@@ -18,6 +18,7 @@ typedef struct Element
         Type type;
 		void (*Free)(struct Element *This);
 		void (*Clear)(struct Element *This);
+		char* (*serialize)(struct Element* This);
 } Element;
 
 //Constructeurs
@@ -50,5 +51,7 @@ void Element_New_Free(Element* This);
 /// \param This Pointeur sur l'Element à nettoyer
 ///
 void Element_Clear(Element *This);
+
+char* Element_serialize(Element* This);
 
 #endif // ELEMENT_H

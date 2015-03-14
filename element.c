@@ -30,3 +30,14 @@ void Element_New_Free(Element* This){
 	if(This) This->Clear(This);
 	free(This);
 }
+
+char* Element_serialize(Element *This)
+{
+	This=This;
+	/*char* toFill=malloc()
+	*toFill=malloc((4*(5+1)+1)*sizeof(char));
+	sprintf(tofill, "%d\n%d\n%d\n%d\n", This->type, This->dernierRepas, This->sasiete, This->derniereReproduction);*/
+
+	// switch type pour choisir ce que l'on fait
+	return NULL;
+}

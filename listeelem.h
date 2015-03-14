@@ -39,6 +39,7 @@ typedef struct ListeElem {
 	Bool (*deleteElement)(struct ListeElem*, struct Element*);
 	void (*Print)(struct ListeElem*);
 	struct Element* (*getNieme)(struct ListeElem*, uint16_t);
+	char* (*serialize)(struct ListeElem*);
 }ListeElem;
 
 uint16_t ListeElem_Taille(ListeElem* This);
@@ -116,5 +117,7 @@ void ListeElem_Print(ListeElem*);
 /// \return
 ///
 struct Element *ListeElem_getNieme(ListeElem *This, uint16_t number);
+
+char* ListeElem_serialize(ListeElem *This);
 
 #endif // LISTEELEM_H

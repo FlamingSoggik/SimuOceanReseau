@@ -538,3 +538,16 @@ Bool ElementAnimal_doitJouerCeTour(ElementAnimal *This)
 		return False;
 	return True;
 }
+
+char* ElementAnimal_serialize(ElementAnimal *This)
+{
+	/* Format de la chaine retournée :
+	 * <Type>\n<Variable>\n<Variable>
+	 */
+	char* SerializedThis;
+
+	// 4 : nombre de uint16, 5: nombre de caractère pour un uint16 +1: comptage du retour à la ligne +1 : \0
+	SerializedThis=malloc((4*(5+1)+1)*sizeof(char));
+	sprintf(SerializedThis, "%d\n%d\n%d\n%d\n", This->type, This->dernierRepas, This->sasiete, This->derniereReproduction);
+	return SerializedThis;
+}

@@ -13,6 +13,7 @@ typedef struct ElementTerre
 		Type type;
 		void (*Free)(struct Element *This);
 		void (*Clear)(struct Element *This);
+		char (*serialize)(struct Element* This);
 } ElementTerre;
 
 //Constructeurs

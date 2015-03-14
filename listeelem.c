@@ -1,7 +1,8 @@
-#include "listeelem.h"
-#include "elementanimal.h"
 #include <stdlib.h>
 #include <stdio.h>
+#include <string.h>
+#include "listeelem.h"
+#include "elementanimal.h"
 
 
 void ListeElem_Init(ListeElem* This){
@@ -24,6 +25,7 @@ void ListeElem_Init(ListeElem* This){
 	This->Print=ListeElem_Print;
 	This->Vider=ListeElem_Vider;
 	This->getNieme=ListeElem_getNieme;
+	This->serialize=ListeElem_serialize;
 }
 
 ListeElem* New_ListeElem(){
@@ -255,4 +257,34 @@ Element *ListeElem_getNieme(ListeElem *This, uint16_t number)
 		--number;
 	}
 	return tmp->e;
+}
+
+char* ListeElem_serialize(ListeElem *This)
+{
+	/* Format de la chaine retournée :
+	 * <nombre d'elements>\n<Element>\n<Element>
+	 */
+	int i = 0, offset;
+	char* SerializedThis;
+	// tableau à double entrée de chaine de caractère contenant les fifférents éléments
+	char **leschaines = malloc(This->taille*sizeof(char*));
+	if (!leschaines) return NULL;
+	unsigned int nbrCaract=0;
+	MaillonListeElem *tmp = This->Top;
+	while(tmp != NULL){
+		leschaines[i]=tmp->e->serialize(tmp->e);
+		nbrCaract+=strlen(leschaines[i]);
+		tmp=tmp->next;
+		++i;
+	}
+
+	SerializedThis=malloc((nbrCaract+(5+1)+1)*sizeof(char));
+	offset = sprintf(SerializedThis, "%d\n", This->taille);
+
+	for(i=0; i<This->taille; ++i){
+		offset += sprintf(SerializedThis+offset, "%s", leschaines[i]);
+		free(leschaines[i]);
+	}
+	free(leschaines);
+	return SerializedThis;
 }

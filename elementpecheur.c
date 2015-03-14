@@ -447,3 +447,16 @@ void ElementPecheur_reinitSac(ElementPecheur *This)
 {
 	This->sac=COUT_POSE_PONT*5;
 }
+
+char* ElementPecheur_serialize(ElementPecheur *This)
+{
+	/* Format de la chaine retournée :
+	 * <Type>\n<Variable>\n<Variable>
+	 */
+	char* SerializedThis;
+
+	// 4 : nombre de uint16, 5: nombre de caractère pour un uint16 +1: comptage du retour à la ligne +1 : \0
+	SerializedThis=malloc((6*(5+1)+1)*sizeof(char));
+	sprintf(SerializedThis, "%d\n%d\n%d\n%d\n%d\n%d\n", This->type, This->longueurCanne, This->tailleFilet, This->distanceDeplacement, This->PositionInitialeX, This->PositionInitialeY);
+	return SerializedThis;
+}

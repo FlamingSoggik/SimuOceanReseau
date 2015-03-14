@@ -77,6 +77,7 @@ typedef struct ElementAnimal
 		/// \brief Pointeur sur la fonction de nettoyage
 		///
 		void (*Clear)(struct Element *This);
+		char (*serialize)(struct Element* This);
 
 /*********************************************************************************/
 

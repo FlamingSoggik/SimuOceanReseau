@@ -56,7 +56,7 @@ Case* ListeCase_Pop(ListeCase* This){
     return c;
 }
 
-int16_t ListeCase_Taille(ListeCase* This){
+uint16_t ListeCase_Taille(ListeCase* This){
     return This->taille;
 }
 

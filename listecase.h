@@ -23,11 +23,11 @@ typedef struct ListeCase {
 	int16_t(*Push)(struct ListeCase*, struct Case*);
 	struct Case*(*Pop)(struct ListeCase*);
     void(*Clear)(struct ListeCase*);
-	int16_t(*Taille)(struct ListeCase*);
+	uint16_t (*Taille)(struct ListeCase*);
 	struct Case*(*getNieme)(struct ListeCase*, uint16_t);
 }ListeCase;
 
-int16_t ListeCase_Taille(ListeCase* This);
+uint16_t ListeCase_Taille(ListeCase* This);
 void ListeCase_Clear(ListeCase *This);
 void ListeCase_New_Free(ListeCase *This);
 ///

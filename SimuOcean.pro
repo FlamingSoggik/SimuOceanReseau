@@ -3,7 +3,7 @@ CONFIG += console
 CONFIG -= app_bundle
 CONFIG -= qt
 
-LIBS += -L/usr/lib/x86_64-linux-gnu -lSDL -lSDL_ttf
+LIBS += -L/usr/lib/x86_64-linux-gnu -lSDL -lSDL_ttf -lpthread
 
 SOURCES += main.c \
     element.c \
@@ -19,6 +19,7 @@ SOURCES += main.c \
     elementterre.c \
     changermodeterminal.c \
     stringreplace.c \
+    reseau.c\
     sdl_pecheur.c
 
 include(deployment.pri)
@@ -39,4 +40,5 @@ HEADERS += \
     elementterre.h \
     changermodeterminal.h \
     stringreplace.h \
+    reseau.h\
     sdl_pecheur.h

@@ -1,5 +1,6 @@
-#include "listetype.h"
 #include <stdlib.h>
+#include <stdio.h>
+#include "listetype.h"
 
 void ListeType_Init(ListeType* This){
 	This->taille=0;
@@ -73,4 +74,24 @@ Bool ListeType_Contain(ListeType * This, Type t)
 		tmp=tmp->next;
 	}
 	return False;
+}
+
+char* ListeType_serialize(ListeType *This)
+{
+	/* Format de la chaine retournée :
+	 * <nombre d'elements>\n<Type>\n<Type>
+	 */
+	int offset;
+	char* SerializedThis;
+	// tableau à double entrée de chaine de caractère contenant les fifférents éléments
+	SerializedThis=malloc(((This->taille+1)*(5+1)+1)*sizeof(char));
+	if (!SerializedThis) return NULL;
+	offset = sprintf(SerializedThis, "%d\n", This->taille);
+
+	MaillonListeType *tmp = This->Top;
+	while(tmp != NULL){
+		offset += sprintf(SerializedThis+offset, "%d\n", tmp->t);
+		tmp=tmp->next;
+	}
+	return SerializedThis;
 }

@@ -19,6 +19,7 @@ typedef struct ElementPecheur
 		Type type;
 		void (*Free)(struct Element *This);
 		void (*Clear)(struct Element *This);
+		char (*serialize)(struct Element* This);
 
 
 /*********************************************************************************/
