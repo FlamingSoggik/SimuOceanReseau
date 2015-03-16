@@ -12,6 +12,13 @@
 #include <strings.h>
 #include <net/if.h>
 #include <sys/errno.h>
+#include <inttypes.h>
+
+#include "element.h"
+#include "elementanimal.h"
+#include "elementpecheur.h"
+#include "elementterre.h"
+#include "elementpont.h"
 
 void* HandleIncommingPlayer(void *arg){
 	pthread_setcancelstate(PTHREAD_CANCEL_ENABLE, NULL);
@@ -159,7 +166,6 @@ void Reseau_Free(Reseau* This)
 {
 	This->Clear(This);
 }
-
 
 void Reseau_Init(Reseau* This){
 	This->Clear=Reseau_Clear;
@@ -392,3 +398,60 @@ void  tenterConnection(Reseau *This)
 		exit(1);
 	}
 }
+
+void unSerialize(char* str, Grille* g){
+	uint16_t xCase, yCase, nbr, i;
+	uint16_t type, dernierRepas, sasiete, derniereReproduction;
+	uint16_t sac, longueurCanne, tailleFilet, distanceDeplacement, PositionInitialeX, PositionInitialeY;
+	//On créé un strean (via un fichier) ---> probablement assez sale
+	FILE* stream=fopen("/tmp/streamSimuOcean", "r+");
+	fprintf(stream, "%s", str);
+	fseek(stream, 0L, SEEK_SET);
+	fscanf(stream, "%" SCNd16, &xCase);
+	fscanf(stream, "%" SCNd16, &yCase);
+	fscanf(stream, "%" SCNd16, &nbr);
+	for (i=0; i<nbr ; ++i){
+		//Scan d'un élément
+		fscanf(stream, "%" SCNd16, &type);
+		if (type >= TYPEMINANIMAL && type <= TYPEMAXANIMAL){
+			fscanf(stream, "%" SCNd16, &dernierRepas);
+			fscanf(stream, "%" SCNd16, &sasiete);
+			fscanf(stream, "%" SCNd16, &derniereReproduction);
+
+			ElementAnimal *ea = New_ElementAnimal(&g->tab[xCase][yCase], type);
+			ea->SetDernierRepas(ea, dernierRepas);
+			ea->SetSasiete(ea, sasiete);
+			ea->SetDerniereReproduction(ea, derniereReproduction);
+			g->tab[xCase][yCase].liste->Clear(g->tab[xCase][yCase].liste);
+			g->tab[xCase][yCase].liste->Push(g->tab[xCase][yCase].liste, (Element*)ea);
+			//Créer animal
+			//mettre dans la liste
+		}
+		else if (type == TERRE){
+			//Créer terre
+			//mettre dans la liste
+			ElementTerre *t = New_ElementTerre(&g->tab[xCase][yCase]);
+			g->tab[xCase][yCase].liste->Clear(g->tab[xCase][yCase].liste);
+			g->tab[xCase][yCase].liste->Push(g->tab[xCase][yCase].liste, (Element*)t);
+		}
+		else if (type == PONT){
+			//Créer pont
+			//mettre dans la liste
+			ElementTerre *t = New_ElementPont(&g->tab[xCase][yCase]);
+			g->tab[xCase][yCase].liste->Clear(g->tab[xCase][yCase].liste);
+			g->tab[xCase][yCase].liste->Push(g->tab[xCase][yCase].liste, (Element*)t);
+		}
+		else if (type == PECHEUR){
+			fscanf(stream, "%" SCNd16, &sac);
+			fscanf(stream, "%" SCNd16, &longueurCanne);
+			fscanf(stream, "%" SCNd16, &tailleFilet);
+			fscanf(stream, "%" SCNd16, &distanceDeplacement);
+			fscanf(stream, "%" SCNd16, &PositionInitialeX);
+			fscanf(stream, "%" SCNd16, &PositionInitialeY);
+
+			//Créer pecheur
+			//mettre dans la liste
+		}
+	}
+}
+

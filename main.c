@@ -7,13 +7,13 @@
 #include <stdlib.h>
 #include "affichage.h"
 #include <unistd.h>
-
 #include "stringreplace.h"
+#include "reseau.h"
 
 int main(int argc, char **argv)
 {
 	Grille *g;
-
+	Reseau *r;
 
 	int nbpecheurs = 0, tailleGrille=0;
 	char interface = -1;
@@ -35,9 +35,11 @@ int main(int argc, char **argv)
 	}
 	switch (interface){
 		case 'a' :
+			r=New_Reseau();
 			g = New_Grille(tailleGrille, nbpecheurs);
 			g=SDL_Print(g);
 			g->Free(g);
+			r->Free(r);
 			break;
 		case 's':
 			g = New_Grille(tailleGrille, nbpecheurs);

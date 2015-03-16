@@ -457,6 +457,54 @@ char* ElementPecheur_serialize(ElementPecheur *This)
 
 	// 4 : nombre de uint16, 5: nombre de caractère pour un uint16 +1: comptage du retour à la ligne +1 : \0
 	SerializedThis=malloc((6*(5+1)+1)*sizeof(char));
-	sprintf(SerializedThis, "%d\n%d\n%d\n%d\n%d\n%d\n", This->type, This->longueurCanne, This->tailleFilet, This->distanceDeplacement, This->PositionInitialeX, This->PositionInitialeY);
+	sprintf(SerializedThis, "%d\n%d\n%d\n%d\n%d\n%d\n%d\n", This->type, This->sac, This->longueurCanne, This->tailleFilet, This->distanceDeplacement, This->PositionInitialeX, This->PositionInitialeY);
 	return SerializedThis;
+}
+
+uint16_t ElementPecheur_getSac(struct ElementPecheur *This){
+	return This->sac;
+}
+
+void ElementPecheur_setSac(struct ElementPecheur *This, uint16_t toset){
+	This->sac=toset;
+}
+
+uint16_t ElementPecheur_getLongueurCanne(struct ElementPecheur *This){
+	return This->longueurCanne;
+}
+
+void ElementPecheur_setLongueurCanne(struct ElementPecheur *This, uint16_t toset){
+	This->longueurCanne=toset;
+}
+
+uint16_t ElementPecheur_getTailleFilet(struct ElementPecheur *This){
+	return This->tailleFilet;
+}
+
+void ElementPecheur_setTailleFilet(struct ElementPecheur *This, uint16_t toset){
+	This->tailleFilet=toset;
+}
+
+uint16_t ElementPecheur_getDistanceDeplacement(struct ElementPecheur *This){
+	return This->distanceDeplacement;
+}
+
+void ElementPecheur_setDistanceDeplacement(struct ElementPecheur *This, uint16_t toset){
+	This->distanceDeplacement=toset;
+}
+
+uint16_t ElementPecheur_getPositionInitialex(struct ElementPecheur *This){
+	return This->PositionInitialeX;
+}
+
+void ElementPecheur_setPositionInitialex(struct ElementPecheur *This, uint16_t toset){
+	This->PositionInitialeX=toset;
+}
+
+uint16_t ElementPecheur_getPositionInitialey(struct ElementPecheur *This){
+	return This->PositionInitialeY;
+}
+
+void ElementPecheur_setPositionInitialey(struct ElementPecheur *This, uint16_t toset){
+	This->PositionInitialeY=toset;
 }

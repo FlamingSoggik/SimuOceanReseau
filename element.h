@@ -8,7 +8,9 @@ typedef enum Type {
 	//0		 1		  2		 3	   4	   5		 6		  7		 8		 9		 10		 11		12
 	VOID, PLANCTON, CORAIL, BAR, THON, POLLUTION, PYRANHA, REQUIN, ORQUE, BALEINE, PECHEUR, PONT, TERRE,
 	TYPEMIN=0,
-	TYPEMAX=TERRE
+	TYPEMAX=TERRE,
+	TYPEMINANIMAL=PLANCTON,
+	TYPEMAXANIMAL=BALEINE
 }Type;
 
 /// Element est la structure de base dont les autres elements héritent (ElementPecheur, ElementPont et ElementTerre et ElementAnimal)
