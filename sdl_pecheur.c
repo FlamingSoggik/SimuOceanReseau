@@ -46,18 +46,6 @@ void Commandes_Pecheur(SDL_Surface *ecran, SDL_Surface *Avancer, SDL_Surface *Co
 {
 
 
-//static int16_t premierPassage = 1;
-
-//if (premierPassage == 1){
-//	premierPassage=0;
-//}
-//else {
-//	SDL_FreeSurface(Avancer);
-//	SDL_FreeSurface(Construire);
-//	SDL_FreeSurface(PecherCanne);
-//	SDL_FreeSurface(PecherFilet);
-//	}
-
 SDL_Color Couleur_Commandes = {193, 205, 193,0};
 
 if (Commande_Selected==0)
@@ -97,10 +85,10 @@ PecherFilet = TTF_RenderText_Blended(police_underline, "Pecher (Filet)", Couleur
 }
 
 int16_t Centre_Commandes=(ScreenH +(ScreenW-ScreenH)/2);
-Blit_Image(ecran, Avancer, Centre_Commandes - 40, ScreenH/2 - 50);
-Blit_Image(ecran, Construire, Centre_Commandes - 40, ScreenH/2);
-Blit_Image(ecran, PecherCanne, Centre_Commandes - 40, ScreenH/2 + 50);
-Blit_Image(ecran, PecherFilet, Centre_Commandes - 40, ScreenH/2 + 100);
+Blit_Image(ecran, Avancer, Centre_Commandes - 40, ScreenH/2 - 100);
+Blit_Image(ecran, Construire, Centre_Commandes - 40, ScreenH/2 - 50);
+Blit_Image(ecran, PecherCanne, Centre_Commandes - 40, ScreenH/2 );
+Blit_Image(ecran, PecherFilet, Centre_Commandes - 40, ScreenH/2 + 50);
 
 SDL_FreeSurface(Avancer);
 SDL_FreeSurface(Construire);

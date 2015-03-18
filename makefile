@@ -7,7 +7,7 @@ all: ${EXEC}
 
 ${EXEC}:
 	gcc `sdl-config --cflags` -Wall -Wextra -c *.c
-	gcc `sdl-config --cflags --libs` -lm -lSDL_ttf -o LifeGame *.o
+	gcc `sdl-config --cflags --libs` -lpthread -lm -lSDL_ttf -o LifeGame *.o
 
 
 
