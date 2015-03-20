@@ -29,12 +29,32 @@ typedef struct ElementPecheur
 		/// \brief sac Alias besace : masse de poisson disponible pour la consruction du pont
 		///
 		uint16_t sac;
+		uint16_t (*GetSac)(struct ElementPecheur*);
+		void (*SetSac)(struct ElementPecheur* , uint16_t);
+
 		uint16_t longueurCanne;
+		uint16_t (*GetLongueurCanne)(struct ElementPecheur*);
+		void (*SetLongueurCanne)(struct ElementPecheur* , uint16_t);
+
 		uint16_t tailleFilet;
+		uint16_t (*GetTailleFilet)(struct ElementPecheur*);
+		void (*SetTailleFilet)(struct ElementPecheur* , uint16_t);
+
 		uint16_t distanceDeplacement;
+		uint16_t (*GetDistanceDeplacement)(struct ElementPecheur*);
+		void (*SetDistanceDeplacement)(struct ElementPecheur* , uint16_t);
+
 		struct ListeType* listeDePeche;
+
 		uint16_t PositionInitialeX;
+		uint16_t (*GetPositionInitialeX)(struct ElementPecheur*);
+		void (*SetPositionInitialeX)(struct ElementPecheur* , uint16_t);
+
 		uint16_t PositionInitialeY;
+		uint16_t (*GetPositionInitialeY)(struct ElementPecheur*);
+		void (*SetPositionInitialeY)(struct ElementPecheur* , uint16_t);
+
+
 		char estSelectionne;
 		void (*pecheParCanne)(struct ElementPecheur*, char*);
 		void (*pecheParCanneSDL)(struct ElementPecheur*, int16_t, int16_t);
@@ -120,6 +140,21 @@ void ElementPecheur_reinitSac(ElementPecheur* This);
 
 void ElementPecheur_Clear(Element *This);
 void ElementPecheur_New_Free(Element* This);
+
+
+uint16_t ElementPecheur_getSac(struct ElementPecheur *This);
+void ElementPecheur_setSac(struct ElementPecheur *This, uint16_t toset);
+uint16_t ElementPecheur_getLongueurCanne(struct ElementPecheur *This);
+void ElementPecheur_setLongueurCanne(struct ElementPecheur *This, uint16_t toset);
+uint16_t ElementPecheur_getTailleFilet(struct ElementPecheur *This);
+void ElementPecheur_setTailleFilet(struct ElementPecheur *This, uint16_t toset);
+uint16_t ElementPecheur_getDistanceDeplacement(struct ElementPecheur *This);
+void ElementPecheur_setDistanceDeplacement(struct ElementPecheur *This, uint16_t toset);
+uint16_t ElementPecheur_getPositionInitialex(struct ElementPecheur *This);
+void ElementPecheur_setPositionInitialex(struct ElementPecheur *This, uint16_t toset);
+uint16_t ElementPecheur_getPositionInitialey(struct ElementPecheur *This);
+void ElementPecheur_setPositionInitialey(struct ElementPecheur *This, uint16_t toset);
+
 
 #ifdef __cplusplus
 }

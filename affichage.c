@@ -7,11 +7,11 @@
 
 struct Grille* SDL_Print(struct Grille *grill){
 
-    const long PROP_FENETRE=95; // (1-100) Proportion de la grille par rapport à la fenetre du jeu.
+	const long PROP_FENETRE=95; // (1-100) Proportion de la grille par rapport à la fenetre du jeu.
 	const int16_t NBR_CASES=grill->Taille; // Largeur de la grille
 
 	/* Initialisation des variables nécessaires */
-    SDL_Surface **Selected_Type_Case=NULL, *caseDePeche=NULL, *blanc=NULL, *rouge=NULL, *plusIcone=NULL, *moinsIcone=NULL, *graphIcone=NULL,*paramIcone=NULL,*ecran = NULL ,*fenetre = NULL, *curseur1 = NULL, *curseur2 = NULL, *boite = NULL, *graphique=NULL;
+	SDL_Surface **Selected_Type_Case=NULL, *blanc=NULL, *rouge=NULL, *plusIcone=NULL, *moinsIcone=NULL, *graphIcone=NULL,*paramIcone=NULL,*ecran = NULL ,*fenetre = NULL, *curseur1 = NULL, *curseur2 = NULL, *boite = NULL, *graphique=NULL;
 	TTF_Font *police=NULL, *police_underline=NULL;
 	SDL_Event event;
 	int16_t continuer=1;
@@ -57,8 +57,8 @@ struct Grille* SDL_Print(struct Grille *grill){
 	/* On récupère la taille de l'écran */
 	const SDL_VideoInfo *videoInfo;
 	videoInfo=SDL_GetVideoInfo();
-    int16_t ScreenW=videoInfo->current_w*0.98;
-    int16_t ScreenH=videoInfo->current_h*0.9;
+	int16_t ScreenW=videoInfo->current_w*0.9;
+	int16_t ScreenH=videoInfo->current_h*0.9;
 
 
 	ecran = SDL_SetVideoMode(ScreenW, ScreenH, 32, SDL_HWSURFACE | SDL_DOUBLEBUF);
@@ -133,16 +133,9 @@ struct Grille* SDL_Print(struct Grille *grill){
 	blanc = SDL_CreateRGBSurface(SDL_HWSURFACE, 0.5*taille_case, 0.5*taille_case, 32, 0, 0, 0, 0);
 	SDL_FillRect(blanc, NULL, SDL_MapRGB(ecran->format, 255, 255, 255));
 	/*Actions du pécheur*/
-    SDL_Surface *Avancer=NULL, *Construire=NULL, *PecherCanne=NULL, *PecherFilet=NULL;
+	SDL_Surface *Avancer=NULL, *Construire=NULL, *PecherCanne=NULL, *PecherFilet=NULL;
 
-    /*Case blanche pour Pecher*/
-    SDL_Rect pos_peche;
-    pos_peche.x=(ScreenH +(ScreenW-ScreenH)/2 - ScreenW/8 + 20);
-    pos_peche.y=(5*ScreenH/8+50);
-    pos_peche.w=ScreenW/4;
-    pos_peche.h=ScreenH/4;
-    caseDePeche=SDL_CreateRGBSurface(SDL_HWSURFACE, pos_peche.w, pos_peche.h, 32, 0, 0, 0, 0);
-    SDL_FillRect(caseDePeche, NULL, SDL_MapRGB(ecran->format, 255, 255, 255));
+
 
 
 
@@ -390,13 +383,13 @@ struct Grille* SDL_Print(struct Grille *grill){
 					/*Selection Commande Pecheur */
 					if (!Est_Un_Dev)
 					{
-                        if (((ScreenH +(ScreenW-ScreenH)/2)-40<=event.button.x) && (event.button.x<=(ScreenH +(ScreenW-ScreenH)/2)+40) && ((ScreenH/2 - 100)<=event.button.y) && (event.button.y<=(ScreenH/2 - 60)))
+						if (((ScreenH +(ScreenW-ScreenH)/2)-40<=event.button.x) && (event.button.x<=(ScreenH +(ScreenW-ScreenH)/2)+40) && ((ScreenH/2 - 50)<=event.button.y) && (event.button.y<=(ScreenH/2 - 10)))
 							Commande_Selected=1;
-                        if (((ScreenH +(ScreenW-ScreenH)/2)-40<=event.button.x) && (event.button.x<=(ScreenH +(ScreenW-ScreenH)/2)+45) && ((ScreenH/2 - 50)<=event.button.y) && (event.button.y<=(ScreenH/2 - 10)))
+						if (((ScreenH +(ScreenW-ScreenH)/2)-40<=event.button.x) && (event.button.x<=(ScreenH +(ScreenW-ScreenH)/2)+45) && ((ScreenH/2)<=event.button.y) && (event.button.y<=(ScreenH/2 + 40)))
 							Commande_Selected=2;
-                        if (((ScreenH +(ScreenW-ScreenH)/2)-40<=event.button.x) && (event.button.x<=(ScreenH +(ScreenW-ScreenH)/2)+50) && ((ScreenH/2)<=event.button.y) && (event.button.y<=(ScreenH/2 + 40)))
+						if (((ScreenH +(ScreenW-ScreenH)/2)-40<=event.button.x) && (event.button.x<=(ScreenH +(ScreenW-ScreenH)/2)+50) && ((ScreenH/2 +50)<=event.button.y) && (event.button.y<=(ScreenH/2 + 90)))
 							Commande_Selected=3;
-                        if (((ScreenH +(ScreenW-ScreenH)/2)-40<=event.button.x) && (event.button.x<=(ScreenH +(ScreenW-ScreenH)/2)+50) && ((ScreenH/2 +50)<=event.button.y) && (event.button.y<=(ScreenH/2 + 90)))
+						if (((ScreenH +(ScreenW-ScreenH)/2)-40<=event.button.x) && (event.button.x<=(ScreenH +(ScreenW-ScreenH)/2)+50) && ((ScreenH/2 +100)<=event.button.y) && (event.button.y<=(ScreenH/2 + 140)))
 							Commande_Selected=4;
 					}
 
@@ -404,7 +397,7 @@ struct Grille* SDL_Print(struct Grille *grill){
 					/*Peche 2.0*/
 
 
-                    if ((pos_peche.x<=event.button.x) && (event.button.x<=(pos_peche.x+pos_peche.w)) && (pos_peche.y<=event.button.y) && (event.button.y<=(pos_peche.y+pos_peche.h)) && (grill->nbPecheur>0))
+					if (event.button.x<=ScreenH && (event.button.y<=ScreenH) && ((grill->nbPecheur>0)))
 					{
 
 						pointeurX=event.button.x;
@@ -425,7 +418,7 @@ struct Grille* SDL_Print(struct Grille *grill){
 					/*Peche 2.0*/
 					if ((Commande_Selected==3 || Commande_Selected==4) && (grill->nbPecheur>0))
 					{
-                        if (Actif_Peche!=0 && (pos_peche.x<=event.button.x) && (event.button.x<=(pos_peche.x+pos_peche.w)) && (pos_peche.y<=event.button.y) && (event.button.y<=(pos_peche.y+pos_peche.h)))
+						if (Actif_Peche!=0 && event.button.x<=ScreenH && (event.button.y<=ScreenH))
 						{
 							pointeurX=event.button.x-pointeurX;
 							pointeurY=event.button.y-pointeurY;
@@ -508,7 +501,7 @@ struct Grille* SDL_Print(struct Grille *grill){
 		if(!Est_Un_Dev)
 		{
 			Commandes_Pecheur(ecran, Avancer, Construire, PecherCanne, PecherFilet, police, police_underline, Commande_Selected, ScreenH, ScreenW);
-            Blit_Image(ecran, caseDePeche, pos_peche.x, pos_peche.y);
+
 			if (TourDuJoueur!=-1)
 				Sac_Pecheur( ecran, police, grill->tabPecheur[TourDuJoueur], ScreenH, ScreenW );
 		}
@@ -618,7 +611,6 @@ struct Grille* SDL_Print(struct Grille *grill){
 	SDL_FreeSurface(Construire);
 	SDL_FreeSurface(PecherCanne);
 	SDL_FreeSurface(PecherFilet);
-    SDL_FreeSurface(caseDePeche);
 
 
 	for(i=0; i<12; i++){

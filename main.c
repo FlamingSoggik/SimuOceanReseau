@@ -14,7 +14,6 @@ int main(int argc, char **argv)
 {
 	Grille *g;
 	Reseau *r;
-
 	int nbpecheurs = 0, tailleGrille=0;
 	char interface = -1;
 	if (argc < 4){
@@ -36,9 +35,10 @@ int main(int argc, char **argv)
 	switch (interface){
 		case 'a' :
 			r=New_Reseau();
-			g = New_Grille(tailleGrille, nbpecheurs);
-			g=SDL_Print(g);
-			g->Free(g);
+			//g = New_Grille(tailleGrille, nbpecheurs);
+			//g=SDL_Print(g);
+			//g->Free(g);
+			sleep(50);
 			r->Free(r);
 			break;
 		case 's':

@@ -3,6 +3,7 @@
 
 #include <pthread.h>
 #include <sys/select.h>
+#include "listeclient.h"
 
 typedef struct Reseau
 {
@@ -16,10 +17,10 @@ typedef struct Reseau
 	int portEcouteIncommingClients;
 	int portEcouteInternalMessages;
 	int portEcouteTcp;
-	int nbConnectes;
 	fd_set untouchableSet;
 	fd_set degradableSet;
 	int maxFd;
+	ListeClient* clients;
 	void (*Free)(struct Reseau *This);
 	void (*Clear)(struct Reseau *This);
 } Reseau;

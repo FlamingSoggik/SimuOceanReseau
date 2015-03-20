@@ -59,6 +59,25 @@ char ElementPecheur_Init(Case *c, ElementPecheur* This){
 	This->tailleFilet=TAILLE_FILET;
 	This->distanceDeplacement=DISTANCE_DEPLACEMENT;
 	This->estSelectionne=0;
+
+	This->GetSac=ElementPecheur_getSac;
+	This->SetSac=ElementPecheur_setSac;
+
+	This->GetLongueurCanne=ElementPecheur_getLongueurCanne;
+	This->SetLongueurCanne=ElementPecheur_setLongueurCanne;
+
+	This->GetTailleFilet=ElementPecheur_getTailleFilet;
+	This->SetTailleFilet=ElementPecheur_setTailleFilet;
+
+	This->GetDistanceDeplacement=ElementPecheur_getDistanceDeplacement;
+	This->SetDistanceDeplacement=ElementPecheur_setDistanceDeplacement;
+
+	This->GetPositionInitialeX=ElementPecheur_getPositionInitialex;
+	This->SetPositionInitialeX=ElementPecheur_setPositionInitialex;
+
+	This->GetPositionInitialeY=ElementPecheur_getPositionInitialey;
+	This->SetPositionInitialeY=ElementPecheur_setPositionInitialey;
+
 	return 0;
 }
 

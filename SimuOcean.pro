@@ -20,7 +20,9 @@ SOURCES += main.c \
     changermodeterminal.c \
     stringreplace.c \
     reseau.c\
-    sdl_pecheur.c
+    sdl_pecheur.c \
+    listeclient.c \
+    client.c
 
 include(deployment.pri)
 qtcAddDeployment()
@@ -41,4 +43,6 @@ HEADERS += \
     changermodeterminal.h \
     stringreplace.h \
     reseau.h\
-    sdl_pecheur.h
+    sdl_pecheur.h \
+    listeclient.h \
+    client.h
