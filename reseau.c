@@ -122,8 +122,7 @@ void* HandleTcpPlayer(void *arg){
 							perror("getpeername");
 							++done;
 							continue;
-						}
-						write(c->socketTCP, "#2#ports?\n", 9);
+                        }
 						This->clients->Push(This->clients, c);
 						printf("Nouveau Client ajoutté au jeu, adresse ip: %s portTCP: %d\n", inet_ntoa(c->from.sin_addr),htons(c->from.sin_port));
 					} else {
@@ -134,9 +133,8 @@ void* HandleTcpPlayer(void *arg){
 							if (This->maxFd == i){
 								updateMax(This, i);
 							}
-						}
-						else if (retread > 0){
-							printf("Message recu sur une socket TCP\n");
+                        }
+                        else if (retread > 0){
 							struct sockaddr_in from;
 							unsigned int onSenTape;
 							//Quel est ton port udpInterne
@@ -150,7 +148,7 @@ void* HandleTcpPlayer(void *arg){
 								printf("Avant le recieve : %d", c->portInterneUDP);
 								sscanf(recvBuffer+3, "%" SCNd16, &c->portInterneUDP);
 								printf("Apres le recieve : %d", c->portInterneUDP);
-							}
+                            }
 						}
 						else {
 							printf("Un client quitte la partie.\n");
@@ -306,11 +304,10 @@ int creatEcouteTcp(Reseau *This)
 	return EXIT_SUCCESS;
 }
 
-
 void tenterConnection(Reseau *This)
 {
 	struct sockaddr_in  dst, from;
-	struct hostent *hp;
+    struct hostent *hp;
 	struct ifconf ifc;
 	struct ifreq *ifr;
 	int socketBroadcast;
@@ -388,6 +385,7 @@ void tenterConnection(Reseau *This)
 		sscanf(buf, "%d%d%d", &code, &porttcp, &portudp);
 		printf("Recu : code:%d portTCP:%d, portUDP:%d", code, porttcp, portudp);
 		hp=gethostbyaddr( &from.sin_addr,sizeof(from.sin_addr) , AF_INET);
+        hp=hp;
 		printf(" de la part de %s(%d)\n",inet_ntoa(from.sin_addr),htons(from.sin_port));
 
 		c->socketTCP = socket(AF_INET, SOCK_STREAM, 0);
@@ -398,23 +396,17 @@ void tenterConnection(Reseau *This)
 		destTCP.sin_addr=from.sin_addr;
 		int retConnect;
 
-printf("On tente de se connecter à un client\n");
 		retConnect=connect(c->socketTCP, (struct sockaddr*)&destTCP, sizeof(struct sockaddr_in));
 		if (retConnect < 0){
 			perror("Connect");
 			continue;
-		}
-printf("Connexion réussie\n");
-		sprintf(buff, "%d\n", This->portEcouteInternalMessages);
-
-		printf("SLEEP\n");
-		sleep(10);
-		printf("END SLEEP\n");
-		if (write(c->socketTCP, buff, strlen(buff) <= 0)){
+        }
+        sprintf(buff, "#2#%d\n", This->portEcouteInternalMessages);
+        if (write(c->socketTCP, buff, strlen(buff)) <= 0){
 			perror("PERROR Write");
 		}
 		else {
-printf("Write réussie\n");
+            printf("Write réussie\n");
 		}
 
 		This->clients->Push(This->clients, c);
