@@ -5,6 +5,7 @@
 #include "listecase.h"
 #include "element.h"
 //#include "elementpecheur.h"
+#include "reseau.h"
 
 #define NOMBRE_PECHEUR_MAX 6
 
@@ -40,6 +41,7 @@ typedef struct Grille
 	///
 	/// \brief tabPecheur Tableau contenant les pecheurs à faire jouer
 	///
+    uint16_t NbrCasesToMe;
 	struct ElementPecheur** tabPecheur;
 	void (*Free)(struct Grille *This);
 	void (*Clear)(struct Grille *This);
@@ -49,6 +51,8 @@ typedef struct Grille
 	void (*reinitPecheur)(struct Grille*, struct Element*);
 	void (*faireTour)(struct Grille*, char isSDL);
 	void (*detruirePont)(struct Grille*, struct Case*);
+    struct Reseau* r;
+    char* (*serializeMesCases)(struct Grille *This);
 } Grille;
 
 
@@ -110,5 +114,7 @@ void Grille_faireTour(Grille *This, char isSdl);
 /// \param Pointeur sur la case où l'on veut supprimer le pont
 ///
 void Grille_detruirePont(Grille *This, struct Case* c);
+
+char* Grille_serializeMesCases(Grille *This);
 
 #endif // GRILLE_H

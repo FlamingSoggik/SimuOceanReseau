@@ -8,12 +8,10 @@
 #include "affichage.h"
 #include <unistd.h>
 #include "stringreplace.h"
-#include "reseau.h"
 
 int main(int argc, char **argv)
 {
-	Grille *g;
-	Reseau *r;
+    Grille *g;
 	int nbpecheurs = 0, tailleGrille=0;
 	char interface = -1;
 	if (argc < 4){
@@ -33,13 +31,10 @@ int main(int argc, char **argv)
 		printf("La taille maximum de la grille est 80\n");
 	}
 	switch (interface){
-		case 'a' :
-			r=New_Reseau();
-			//g = New_Grille(tailleGrille, nbpecheurs);
-			//g=SDL_Print(g);
-			//g->Free(g);
-			sleep(50);
-			r->Free(r);
+        case 'a' :
+            g = New_Grille(tailleGrille, nbpecheurs);
+            g=SDL_Print(g);
+            g->Free(g);
 			break;
 		case 's':
 			g = New_Grille(tailleGrille, nbpecheurs);

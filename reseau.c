@@ -21,59 +21,114 @@
 #include "elementpont.h"
 
 void* HandleIncommingPlayer(void *arg){
-	pthread_setcancelstate(PTHREAD_CANCEL_ENABLE, NULL);
-	pthread_setcanceltype(PTHREAD_CANCEL_ASYNCHRONOUS, NULL);
-	Reseau* This = (Reseau*)arg;
-	// Le thread pourra être interrompu à tout moment (notamment dans le recvfrom bloquant)
-	struct sockaddr_in from;
-	struct sockaddr_in dst;
-	struct hostent *hp;
+    pthread_setcancelstate(PTHREAD_CANCEL_ENABLE, NULL);
+    pthread_setcanceltype(PTHREAD_CANCEL_ASYNCHRONOUS, NULL);
+    Reseau* This = (Reseau*)arg;
+    // Le thread pourra être interrompu à tout moment (notamment dans le recvfrom bloquant)
+    struct sockaddr_in from;
+    struct sockaddr_in dst;
+    struct hostent *hp;
 
-	int sizeRecieved;
-	char recvBuffer[10], sendbuffer[10];
-	unsigned int fromlen=sizeof(from);
+    int sizeRecieved;
+    char recvBuffer[10], sendbuffer[10];
+    unsigned int fromlen=sizeof(from);
 
-	for(;;){
-		sizeRecieved=recvfrom(This->sockEcouteIncommingClients, recvBuffer, sizeof(recvBuffer), 0,(struct sockaddr *)&from, &fromlen);
-		if (sizeRecieved <= 0){
-			perror("recvfrom");
-			exit(1);
-		}
-		else if (sizeRecieved < 3){
-			printf("Continue car ordre trop court\n");
-			continue;
-		}
-		if (strncmp(recvBuffer, "#1#", 3) == 0){
-			printf("Demande de connection recue");
-			hp=gethostbyaddr( &from.sin_addr,sizeof(from.sin_addr) , AF_INET);
-			printf(" de la part de %s:%d\n",inet_ntoa(from.sin_addr),htons(from.sin_port));
+    for(;;){
+        sizeRecieved=recvfrom(This->sockEcouteIncommingClients, recvBuffer, sizeof(recvBuffer), 0,(struct sockaddr *)&from, &fromlen);
+        if (sizeRecieved <= 0){
+            perror("recvfrom");
+            exit(1);
+        }
+        else if (sizeRecieved < 3){
+            printf("Continue car ordre trop court\n");
+            continue;
+        }
+        if (strncmp(recvBuffer, "#1#", 3) == 0){
+            printf("Demande de connection recue");
+            hp=gethostbyaddr( &from.sin_addr,sizeof(from.sin_addr) , AF_INET);
+            printf(" de la part de %s:%d\n",inet_ntoa(from.sin_addr),htons(from.sin_port));
 
-			sprintf(sendbuffer, "1\n%d\n%d\n", This->portEcouteTcp, This->portEcouteInternalMessages);
+            sprintf(sendbuffer, "1\n%d\n%d\n", This->portEcouteTcp, This->portEcouteInternalMessages);
 
-			dst.sin_addr=from.sin_addr;
-			dst.sin_port=from.sin_port;
-			dst.sin_family=AF_INET;
+            dst.sin_addr=from.sin_addr;
+            dst.sin_port=from.sin_port;
+            dst.sin_family=AF_INET;
 
-			sendto(This->sockEcouteIncommingClients, sendbuffer, strlen(sendbuffer)+1, 0, (struct sockaddr *) &dst, sizeof(dst));
-		}
-		else {
-			printf("Message recu inconnu\n");
+            sendto(This->sockEcouteIncommingClients, sendbuffer, strlen(sendbuffer)+1, 0, (struct sockaddr *) &dst, sizeof(dst));
+        }
+        else {
+            printf("Message recu inconnu\n");
 
-			recvBuffer[sizeRecieved]='\0';
-			printf("%s\n",recvBuffer);
-			hp=gethostbyaddr( &from.sin_addr,sizeof(from.sin_addr) , AF_INET);
-			printf("...de la part de %s(%d)\n",inet_ntoa(from.sin_addr),htons(from.sin_port));
+            recvBuffer[sizeRecieved]='\0';
+            printf("%s\n",recvBuffer);
+            hp=gethostbyaddr( &from.sin_addr,sizeof(from.sin_addr) , AF_INET);
+            printf("...de la part de %s(%d)\n",inet_ntoa(from.sin_addr),htons(from.sin_port));
 
-			dst.sin_addr=from.sin_addr;
-			dst.sin_port=from.sin_port;
-			dst.sin_family=AF_INET;
+            dst.sin_addr=from.sin_addr;
+            dst.sin_port=from.sin_port;
+            dst.sin_family=AF_INET;
 
-			sendto(This->sockEcouteIncommingClients, "#1#", 7, 0, (struct sockaddr *) &dst, sizeof(dst));
-		}
-	}
-	//Anti warning trick
-	hp=hp;
-	pthread_exit(NULL);
+            sendto(This->sockEcouteIncommingClients, "#1#", 7, 0, (struct sockaddr *) &dst, sizeof(dst));
+        }
+    }
+    //Anti warning trick
+    hp=hp;
+    pthread_exit(NULL);
+}
+
+void* HandleInternalMessage(void *arg){
+    pthread_setcancelstate(PTHREAD_CANCEL_ENABLE, NULL);
+    pthread_setcanceltype(PTHREAD_CANCEL_ASYNCHRONOUS, NULL);
+    Reseau* This = (Reseau*)arg;
+    // Le thread pourra être interrompu à tout moment (notamment dans le recvfrom bloquant)
+    struct sockaddr_in from;
+    struct sockaddr_in dst;
+    struct hostent *hp;
+
+    char* toSend;
+    int sizeRecieved;
+    char recvBuffer[10];
+    unsigned int fromlen=sizeof(from);
+
+    for(;;){
+        sizeRecieved=recvfrom(This->sockEcouteInternalMessages, recvBuffer, sizeof(recvBuffer), 0,(struct sockaddr *)&from, &fromlen);
+        if (sizeRecieved <= 0){
+            perror("recvfrom");
+            exit(1);
+        }
+        else if (sizeRecieved < 3){
+            printf("Continue car ordre trop court\n");
+            continue;
+        }
+        hp=gethostbyaddr( &from.sin_addr,sizeof(from.sin_addr) , AF_INET);
+        dst.sin_addr=from.sin_addr;
+        dst.sin_port=from.sin_port;
+        dst.sin_family=AF_INET;
+        if (strncmp(recvBuffer, "#3#", 3) == 0){
+            printf("Demande de don de carte de la part de %s:%d\n",inet_ntoa(from.sin_addr),htons(from.sin_port));
+
+            toSend=This->g->serializeMesCases(This->g);
+            sendto(This->sockEcouteIncommingClients, toSend, strlen(toSend)+1, 0, (struct sockaddr *) &dst, sizeof(dst));
+            free(toSend);
+        }
+        else {
+            printf("Message recu inconnu\n");
+
+            recvBuffer[sizeRecieved]='\0';
+            printf("%s\n",recvBuffer);
+            hp=gethostbyaddr( &from.sin_addr,sizeof(from.sin_addr) , AF_INET);
+            printf("...de la part de %s(%d)\n",inet_ntoa(from.sin_addr),htons(from.sin_port));
+
+            dst.sin_addr=from.sin_addr;
+            dst.sin_port=from.sin_port;
+            dst.sin_family=AF_INET;
+
+            sendto(This->sockEcouteIncommingClients, "#1#", 7, 0, (struct sockaddr *) &dst, sizeof(dst));
+        }
+    }
+    //Anti warning trick
+    hp=hp;
+    pthread_exit(NULL);
 }
 
 void updateMax(Reseau* This, unsigned int oldmax){
@@ -95,7 +150,7 @@ void* HandleTcpPlayer(void *arg){
 	struct sockaddr_in newClientInfos;
 	unsigned int newClientInfosSize = sizeof(struct sockaddr_in);
 	int newClientSocket, i, done, retread, retSelect;
-	char recvBuffer[256];
+    char recvBuffer[4096];
 	for(;;){
 		memcpy(&This->degradableSet, &This->untouchableSet, sizeof(fd_set));
 		retSelect=select(This->maxFd+1, &This->degradableSet, NULL, NULL, NULL);
@@ -105,28 +160,28 @@ void* HandleTcpPlayer(void *arg){
 		}
 		else {
 			for(i=0, done = 0 ; i < This->maxFd+1 && done != retSelect; ++i){
-				if (FD_ISSET(i, &This->degradableSet)){
-					if (i == This->sockEcouteTcp){
+                if (FD_ISSET(i, &This->degradableSet)){
+                    ++done;
+                    if (i == This->sockEcouteTcp){
+                        Client* c = New_Client();
 						if ( (newClientSocket=accept(This->sockEcouteTcp, (struct sockaddr*)&newClientInfos, &newClientInfosSize)) == -1){
 							perror("accept");
 							exit(1);
-						}
+                        }
+                        c->socketTCP=newClientSocket;
+                        unsigned int onSenTape=sizeof(struct sockaddr_in);
+                        if (getpeername(newClientSocket, (struct sockaddr*)&c->from, &onSenTape) < 0){
+                            perror("getpeername");
+                            continue;
+                        }
+                        This->clients->Push(This->clients, c);
 						FD_SET(newClientSocket, &This->untouchableSet);
 						if (newClientSocket > This->maxFd){
 							This->maxFd=newClientSocket;
-						}
-						Client* c = New_Client();
-						unsigned int onSenTape=sizeof(struct sockaddr_in);
-						c->socketTCP=newClientSocket;
-						if (getpeername(newClientSocket, (struct sockaddr*)&c->from, &onSenTape) < 0){
-							perror("getpeername");
-							++done;
-							continue;
                         }
-						This->clients->Push(This->clients, c);
 						printf("Nouveau Client ajoutté au jeu, adresse ip: %s portTCP: %d\n", inet_ntoa(c->from.sin_addr),htons(c->from.sin_port));
 					} else {
-						if ( (retread=read(i, recvBuffer, sizeof(recvBuffer))) < 0){
+                        if ( (retread=read(i, recvBuffer, sizeof(recvBuffer))) <= 0){
 							printf("Un client quitte la partie.\n");
 							This->clients->remove(This->clients, i);
 							FD_CLR(i, &This->untouchableSet);
@@ -134,32 +189,22 @@ void* HandleTcpPlayer(void *arg){
 								updateMax(This, i);
 							}
                         }
-                        else if (retread > 0){
+                        else {
 							struct sockaddr_in from;
 							unsigned int onSenTape;
 							//Quel est ton port udpInterne
 							if (strncmp(recvBuffer, "#2#", 3) == 0){
 								if (getpeername(newClientSocket, (struct sockaddr*)&from, &onSenTape) < 0){
-									perror("getpeername");
-									++done;
+                                    perror("getpeername");
 									continue;
 								}
 								Client *c=This->clients->getFrom(This->clients, from);
-								printf("Avant le recieve : %d", c->portInterneUDP);
+                                printf("Avant le recieve : %d\n", c->portInterneUDP);
 								sscanf(recvBuffer+3, "%" SCNd16, &c->portInterneUDP);
-								printf("Apres le recieve : %d", c->portInterneUDP);
+                                printf("Apres le recieve : %d\n", c->portInterneUDP);
                             }
-						}
-						else {
-							printf("Un client quitte la partie.\n");
-							This->clients->remove(This->clients, i);
-							FD_CLR(i, &This->untouchableSet);
-							if (This->maxFd == i){
-								updateMax(This, i);
-							}
-						}
-					}
-					++done;
+                        }
+                    }
 				}
 			}
 		}
@@ -167,19 +212,19 @@ void* HandleTcpPlayer(void *arg){
 	pthread_exit(NULL);
 }
 
-Reseau *New_Reseau()
+Reseau *New_Reseau(Grille *g)
 {
 	Reseau* This = malloc(sizeof(Reseau));
 	if(!This) return NULL;
-	Reseau_Init(This);
+    Reseau_Init(This, g);
 	This->Free=Reseau_New_Free;
 	return This;
 }
 
-Reseau Reseau_Create()
+Reseau Reseau_Create(Grille *g)
 {
 	Reseau This;
-	Reseau_Init(&This);
+    Reseau_Init(&This, g);
 	This.Free=Reseau_Free;
 	return This;
 }
@@ -195,7 +240,7 @@ void Reseau_Free(Reseau* This)
 	This->Clear(This);
 }
 
-void Reseau_Init(Reseau* This){
+void Reseau_Init(Reseau* This, Grille* g){
 	This->Clear=Reseau_Clear;
 	This->clients=New_ListeClient();
 	pthread_mutex_init(&This->mutexMatricePropriete, NULL);
@@ -212,6 +257,7 @@ void Reseau_Init(Reseau* This){
 		printf("Aucune partie en cours\n");
 	}
 	creatIncommingClients(This);
+    This->g=g;
 }
 
 void Reseau_Clear(Reseau *This){
@@ -229,7 +275,7 @@ void Reseau_Clear(Reseau *This){
 	close(This->sockEcouteIncommingClients);
 	close(This->sockEcouteInternalMessages);
 	close(This->sockEcouteTcp);
-	This->clients->Free(This->Free);
+    This->clients->Free(This->clients);
 }
 
 int creatIncommingClients(Reseau *This)
@@ -258,9 +304,30 @@ int creatIncommingClients(Reseau *This)
 	return EXIT_SUCCESS;
 }
 
-void creatEcouteInternalMessages(Reseau *This)
+int creatEcouteInternalMessages(Reseau *This)
 {
-	This=This;
+    struct sockaddr_in paramSocket;
+
+    if ( (This->sockEcouteInternalMessages= socket(AF_INET, SOCK_DGRAM, 0) ) <0){
+        perror("Creation sockEcouteInternalClients");
+        exit(1);
+    }
+
+    paramSocket.sin_family = AF_INET;
+    paramSocket.sin_addr.s_addr= htonl(INADDR_ANY);
+    paramSocket.sin_port=htons(This->portEcouteInternalMessages);
+
+    if (bind (This->sockEcouteInternalMessages, (const struct sockaddr *)&paramSocket, sizeof(paramSocket)) < 0){
+        printf("%d", This->sockEcouteInternalMessages);
+        perror("bind ");
+        exit(1);
+    }
+
+    if (pthread_create(&This->th_ThreadInternalMessages, NULL, HandleInternalMessage, This)) {
+        perror("pthread_create");
+        return EXIT_FAILURE;
+    }
+    return EXIT_SUCCESS;
 }
 
 int creatEcouteTcp(Reseau *This)
@@ -404,10 +471,7 @@ void tenterConnection(Reseau *This)
         sprintf(buff, "#2#%d\n", This->portEcouteInternalMessages);
         if (write(c->socketTCP, buff, strlen(buff)) <= 0){
 			perror("PERROR Write");
-		}
-		else {
-            printf("Write réussie\n");
-		}
+        }
 
 		This->clients->Push(This->clients, c);
 		FD_SET(c->socketTCP, &This->untouchableSet);
@@ -440,59 +504,72 @@ void tenterConnection(Reseau *This)
 	}
 }
 
+void askForCarte(Reseau *This){
+    int i;
+    Client *c;
+    for (i=0; i<This->clients->taille; ++i){
+        c=This->clients->getNieme(This->clients, i);
+        sendto(This->sockEcouteInternalMessages, "#3#\n", 4, 0, (struct sockaddr*)&c->from, sizeof(c->from));
+    }
+}
+
 void unSerialize(char* str, Grille* g){
-	uint16_t xCase, yCase, nbr, i;
+    uint16_t xCase, yCase, nbr, nbrCase, i, k;
 	uint16_t type, dernierRepas, sasiete, derniereReproduction;
 	uint16_t sac, longueurCanne, tailleFilet, distanceDeplacement, PositionInitialeX, PositionInitialeY;
 	//On créé un strean (via un fichier) ---> probablement assez sale
-	FILE* stream=fopen("/tmp/streamSimuOcean", "r+");
-	fprintf(stream, "%s", str);
-	fseek(stream, 0L, SEEK_SET);
-	fscanf(stream, "%" SCNd16, &xCase);
-	fscanf(stream, "%" SCNd16, &yCase);
-	fscanf(stream, "%" SCNd16, &nbr);
-	for (i=0; i<nbr ; ++i){
-		//Scan d'un élément
-		fscanf(stream, "%" SCNd16, &type);
-		if (type >= TYPEMINANIMAL && type <= TYPEMAXANIMAL){
-			fscanf(stream, "%" SCNd16, &dernierRepas);
-			fscanf(stream, "%" SCNd16, &sasiete);
-			fscanf(stream, "%" SCNd16, &derniereReproduction);
-			ElementAnimal *ea = New_ElementAnimal(&g->tab[xCase][yCase], type);
-			ea->SetDernierRepas(ea, dernierRepas);
-			ea->SetSasiete(ea, sasiete);
-			ea->SetDerniereReproduction(ea, derniereReproduction);
-			g->tab[xCase][yCase].liste->Clear(g->tab[xCase][yCase].liste);
-			g->tab[xCase][yCase].liste->Push(g->tab[xCase][yCase].liste, (Element*)ea);
-		}
-		else if (type == TERRE){
-			ElementTerre *t = New_ElementTerre(&g->tab[xCase][yCase]);
-			g->tab[xCase][yCase].liste->Clear(g->tab[xCase][yCase].liste);
-			g->tab[xCase][yCase].liste->Push(g->tab[xCase][yCase].liste, (Element*)t);
-		}
-		else if (type == PONT){
-			ElementPont*t = New_ElementPont(&g->tab[xCase][yCase]);
-			g->tab[xCase][yCase].liste->Clear(g->tab[xCase][yCase].liste);
-			g->tab[xCase][yCase].liste->Push(g->tab[xCase][yCase].liste, (Element*)t);
-		}
-		else if (type == PECHEUR){
-			fscanf(stream, "%" SCNd16, &sac);
-			fscanf(stream, "%" SCNd16, &longueurCanne);
-			fscanf(stream, "%" SCNd16, &tailleFilet);
-			fscanf(stream, "%" SCNd16, &distanceDeplacement);
-			fscanf(stream, "%" SCNd16, &PositionInitialeX);
-			fscanf(stream, "%" SCNd16, &PositionInitialeY);
+    int fdRW[2];
+    if (pipe(fdRW) < 0){
+        perror("Pipe");
+    }
+    FILE* readStream=fdopen(fdRW[1], "w");
+    FILE* writeStream=fdopen(fdRW[1], "r");
+    fprintf(writeStream, "%s", str);
+    fscanf(readStream, "%" SCNd16, &nbrCase);
+    for (k=0; k<nbrCase; ++k){
+        fscanf(readStream, "%" SCNd16, &xCase);
+        fscanf(readStream, "%" SCNd16, &yCase);
+        fscanf(readStream, "%" SCNd16, &nbr);
+        g->tab[xCase][yCase].liste->Clear(g->tab[xCase][yCase].liste);
+        for (i=0; i<nbr ; ++i){
+            //Scan d'un élément
+            fscanf(readStream, "%" SCNd16, &type);
+            if (type >= TYPEMINANIMAL && type <= TYPEMAXANIMAL){
+                fscanf(readStream, "%" SCNd16, &dernierRepas);
+                fscanf(readStream, "%" SCNd16, &sasiete);
+                fscanf(readStream, "%" SCNd16, &derniereReproduction);
+                ElementAnimal *ea = New_ElementAnimal(&g->tab[xCase][yCase], type);
+                ea->SetDernierRepas(ea, dernierRepas);
+                ea->SetSasiete(ea, sasiete);
+                ea->SetDerniereReproduction(ea, derniereReproduction);
+                g->tab[xCase][yCase].liste->Push(g->tab[xCase][yCase].liste, (Element*)ea);
+            }
+            else if (type == TERRE){
+                ElementTerre *t = New_ElementTerre(&g->tab[xCase][yCase]);
+                g->tab[xCase][yCase].liste->Push(g->tab[xCase][yCase].liste, (Element*)t);
+            }
+            else if (type == PONT){
+                ElementPont*t = New_ElementPont(&g->tab[xCase][yCase]);
+                g->tab[xCase][yCase].liste->Push(g->tab[xCase][yCase].liste, (Element*)t);
+            }
+            else if (type == PECHEUR){
+                fscanf(readStream, "%" SCNd16, &sac);
+                fscanf(readStream, "%" SCNd16, &longueurCanne);
+                fscanf(readStream, "%" SCNd16, &tailleFilet);
+                fscanf(readStream, "%" SCNd16, &distanceDeplacement);
+                fscanf(readStream, "%" SCNd16, &PositionInitialeX);
+                fscanf(readStream, "%" SCNd16, &PositionInitialeY);
 
-			ElementPecheur *p = New_ElementPecheur(&g->tab[xCase][yCase]);
-			p->SetSac(p, sac);
-			p->SetLongueurCanne(p, longueurCanne);
-			p->SetTailleFilet(p, tailleFilet);
-			p->SetDistanceDeplacement(p, distanceDeplacement);
-			p->SetPositionInitialeX(p, PositionInitialeX);
-			p->SetPositionInitialeY(p, PositionInitialeY);
-			g->tab[xCase][yCase].liste->Clear(g->tab[xCase][yCase].liste);
-			g->tab[xCase][yCase].liste->Push(g->tab[xCase][yCase].liste, (Element*)p);
-		}
-	}
+                ElementPecheur *p = New_ElementPecheur(&g->tab[xCase][yCase]);
+                p->SetSac(p, sac);
+                p->SetLongueurCanne(p, longueurCanne);
+                p->SetTailleFilet(p, tailleFilet);
+                p->SetDistanceDeplacement(p, distanceDeplacement);
+                p->SetPositionInitialeX(p, PositionInitialeX);
+                p->SetPositionInitialeY(p, PositionInitialeY);
+                g->tab[xCase][yCase].liste->Push(g->tab[xCase][yCase].liste, (Element*)p);
+            }
+        }
+    }
 }
 

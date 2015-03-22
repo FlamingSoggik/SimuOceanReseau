@@ -23,22 +23,23 @@ typedef struct Reseau
 	ListeClient* clients;
 	void (*Free)(struct Reseau *This);
 	void (*Clear)(struct Reseau *This);
+    struct Grille *g;
 } Reseau;
 
 // Constructeur/Destructeur dynamique
-Reseau* New_Reseau();
+Reseau* New_Reseau(struct Grille *g);
 void Reseau_New_Free(struct Reseau*);
 
 //Constructeur/Destructeur statique
 Reseau Reseau_Create();
 void Reseau_Free(struct Reseau*);
 
-void Reseau_Init(struct Reseau*);
+void Reseau_Init(struct Reseau*, struct Grille *g);
 void Reseau_Clear(struct Reseau*This);
 
 void tenterConnection(struct Reseau* This);
 int creatIncommingClients(Reseau *This);
-void creatEcouteInternalMessages(Reseau *This);
+int creatEcouteInternalMessages(Reseau *This);
 int creatEcouteTcp(Reseau *This);
 
 #endif // RESEAU_H

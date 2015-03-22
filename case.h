@@ -12,6 +12,7 @@ typedef struct Case {
 	struct Grille* g;
 	uint16_t posX;
 	uint16_t posY;
+    struct Client* proprietaire;
     struct ListeElem *liste;
 	void(*Free)(struct Case*);
 	void(*Clear)(struct Case*);

@@ -60,6 +60,8 @@ void Grille_Init(Grille *This, uint16_t Taille, unsigned char nbPecheurs){
 	This->detruirePont=Grille_detruirePont;
 	This->tab=malloc(sizeof(Case*)*Taille);
 	This->nbPecheur = nbPecheurs;
+    This->NbrCasesToMe=Taille*Taille;
+    This->serializeMesCases=Grille_serializeMesCases;
 	for (i=0;i<Taille;++i){
 		This->tab[i]=malloc(sizeof(Case)*Taille);
 	}
@@ -140,6 +142,7 @@ void Grille_Init(Grille *This, uint16_t Taille, unsigned char nbPecheurs){
 		}
 		++compteurTypeEspece;
 	}
+    This->r=New_Reseau(This);
 }
 
 void Grille_Clear(struct Grille *This){
@@ -156,6 +159,7 @@ void Grille_Clear(struct Grille *This){
 	}
 	free(This->tab);
 	viderListePredation(This);
+    This->r->Free(This->r);
 }
 
 void Grille_Print(struct Grille *This){
@@ -475,4 +479,45 @@ void Grille_detruirePont(Grille *This, struct Case *c)
 	}
 	Element* p = This->tab[c->posX][c->posY].liste->getPont(This->tab[c->posX][c->posY].liste);
 	This->tab[c->posX][c->posY].liste->deleteElement(This->tab[c->posX][c->posY].liste, p);
+}
+
+
+char* Grille_serializeMesCases(Grille *This)
+{
+    /* Format de la chaine retournée :
+     * <nombre de Cases>\n<Case>\n<Case>
+     */
+    int i, j, k, offset;
+    char* SerializedThis;
+    // tableau à double entrée de chaine de caractère contenant les fifférents éléments
+    char **leschaines = malloc(This->NbrCasesToMe*sizeof(char*));
+    if (!leschaines) return NULL;
+    unsigned int nbrCaract=0;
+    if (pthread_mutex_lock(&This->r->mutexMatricePropriete) < 0){
+        perror("pthread_mutex_lock");
+        exit(1);
+    }
+    for(i=0;i<This->Taille;++i){
+        for(j=0;j<This->Taille;++j){
+            if (This->tab[i][j].proprietaire == NULL){
+                    leschaines[k]=This->tab[i][j].liste->serialize(This->tab[i][j].liste);
+                    nbrCaract+=strlen(leschaines[k]);
+                    ++k;
+            }
+        }
+    }
+    if (pthread_mutex_unlock(&This->r->mutexMatricePropriete) < 0){
+        perror("pthread_mutex_lock");
+        exit(1);
+    }
+
+    SerializedThis=malloc((nbrCaract+(5+1)+1)*sizeof(char));
+    offset = sprintf(SerializedThis, "%d\n", This->NbrCasesToMe);
+
+    for(i=0; i<This->NbrCasesToMe; ++i){
+        offset += sprintf(SerializedThis+offset, "%s", leschaines[i]);
+        free(leschaines[i]);
+    }
+    free(leschaines);
+    return SerializedThis;
 }
