@@ -7,8 +7,7 @@ typedef struct Client{
 		int socketTCP;
 
 		// adresse ip + port udp
-		struct sockaddr_in from;
-		uint16_t portInterneUDP;
+        struct sockaddr_in from;
 
 		void (*Free)(struct Client *This);
 		void (*Clear)(struct Client *This);

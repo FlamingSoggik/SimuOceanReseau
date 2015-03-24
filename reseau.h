@@ -20,6 +20,7 @@ typedef struct Reseau
 	fd_set untouchableSet;
 	fd_set degradableSet;
 	int maxFd;
+    int selfPipe[2];
 	ListeClient* clients;
 	void (*Free)(struct Reseau *This);
 	void (*Clear)(struct Reseau *This);
@@ -41,5 +42,8 @@ void tenterConnection(struct Reseau* This);
 int creatIncommingClients(Reseau *This);
 int creatEcouteInternalMessages(Reseau *This);
 int creatEcouteTcp(Reseau *This);
+
+void unSerialize(char* str, struct Grille* g, Client *cli);
+void askForCarte(Reseau *This);
 
 #endif // RESEAU_H

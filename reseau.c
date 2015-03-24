@@ -40,13 +40,12 @@ void* HandleIncommingPlayer(void *arg){
             exit(1);
         }
         else if (sizeRecieved < 3){
-            printf("Continue car ordre trop court\n");
+            printf("Continue car osrdre trop court\n");
             continue;
         }
         if (strncmp(recvBuffer, "#1#", 3) == 0){
-            printf("Demande de connection recue");
             hp=gethostbyaddr( &from.sin_addr,sizeof(from.sin_addr) , AF_INET);
-            printf(" de la part de %s:%d\n",inet_ntoa(from.sin_addr),htons(from.sin_port));
+            printf("Demande de connection recue de la part de %s:%d\n",inet_ntoa(from.sin_addr),htons(from.sin_port));
 
             sprintf(sendbuffer, "1\n%d\n%d\n", This->portEcouteTcp, This->portEcouteInternalMessages);
 
@@ -68,7 +67,7 @@ void* HandleIncommingPlayer(void *arg){
             dst.sin_port=from.sin_port;
             dst.sin_family=AF_INET;
 
-            sendto(This->sockEcouteIncommingClients, "#1#", 7, 0, (struct sockaddr *) &dst, sizeof(dst));
+            //sendto(This->sockEcouteIncommingClients, "#1#", 3, 0, (struct sockaddr *) &dst, sizeof(dst));
         }
     }
     //Anti warning trick
@@ -85,13 +84,16 @@ void* HandleInternalMessage(void *arg){
     struct sockaddr_in dst;
     struct hostent *hp;
 
+    printf("HandleInternalMessage bien recu\n");
+
     char* toSend;
     int sizeRecieved;
-    char recvBuffer[10];
+    char recvBuffer[250];
     unsigned int fromlen=sizeof(from);
 
     for(;;){
         sizeRecieved=recvfrom(This->sockEcouteInternalMessages, recvBuffer, sizeof(recvBuffer), 0,(struct sockaddr *)&from, &fromlen);
+        printf("Voilaaaaaaaaaaaaaaaaaaaaaaa\n");
         if (sizeRecieved <= 0){
             perror("recvfrom");
             exit(1);
@@ -104,12 +106,17 @@ void* HandleInternalMessage(void *arg){
         dst.sin_addr=from.sin_addr;
         dst.sin_port=from.sin_port;
         dst.sin_family=AF_INET;
-        if (strncmp(recvBuffer, "#3#", 3) == 0){
+        // On recoit une demande de toute notre carte : #3q (q comme question)
+        if (strncmp(recvBuffer, "#3q", 3) == 0){
             printf("Demande de don de carte de la part de %s:%d\n",inet_ntoa(from.sin_addr),htons(from.sin_port));
-
             toSend=This->g->serializeMesCases(This->g);
             sendto(This->sockEcouteIncommingClients, toSend, strlen(toSend)+1, 0, (struct sockaddr *) &dst, sizeof(dst));
             free(toSend);
+        }
+        else if (strncmp(recvBuffer, "#3a", 3) == 0){
+            printf("Réponse à notre demande de carte de la part de %s:%d\n",inet_ntoa(from.sin_addr),htons(from.sin_port));
+            Client *c = This->clients->getFrom(This->clients, from);
+            unSerialize(recvBuffer+3, This->g, c);
         }
         else {
             printf("Message recu inconnu\n");
@@ -123,7 +130,7 @@ void* HandleInternalMessage(void *arg){
             dst.sin_port=from.sin_port;
             dst.sin_family=AF_INET;
 
-            sendto(This->sockEcouteIncommingClients, "#1#", 7, 0, (struct sockaddr *) &dst, sizeof(dst));
+            //sendto(This->sockEcouteIncommingClients, "#1#", 3, 0, (struct sockaddr *) &dst, sizeof(dst));
         }
     }
     //Anti warning trick
@@ -159,7 +166,7 @@ void* HandleTcpPlayer(void *arg){
 			exit(1);
 		}
 		else {
-			for(i=0, done = 0 ; i < This->maxFd+1 && done != retSelect; ++i){
+            for(i=0, done = 0 ; i < This->maxFd+1 && done != retSelect; ++i){
                 if (FD_ISSET(i, &This->degradableSet)){
                     ++done;
                     if (i == This->sockEcouteTcp){
@@ -179,8 +186,13 @@ void* HandleTcpPlayer(void *arg){
 						if (newClientSocket > This->maxFd){
 							This->maxFd=newClientSocket;
                         }
-						printf("Nouveau Client ajoutté au jeu, adresse ip: %s portTCP: %d\n", inet_ntoa(c->from.sin_addr),htons(c->from.sin_port));
-					} else {
+                        printf("Nouveau Client ajoutté au jeu, adresse ip: %s portTCP: %d socket no : %d\n", inet_ntoa(c->from.sin_addr),htons(c->from.sin_port), i);
+                    }
+                    else if (i == This->selfPipe[0]){
+                        char buf[2];
+                        read(This->selfPipe[0], buf, sizeof(buf));
+                    }
+                    else {
                         if ( (retread=read(i, recvBuffer, sizeof(recvBuffer))) <= 0){
 							printf("Un client quitte la partie.\n");
 							This->clients->remove(This->clients, i);
@@ -193,15 +205,13 @@ void* HandleTcpPlayer(void *arg){
 							struct sockaddr_in from;
 							unsigned int onSenTape;
 							//Quel est ton port udpInterne
-							if (strncmp(recvBuffer, "#2#", 3) == 0){
+                            if (strncmp(recvBuffer, "#2#", 3) == 0){
 								if (getpeername(newClientSocket, (struct sockaddr*)&from, &onSenTape) < 0){
                                     perror("getpeername");
 									continue;
 								}
-								Client *c=This->clients->getFrom(This->clients, from);
-                                printf("Avant le recieve : %d\n", c->portInterneUDP);
-								sscanf(recvBuffer+3, "%" SCNd16, &c->portInterneUDP);
-                                printf("Apres le recieve : %d\n", c->portInterneUDP);
+                                Client *c=This->clients->getFrom(This->clients, from);
+                                sscanf(recvBuffer+3, "%" SCNd16, &c->from.sin_port);
                             }
                         }
                     }
@@ -247,17 +257,37 @@ void Reseau_Init(Reseau* This, Grille* g){
 	This->portEcouteIncommingClients=5020;
 	This->portEcouteInternalMessages=5010;
 	This->portEcouteTcp=5000;
+    FD_ZERO(&This->degradableSet);
+    FD_ZERO(&This->untouchableSet);
+    This->g=g;
+    This->maxFd = 0;
+
+    if (pipe(This->selfPipe) < 0 ) {
+        perror("pipe");
+        exit(1);
+    }
+    FD_SET(This->selfPipe[0], &This->untouchableSet);
+    if (This->selfPipe[0] > This->maxFd){
+        This->maxFd=This->selfPipe[0];
+    }
+    int i;
+    for (i=0; i < This->maxFd+1; ++i){
+        if (FD_ISSET(i, &This->untouchableSet)){
+            printf("The master set contain : %d\n", i);
+        }
+    }
 	creatEcouteInternalMessages(This);
 	creatEcouteTcp(This);
 
 	//lancer la demande (Anybody out there ?) avec un timeout de deux secondes
 	// --> etre connecté ou non
-	tenterConnection(This);
+    tenterConnection(This);
 	if (This->clients->taille == 0){
 		printf("Aucune partie en cours\n");
-	}
-	creatIncommingClients(This);
-    This->g=g;
+    } else {
+        askForCarte(This);
+    }
+    creatIncommingClients(This);
 }
 
 void Reseau_Clear(Reseau *This){
@@ -271,6 +301,8 @@ void Reseau_Clear(Reseau *This){
 		perror("pthread_join");
 		return; // EXIT_FAILURE;
 	}
+    close(This->selfPipe[0]);
+    close(This->selfPipe[1]);
 	pthread_mutex_destroy(&This->mutexMatricePropriete);
 	close(This->sockEcouteIncommingClients);
 	close(This->sockEcouteInternalMessages);
@@ -281,21 +313,29 @@ void Reseau_Clear(Reseau *This){
 int creatIncommingClients(Reseau *This)
 {
 	struct sockaddr_in paramSocket;
-
+    int i, on=1;
 	if ( (This->sockEcouteIncommingClients = socket(AF_INET, SOCK_DGRAM, 0) ) <0){
 		perror("Creation sockEcouteIncommingClients");
 		exit(1);
 	}
 
-	paramSocket.sin_family = AF_INET;
-	paramSocket.sin_addr.s_addr= htonl(INADDR_ANY);
-	paramSocket.sin_port=htons(This->portEcouteIncommingClients);
+    if (setsockopt(This->sockEcouteIncommingClients, SOL_SOCKET, SO_REUSEADDR, &on, sizeof(int)) == -1) {
+        perror("setsockopt");
+        exit(1);
+    }
+    for (i=0; i< 10; ++i){
+        paramSocket.sin_family = AF_INET;
+        paramSocket.sin_addr.s_addr= htonl(INADDR_ANY);
+        paramSocket.sin_port=htons(This->portEcouteIncommingClients);
 
-	if (bind (This->sockEcouteIncommingClients, (const struct sockaddr *)&paramSocket, sizeof(paramSocket)) < 0){
-		printf("%d", This->portEcouteIncommingClients);
-		perror("bind ");
-		exit(1);
-	}
+        if (bind (This->sockEcouteIncommingClients, (const struct sockaddr *)&paramSocket, sizeof(paramSocket)) < 0){
+            printf("Port d'écoute Incoming Client %d déjà en cours d'utilisation -->inc\n", This->portEcouteIncommingClients);
+            ++This->portEcouteIncommingClients;
+            continue;
+        } else {
+            break;
+        }
+    }
 
 	if (pthread_create(&This->th_ThreadIncommingPlayer, NULL, HandleIncommingPlayer, This)) {
 		perror("pthread_create");
@@ -307,20 +347,28 @@ int creatIncommingClients(Reseau *This)
 int creatEcouteInternalMessages(Reseau *This)
 {
     struct sockaddr_in paramSocket;
+    int i, on=1;
 
     if ( (This->sockEcouteInternalMessages= socket(AF_INET, SOCK_DGRAM, 0) ) <0){
         perror("Creation sockEcouteInternalClients");
         exit(1);
     }
-
-    paramSocket.sin_family = AF_INET;
-    paramSocket.sin_addr.s_addr= htonl(INADDR_ANY);
-    paramSocket.sin_port=htons(This->portEcouteInternalMessages);
-
-    if (bind (This->sockEcouteInternalMessages, (const struct sockaddr *)&paramSocket, sizeof(paramSocket)) < 0){
-        printf("%d", This->sockEcouteInternalMessages);
-        perror("bind ");
+    if (setsockopt(This->sockEcouteInternalMessages, SOL_SOCKET, SO_REUSEADDR, &on, sizeof(int)) == -1) {
+        perror("setsockopt");
         exit(1);
+    }
+    for (i=0; i< 10; ++i){
+        paramSocket.sin_family = AF_INET;
+        paramSocket.sin_addr.s_addr= htonl(INADDR_ANY);
+        paramSocket.sin_port=htons(This->portEcouteInternalMessages);
+
+        if (bind (This->sockEcouteInternalMessages, (const struct sockaddr *)&paramSocket, sizeof(paramSocket)) < 0){
+            printf("Port d'écoute Internal Message %d déjà en cours d'utilisation -->inc\n", This->portEcouteInternalMessages);
+            ++This->portEcouteInternalMessages;
+            continue;
+        } else {
+            break;
+        }
     }
 
     if (pthread_create(&This->th_ThreadInternalMessages, NULL, HandleInternalMessage, This)) {
@@ -333,12 +381,17 @@ int creatEcouteInternalMessages(Reseau *This)
 int creatEcouteTcp(Reseau *This)
 {
 	struct sockaddr_in paramSocket;
+    int i, on=1;
 	if ( (This->sockEcouteTcp = socket(AF_INET, SOCK_STREAM, 0) ) <0){
 		perror("Creation sockEcouteTCP");
 		exit(1);
 	}
 
-	int i;
+    if (setsockopt(This->sockEcouteTcp, SOL_SOCKET, SO_REUSEADDR, &on, sizeof(int)) == -1) {
+        perror("setsockopt");
+        exit(1);
+    }
+
 	for (i=0; i< 10; ++i){
 		paramSocket.sin_family = AF_INET;
 		paramSocket.sin_addr.s_addr= htonl(INADDR_ANY);
@@ -360,7 +413,6 @@ int creatEcouteTcp(Reseau *This)
 		exit(1);
 	}
 
-	FD_ZERO(&This->untouchableSet);
 	FD_SET(This->sockEcouteTcp, &This->untouchableSet);
 	This->maxFd=This->sockEcouteTcp;
 
@@ -429,13 +481,13 @@ void tenterConnection(Reseau *This)
 		bcopy(&(ifr->ifr_broadaddr), &dst, sizeof(ifr->ifr_broadaddr));
 
 
-		/* Envoie d'un message à quelqu'un */
+        /* Envoie à tout le monde d'une demande de connection */
 		dst.sin_port=htons(5100);
 		dst.sin_family=AF_INET;
 		sendto(socketBroadcast, "#1#", 3, 0, (struct sockaddr *) &dst, sizeof(dst));
 	}
 
-	/* Setting tu timeout de la socket pour les receptions*/
+    /* Setting du timeout de la socket pour les receptions*/
 	struct timeval tv;
 	tv.tv_sec = 3;
 	tv.tv_usec = 0;
@@ -449,13 +501,14 @@ void tenterConnection(Reseau *This)
 		Client *c = New_Client();
 		buf[nc]='\0';
 		int code, porttcp, portudp;
-		sscanf(buf, "%d%d%d", &code, &porttcp, &portudp);
-		printf("Recu : code:%d portTCP:%d, portUDP:%d", code, porttcp, portudp);
+        sscanf(buf, "%d%d%d", &code, &porttcp, &portudp);
 		hp=gethostbyaddr( &from.sin_addr,sizeof(from.sin_addr) , AF_INET);
         hp=hp;
-		printf(" de la part de %s(%d)\n",inet_ntoa(from.sin_addr),htons(from.sin_port));
+        printf("Recu : code:%d portTCP:%d, portUDP:%d de la part de %s(%d)\n", code, porttcp, portudp ,inet_ntoa(from.sin_addr),htons(from.sin_port));
 
-		c->socketTCP = socket(AF_INET, SOCK_STREAM, 0);
+        c->socketTCP = socket(AF_INET, SOCK_STREAM, 0);
+        c->from.sin_addr=from.sin_addr;
+        c->from.sin_port=htons(portudp);
 
 		struct sockaddr_in destTCP;
 		destTCP.sin_family=AF_INET;
@@ -473,12 +526,12 @@ void tenterConnection(Reseau *This)
 			perror("PERROR Write");
         }
 
-		This->clients->Push(This->clients, c);
+        This->clients->Push(This->clients, c);
 		FD_SET(c->socketTCP, &This->untouchableSet);
 		if (c->socketTCP > This->maxFd){
 			This->maxFd=c->socketTCP;
-		}
-
+        }
+        write(This->selfPipe[1], "n", 1);
 		/* Traitement de la donnée sensible :
 		 * pthread_mutex_lock(pthread_mutex_t *mut);
 		 */
@@ -504,16 +557,18 @@ void tenterConnection(Reseau *This)
 	}
 }
 
+
 void askForCarte(Reseau *This){
     int i;
     Client *c;
     for (i=0; i<This->clients->taille; ++i){
         c=This->clients->getNieme(This->clients, i);
-        sendto(This->sockEcouteInternalMessages, "#3#\n", 4, 0, (struct sockaddr*)&c->from, sizeof(c->from));
+        printf("Demande de partie de carte envoyée à : %s:%d\n", inet_ntoa(c->from.sin_addr), htons(c->from.sin_port));
+        sendto(This->sockEcouteInternalMessages, "#3q\n", 4, 0, (struct sockaddr*)&c->from, sizeof(c->from));
     }
 }
 
-void unSerialize(char* str, Grille* g){
+void unSerialize(char* str, Grille* g, Client *cli){
     uint16_t xCase, yCase, nbr, nbrCase, i, k;
 	uint16_t type, dernierRepas, sasiete, derniereReproduction;
 	uint16_t sac, longueurCanne, tailleFilet, distanceDeplacement, PositionInitialeX, PositionInitialeY;
@@ -531,6 +586,7 @@ void unSerialize(char* str, Grille* g){
         fscanf(readStream, "%" SCNd16, &yCase);
         fscanf(readStream, "%" SCNd16, &nbr);
         g->tab[xCase][yCase].liste->Clear(g->tab[xCase][yCase].liste);
+        g->tab[xCase][yCase].proprietaire=cli;
         for (i=0; i<nbr ; ++i){
             //Scan d'un élément
             fscanf(readStream, "%" SCNd16, &type);

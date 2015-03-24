@@ -489,7 +489,7 @@ char* Grille_serializeMesCases(Grille *This)
      */
     int i, j, k, offset;
     char* SerializedThis;
-    // tableau à double entrée de chaine de caractère contenant les fifférents éléments
+    // tableau à double entrée de chaine de caractère contenant les différents éléments
     char **leschaines = malloc(This->NbrCasesToMe*sizeof(char*));
     if (!leschaines) return NULL;
     unsigned int nbrCaract=0;
@@ -507,7 +507,7 @@ char* Grille_serializeMesCases(Grille *This)
         }
     }
     if (pthread_mutex_unlock(&This->r->mutexMatricePropriete) < 0){
-        perror("pthread_mutex_lock");
+        perror("pthread_mutex_unlock");
         exit(1);
     }
 
