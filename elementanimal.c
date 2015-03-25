@@ -25,9 +25,13 @@ ElementAnimal_Constantes C_Baleine;
 
 ElementAnimal* New_ElementAnimal(Case *c, Type t){
 	ElementAnimal* This = malloc(sizeof(ElementAnimal));
-	if (!This) return NULL;
+    if (!This){
+        puts("ERROR1");
+        return NULL;
+    }
 	if (ElementAnimal_Init(c, This, t) < 0){
 		free(This);
+        puts("ERROR2");
 		return NULL;
 	}
 	This->Free = Element_New_Free;
@@ -62,7 +66,7 @@ char lienVersConstantes(ElementAnimal* This, Type t)
 			This->constantes=&C_Baleine;
 			break;
 		default :
-			//printf("Erreur lienVersConstantes %d\n", t);
+            printf("Erreur lienVersConstantes %d\n", t);
 			return ERR_TYPE_NOT_ANIMAL;
 			break;
 	}
@@ -236,6 +240,7 @@ char ElementAnimal_Init(Case *c, ElementAnimal* This, Type t){
 	This->finDuTour=ElementAnimal_finDuTour;
 	This->doitJouerCeTour=ElementAnimal_doitJouerCeTour;
 	char ret = lienVersConstantes(This, t);
+    This->serialize=ElementAnimal_serialize;
 	This->sasiete = This->constantes->tailleDuBide;
 	return ret;
 }
@@ -539,8 +544,9 @@ Bool ElementAnimal_doitJouerCeTour(ElementAnimal *This)
 	return True;
 }
 
-char* ElementAnimal_serialize(ElementAnimal *This)
+char* ElementAnimal_serialize(Element *This)
 {
+    ElementAnimal* me = (ElementAnimal*)This;
 	/* Format de la chaine retournée :
 	 * <Type>\n<Variable>\n<Variable>
 	 */
@@ -548,6 +554,6 @@ char* ElementAnimal_serialize(ElementAnimal *This)
 
 	// 4 : nombre de uint16, 5: nombre de caractère pour un uint16 +1: comptage du retour à la ligne +1 : \0
 	SerializedThis=malloc((4*(5+1)+1)*sizeof(char));
-	sprintf(SerializedThis, "%d\n%d\n%d\n%d\n", This->type, This->dernierRepas, This->sasiete, This->derniereReproduction);
+    sprintf(SerializedThis, "%d\n%d\n%d\n%d\n", me->type, me->dernierRepas, me->sasiete, me->derniereReproduction);
 	return SerializedThis;
 }

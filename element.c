@@ -1,10 +1,15 @@
 #include "element.h"
+#include "elementanimal.h"
+#include "elementpecheur.h"
+#include "elementpont.h"
+#include "elementterre.h"
 #include <stdio.h>
 #include <stdlib.h>
 
 void Element_Init(Case *c, Element *This){
     This->caseParent=c;
 	This->Clear = Element_Clear;
+    This->serialize=Element_serialize;
 	This->type=VOID;
 }
 
@@ -33,11 +38,21 @@ void Element_New_Free(Element* This){
 
 char* Element_serialize(Element *This)
 {
-	This=This;
-	/*char* toFill=malloc()
-	*toFill=malloc((4*(5+1)+1)*sizeof(char));
-	sprintf(tofill, "%d\n%d\n%d\n%d\n", This->type, This->dernierRepas, This->sasiete, This->derniereReproduction);*/
+    if (This->type >= TYPEMINANIMAL && This->type <= TYPEMAXANIMAL){
+        ElementAnimal *ea = (ElementAnimal*)This;
+        return ea->serialize((Element*)ea);
+    }
+    else if (This->type == PECHEUR){
+        ElementPecheur *ep = (ElementPecheur*)This;
+        return ep->serialize((Element*)ep);
+    }
+    else{
+        char* toFill;
+        toFill=malloc(((5+1)+1)*sizeof(char));
+        sprintf(toFill, "%d\n", This->type);
+        return toFill;
+    }
 
 	// switch type pour choisir ce que l'on fait
-	return NULL;
+
 }

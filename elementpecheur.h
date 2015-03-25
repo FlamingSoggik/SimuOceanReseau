@@ -19,7 +19,7 @@ typedef struct ElementPecheur
 		Type type;
 		void (*Free)(struct Element *This);
 		void (*Clear)(struct Element *This);
-		char (*serialize)(struct Element* This);
+        char* (*serialize)(struct Element* This);
 
 
 /*********************************************************************************/
@@ -154,6 +154,9 @@ uint16_t ElementPecheur_getPositionInitialex(struct ElementPecheur *This);
 void ElementPecheur_setPositionInitialex(struct ElementPecheur *This, uint16_t toset);
 uint16_t ElementPecheur_getPositionInitialey(struct ElementPecheur *This);
 void ElementPecheur_setPositionInitialey(struct ElementPecheur *This, uint16_t toset);
+
+
+char* ElementPecheur_serialize(Element *This);
 
 
 #ifdef __cplusplus

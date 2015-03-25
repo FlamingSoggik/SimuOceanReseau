@@ -24,6 +24,7 @@ char ElementPont_Init(Case *c, ElementPont* This){
 	This->caseParent=c;
 	This->type=PONT;
 	This->Clear = Element_Clear;
+    This->serialize=Element_serialize;
 	return 0;
 }
 

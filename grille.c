@@ -497,10 +497,11 @@ char* Grille_serializeMesCases(Grille *This)
         perror("pthread_mutex_lock");
         exit(1);
     }
+    k=0;
     for(i=0;i<This->Taille;++i){
         for(j=0;j<This->Taille;++j){
             if (This->tab[i][j].proprietaire == NULL){
-                    leschaines[k]=This->tab[i][j].liste->serialize(This->tab[i][j].liste);
+                    leschaines[k]=This->tab[i][j].serialize(&This->tab[i][j]);
                     nbrCaract+=strlen(leschaines[k]);
                     ++k;
             }
@@ -511,13 +512,14 @@ char* Grille_serializeMesCases(Grille *This)
         exit(1);
     }
 
-    SerializedThis=malloc((nbrCaract+(5+1)+1)*sizeof(char));
-    offset = sprintf(SerializedThis, "%d\n", This->NbrCasesToMe);
+    SerializedThis=malloc((nbrCaract+(5+1)+1+1+3)*sizeof(char));
+    offset = sprintf(SerializedThis, "#3a%d\n", This->NbrCasesToMe);
 
     for(i=0; i<This->NbrCasesToMe; ++i){
         offset += sprintf(SerializedThis+offset, "%s", leschaines[i]);
         free(leschaines[i]);
     }
+    offset += sprintf(SerializedThis+offset, "#");
     free(leschaines);
     return SerializedThis;
 }

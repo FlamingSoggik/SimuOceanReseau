@@ -84,16 +84,13 @@ void* HandleInternalMessage(void *arg){
     struct sockaddr_in dst;
     struct hostent *hp;
 
-    printf("HandleInternalMessage bien recu\n");
-
     char* toSend;
     int sizeRecieved;
-    char recvBuffer[250];
+    char recvBuffer[65535];
     unsigned int fromlen=sizeof(from);
 
     for(;;){
         sizeRecieved=recvfrom(This->sockEcouteInternalMessages, recvBuffer, sizeof(recvBuffer), 0,(struct sockaddr *)&from, &fromlen);
-        printf("Voilaaaaaaaaaaaaaaaaaaaaaaa\n");
         if (sizeRecieved <= 0){
             perror("recvfrom");
             exit(1);
@@ -103,6 +100,8 @@ void* HandleInternalMessage(void *arg){
             continue;
         }
         hp=gethostbyaddr( &from.sin_addr,sizeof(from.sin_addr) , AF_INET);
+        //Anti warning trick
+        hp=hp;
         dst.sin_addr=from.sin_addr;
         dst.sin_port=from.sin_port;
         dst.sin_family=AF_INET;
@@ -110,6 +109,9 @@ void* HandleInternalMessage(void *arg){
         if (strncmp(recvBuffer, "#3q", 3) == 0){
             printf("Demande de don de carte de la part de %s:%d\n",inet_ntoa(from.sin_addr),htons(from.sin_port));
             toSend=This->g->serializeMesCases(This->g);
+//            FILE* fe=fopen("fic.txt", "w");
+//            fprintf(fe, "%s", toSend);
+//            fclose(fe);
             sendto(This->sockEcouteIncommingClients, toSend, strlen(toSend)+1, 0, (struct sockaddr *) &dst, sizeof(dst));
             free(toSend);
         }
@@ -117,6 +119,7 @@ void* HandleInternalMessage(void *arg){
             printf("Réponse à notre demande de carte de la part de %s:%d\n",inet_ntoa(from.sin_addr),htons(from.sin_port));
             Client *c = This->clients->getFrom(This->clients, from);
             unSerialize(recvBuffer+3, This->g, c);
+            printf("FIN UNSERIALIZED\n");
         }
         else {
             printf("Message recu inconnu\n");
@@ -133,8 +136,6 @@ void* HandleInternalMessage(void *arg){
             //sendto(This->sockEcouteIncommingClients, "#1#", 3, 0, (struct sockaddr *) &dst, sizeof(dst));
         }
     }
-    //Anti warning trick
-    hp=hp;
     pthread_exit(NULL);
 }
 
@@ -253,10 +254,10 @@ void Reseau_Free(Reseau* This)
 void Reseau_Init(Reseau* This, Grille* g){
 	This->Clear=Reseau_Clear;
 	This->clients=New_ListeClient();
-	pthread_mutex_init(&This->mutexMatricePropriete, NULL);
-	This->portEcouteIncommingClients=5020;
-	This->portEcouteInternalMessages=5010;
-	This->portEcouteTcp=5000;
+    pthread_mutex_init(&This->mutexMatricePropriete, NULL);
+    This->portEcouteInternalMessages=5000;
+    This->portEcouteTcp=5100;
+    This->portEcouteIncommingClients=5200;
     FD_ZERO(&This->degradableSet);
     FD_ZERO(&This->untouchableSet);
     This->g=g;
@@ -282,12 +283,11 @@ void Reseau_Init(Reseau* This, Grille* g){
 	//lancer la demande (Anybody out there ?) avec un timeout de deux secondes
 	// --> etre connecté ou non
     tenterConnection(This);
-	if (This->clients->taille == 0){
-		printf("Aucune partie en cours\n");
-    } else {
+    if (This->clients->taille != 0){
         askForCarte(This);
     }
     creatIncommingClients(This);
+    printf("Fin init\n");
 }
 
 void Reseau_Clear(Reseau *This){
@@ -313,28 +313,23 @@ void Reseau_Clear(Reseau *This){
 int creatIncommingClients(Reseau *This)
 {
 	struct sockaddr_in paramSocket;
-    int i, on=1;
+    int on=1;
 	if ( (This->sockEcouteIncommingClients = socket(AF_INET, SOCK_DGRAM, 0) ) <0){
 		perror("Creation sockEcouteIncommingClients");
 		exit(1);
 	}
 
-    if (setsockopt(This->sockEcouteIncommingClients, SOL_SOCKET, SO_REUSEADDR, &on, sizeof(int)) == -1) {
-        perror("setsockopt");
-        exit(1);
-    }
-    for (i=0; i< 10; ++i){
-        paramSocket.sin_family = AF_INET;
-        paramSocket.sin_addr.s_addr= htonl(INADDR_ANY);
-        paramSocket.sin_port=htons(This->portEcouteIncommingClients);
+//    if (setsockopt(This->sockEcouteIncommingClients, SOL_SOCKET, SO_REUSEADDR, &on, sizeof(int)) == -1) {
+//        perror("setsockopt");
+//        exit(1);
+//    }
+    paramSocket.sin_family = AF_INET;
+    paramSocket.sin_addr.s_addr= htonl(INADDR_ANY);
+    paramSocket.sin_port=htons(This->portEcouteIncommingClients);
 
-        if (bind (This->sockEcouteIncommingClients, (const struct sockaddr *)&paramSocket, sizeof(paramSocket)) < 0){
-            printf("Port d'écoute Incoming Client %d déjà en cours d'utilisation -->inc\n", This->portEcouteIncommingClients);
-            ++This->portEcouteIncommingClients;
-            continue;
-        } else {
-            break;
-        }
+    if (bind (This->sockEcouteIncommingClients, (const struct sockaddr *)&paramSocket, sizeof(paramSocket)) < 0){
+        printf("Port d'écoute Incoming Client %d déjà en cours d'utilisation -->inc\n", This->portEcouteIncommingClients);
+        exit(1);
     }
 
 	if (pthread_create(&This->th_ThreadIncommingPlayer, NULL, HandleIncommingPlayer, This)) {
@@ -353,10 +348,10 @@ int creatEcouteInternalMessages(Reseau *This)
         perror("Creation sockEcouteInternalClients");
         exit(1);
     }
-    if (setsockopt(This->sockEcouteInternalMessages, SOL_SOCKET, SO_REUSEADDR, &on, sizeof(int)) == -1) {
-        perror("setsockopt");
-        exit(1);
-    }
+//    if (setsockopt(This->sockEcouteInternalMessages, SOL_SOCKET, SO_REUSEADDR, &on, sizeof(int)) == -1) {
+//        perror("setsockopt");
+//        exit(1);
+//    }
     for (i=0; i< 10; ++i){
         paramSocket.sin_family = AF_INET;
         paramSocket.sin_addr.s_addr= htonl(INADDR_ANY);
@@ -371,6 +366,10 @@ int creatEcouteInternalMessages(Reseau *This)
         }
     }
 
+    This->portEcouteTcp=This->portEcouteInternalMessages+100;
+    This->portEcouteIncommingClients=This->portEcouteInternalMessages+200;
+    printf("InternalUDP: %d \t TCP: %d \t ExternalUDP: %d\n", This->portEcouteInternalMessages, This->portEcouteTcp, This->portEcouteIncommingClients);
+
     if (pthread_create(&This->th_ThreadInternalMessages, NULL, HandleInternalMessage, This)) {
         perror("pthread_create");
         return EXIT_FAILURE;
@@ -378,35 +377,29 @@ int creatEcouteInternalMessages(Reseau *This)
     return EXIT_SUCCESS;
 }
 
+
 int creatEcouteTcp(Reseau *This)
 {
 	struct sockaddr_in paramSocket;
-    int i, on=1;
+    int on=1;
 	if ( (This->sockEcouteTcp = socket(AF_INET, SOCK_STREAM, 0) ) <0){
 		perror("Creation sockEcouteTCP");
 		exit(1);
 	}
 
-    if (setsockopt(This->sockEcouteTcp, SOL_SOCKET, SO_REUSEADDR, &on, sizeof(int)) == -1) {
-        perror("setsockopt");
+//    if (setsockopt(This->sockEcouteTcp, SOL_SOCKET, SO_REUSEADDR, &on, sizeof(int)) == -1) {
+//        perror("setsockopt");
+//        exit(1);
+//    }
+
+    paramSocket.sin_family = AF_INET;
+    paramSocket.sin_addr.s_addr= htonl(INADDR_ANY);
+    paramSocket.sin_port=htons(This->portEcouteTcp);
+
+    if (bind (This->sockEcouteTcp, (const struct sockaddr *)&paramSocket, sizeof(paramSocket))<0){
+        printf("Port d'écoute TCP %d déjà en cours d'utilisation -->inc\n", This->portEcouteTcp);
         exit(1);
     }
-
-	for (i=0; i< 10; ++i){
-		paramSocket.sin_family = AF_INET;
-		paramSocket.sin_addr.s_addr= htonl(INADDR_ANY);
-		paramSocket.sin_port=htons(This->portEcouteTcp);
-
-		if (bind (This->sockEcouteTcp, (const struct sockaddr *)&paramSocket, sizeof(paramSocket))<0){
-			printf("Port d'écoute TCP %d déjà en cours d'utilisation -->inc\n", This->portEcouteTcp);
-			++This->portEcouteTcp;
-			continue;
-		} else {
-			break;
-		}
-	}
-	This->portEcouteIncommingClients=This->portEcouteTcp+100;
-	This->portEcouteInternalMessages=This->portEcouteTcp+200;
 
 	if (listen(This->sockEcouteTcp, 10) < 0){
 		perror("Listen sockEcouteTCP");
@@ -482,7 +475,7 @@ void tenterConnection(Reseau *This)
 
 
         /* Envoie à tout le monde d'une demande de connection */
-		dst.sin_port=htons(5100);
+        dst.sin_port=htons(5200);
 		dst.sin_family=AF_INET;
 		sendto(socketBroadcast, "#1#", 3, 0, (struct sockaddr *) &dst, sizeof(dst));
 	}
@@ -498,6 +491,7 @@ void tenterConnection(Reseau *This)
 	fromlen=sizeof(from);
 	while ((nc=recvfrom(socketBroadcast, buf, sizeof(buf), 0, (struct sockaddr *)&from, &fromlen)) >= 0){
 		/* Connection TCP à chaque client */
+        printf("Nouveau serveur à qui se connecter\n");
 		Client *c = New_Client();
 		buf[nc]='\0';
 		int code, porttcp, portudp;
@@ -557,43 +551,65 @@ void tenterConnection(Reseau *This)
 	}
 }
 
-
 void askForCarte(Reseau *This){
     int i;
     Client *c;
     for (i=0; i<This->clients->taille; ++i){
         c=This->clients->getNieme(This->clients, i);
         printf("Demande de partie de carte envoyée à : %s:%d\n", inet_ntoa(c->from.sin_addr), htons(c->from.sin_port));
-        sendto(This->sockEcouteInternalMessages, "#3q\n", 4, 0, (struct sockaddr*)&c->from, sizeof(c->from));
+        if (sendto(This->sockEcouteInternalMessages, "#3q\n", 4, 0, (struct sockaddr*)&c->from, sizeof(c->from)) == -1){
+            perror("Send to __LINE__");
+        }
     }
 }
 
 void unSerialize(char* str, Grille* g, Client *cli){
-    uint16_t xCase, yCase, nbr, nbrCase, i, k;
+    uint16_t xCase, yCase, nbrElem, nbrCase, i, k;
 	uint16_t type, dernierRepas, sasiete, derniereReproduction;
 	uint16_t sac, longueurCanne, tailleFilet, distanceDeplacement, PositionInitialeX, PositionInitialeY;
 	//On créé un strean (via un fichier) ---> probablement assez sale
+    /* Strem via pipe : ne fonctionne pas
     int fdRW[2];
     if (pipe(fdRW) < 0){
         perror("Pipe");
     }
-    FILE* readStream=fdopen(fdRW[1], "w");
-    FILE* writeStream=fdopen(fdRW[1], "r");
+    FILE* readStream=fdopen(fdRW[0], "r");
+    FILE* writeStream=fdopen(fdRW[1], "w");
+    //FILE* readStream=fopen("fic.txt", "r");
     fprintf(writeStream, "%s", str);
+    //fprintf(debugFic, "%s", str);
+    //fclose(debugFic);
+    */
+    FILE* readStream=fopen("SimuOceanStream.txt", "w+");
+    if (readStream == NULL){
+        perror("fopen");
+        exit(-1);
+    }
+    //FILE* readStream=fopen("fic.txt", "r");
+    fprintf(readStream, "%s", str);
+    rewind(readStream);
+    //fprintf(debugFic, "%s", str);
+    //fclose(debugFic);
     fscanf(readStream, "%" SCNd16, &nbrCase);
+    printf("Nombre de cases : %d\n", nbrCase);
     for (k=0; k<nbrCase; ++k){
         fscanf(readStream, "%" SCNd16, &xCase);
         fscanf(readStream, "%" SCNd16, &yCase);
-        fscanf(readStream, "%" SCNd16, &nbr);
+        fscanf(readStream, "%" SCNd16, &nbrElem);
         g->tab[xCase][yCase].liste->Clear(g->tab[xCase][yCase].liste);
         g->tab[xCase][yCase].proprietaire=cli;
-        for (i=0; i<nbr ; ++i){
+        printf("Case[%d][%d] : ", xCase, yCase);
+        if (nbrElem == 0){
+            printf("\n");
+        }
+        for (i=0; i<nbrElem ; ++i){
             //Scan d'un élément
             fscanf(readStream, "%" SCNd16, &type);
             if (type >= TYPEMINANIMAL && type <= TYPEMAXANIMAL){
                 fscanf(readStream, "%" SCNd16, &dernierRepas);
                 fscanf(readStream, "%" SCNd16, &sasiete);
                 fscanf(readStream, "%" SCNd16, &derniereReproduction);
+                printf("%d\t%d\t%d\t%d\n", type, dernierRepas, sasiete, derniereReproduction);
                 ElementAnimal *ea = New_ElementAnimal(&g->tab[xCase][yCase], type);
                 ea->SetDernierRepas(ea, dernierRepas);
                 ea->SetSasiete(ea, sasiete);
@@ -601,10 +617,12 @@ void unSerialize(char* str, Grille* g, Client *cli){
                 g->tab[xCase][yCase].liste->Push(g->tab[xCase][yCase].liste, (Element*)ea);
             }
             else if (type == TERRE){
+                printf("%d\n", type);
                 ElementTerre *t = New_ElementTerre(&g->tab[xCase][yCase]);
                 g->tab[xCase][yCase].liste->Push(g->tab[xCase][yCase].liste, (Element*)t);
             }
             else if (type == PONT){
+                printf("%d\n", type);
                 ElementPont*t = New_ElementPont(&g->tab[xCase][yCase]);
                 g->tab[xCase][yCase].liste->Push(g->tab[xCase][yCase].liste, (Element*)t);
             }
@@ -616,6 +634,7 @@ void unSerialize(char* str, Grille* g, Client *cli){
                 fscanf(readStream, "%" SCNd16, &PositionInitialeX);
                 fscanf(readStream, "%" SCNd16, &PositionInitialeY);
 
+                printf("%d\t%d\t%d\t%d\t%d\t%d\t%d\n", type, sac, longueurCanne, tailleFilet, distanceDeplacement, PositionInitialeX, PositionInitialeY);
                 ElementPecheur *p = New_ElementPecheur(&g->tab[xCase][yCase]);
                 p->SetSac(p, sac);
                 p->SetLongueurCanne(p, longueurCanne);

@@ -77,6 +77,7 @@ char ElementPecheur_Init(Case *c, ElementPecheur* This){
 
 	This->GetPositionInitialeY=ElementPecheur_getPositionInitialey;
 	This->SetPositionInitialeY=ElementPecheur_setPositionInitialey;
+    This->serialize=ElementPecheur_serialize;
 
 	return 0;
 }
@@ -467,8 +468,9 @@ void ElementPecheur_reinitSac(ElementPecheur *This)
 	This->sac=COUT_POSE_PONT*5;
 }
 
-char* ElementPecheur_serialize(ElementPecheur *This)
+char* ElementPecheur_serialize(Element *This)
 {
+    ElementPecheur* me = (ElementPecheur*) This;
 	/* Format de la chaine retournée :
 	 * <Type>\n<Variable>\n<Variable>
 	 */
@@ -476,7 +478,7 @@ char* ElementPecheur_serialize(ElementPecheur *This)
 
 	// 4 : nombre de uint16, 5: nombre de caractère pour un uint16 +1: comptage du retour à la ligne +1 : \0
 	SerializedThis=malloc((6*(5+1)+1)*sizeof(char));
-	sprintf(SerializedThis, "%d\n%d\n%d\n%d\n%d\n%d\n%d\n", This->type, This->sac, This->longueurCanne, This->tailleFilet, This->distanceDeplacement, This->PositionInitialeX, This->PositionInitialeY);
+    sprintf(SerializedThis, "%d\n%d\n%d\n%d\n%d\n%d\n%d\n", me->type, me->sac, me->longueurCanne, me->tailleFilet, me->distanceDeplacement, me->PositionInitialeX, me->PositionInitialeY);
 	return SerializedThis;
 }
 

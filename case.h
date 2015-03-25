@@ -17,6 +17,7 @@ typedef struct Case {
 	void(*Free)(struct Case*);
 	void(*Clear)(struct Case*);
 	void (*Print)(struct Case *This);
+    char* (*serialize)(struct Case *This);
 }Case;
 
 ///
@@ -45,5 +46,7 @@ void Case_Clear(Case *This);
 /// \param This Pointeur sur la Case à afficher
 ///
 void Case_Print(Case *This);
+
+char* Case_serialize(Case *This);
 
 #endif // CASE_H

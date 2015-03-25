@@ -170,6 +170,7 @@ Bool ElementAnimal_peutManger(ElementAnimal* This, Type t);
 void ElementAnimal_aFaitSonTour(ElementAnimal* This);
 void ElementAnimal_finDuTour(ElementAnimal *This);
 Bool ElementAnimal_doitJouerCeTour(ElementAnimal *This);
+char* ElementAnimal_serialize(Element *This);
 
 ///
 /// \brief defineConstant definis les constantes des différents animaux
@@ -187,6 +188,7 @@ void remplirListePredation(Grille *This);
 /// \param This
 ///
 void viderListePredation(Grille *This);
+
 
 #ifdef __cplusplus
 }

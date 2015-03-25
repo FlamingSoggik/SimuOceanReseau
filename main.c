@@ -34,7 +34,10 @@ int main(int argc, char **argv)
         case 'a' :
             g = New_Grille(tailleGrille, nbpecheurs);
             //g=SDL_Print(g);
-            sleep(50);
+            sleep(60);
+
+            system("clear");
+            g->Print(g);
             g->Free(g);
 			break;
 		case 's':
