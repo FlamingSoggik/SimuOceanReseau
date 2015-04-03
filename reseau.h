@@ -3,14 +3,19 @@
 
 #include <pthread.h>
 #include <sys/select.h>
+#include "client.h"
 #include "listeclient.h"
+
+struct Client;
 
 typedef struct Reseau
 {
 	pthread_t th_ThreadIncommingPlayer;
-	pthread_t th_ThreadInternalMessages;
-	pthread_t th_ThreadTcp;
+    pthread_t th_ThreadInternalMessages;
+    pthread_t th_ThreadTcp;
+    pthread_t th_AnswerTimeout4;
 	pthread_mutex_t mutexMatricePropriete;
+    pthread_cond_t condEverythingRecieved;
 	int sockEcouteIncommingClients;
 	int sockEcouteInternalMessages;
 	int sockEcouteTcp;
@@ -21,7 +26,8 @@ typedef struct Reseau
 	fd_set degradableSet;
 	int maxFd;
     int selfPipe[2];
-	ListeClient* clients;
+    char nbrReponseAttendue[10];
+    struct ListeClient* clients;
 	void (*Free)(struct Reseau *This);
 	void (*Clear)(struct Reseau *This);
     struct Grille *g;
@@ -43,7 +49,7 @@ int creatIncommingClients(Reseau *This);
 int creatEcouteInternalMessages(Reseau *This);
 int creatEcouteTcp(Reseau *This);
 
-void unSerialize(char* str, struct Grille* g, Client *cli);
+void unSerialize(char* str, struct Grille* g, struct Client *cli);
 void askForCarte(Reseau *This);
 
 #endif // RESEAU_H

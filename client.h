@@ -2,13 +2,13 @@
 #define CLIENT_H
 
 #include <netinet/in.h>
+#include "listecase.h"
 
 typedef struct Client{
 		int socketTCP;
-
 		// adresse ip + port udp
         struct sockaddr_in from;
-
+        struct ListeCase* casesTo;
 		void (*Free)(struct Client *This);
 		void (*Clear)(struct Client *This);
 }Client;

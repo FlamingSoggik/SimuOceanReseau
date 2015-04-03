@@ -493,6 +493,8 @@ char* Grille_serializeMesCases(Grille *This)
     char **leschaines = malloc(This->NbrCasesToMe*sizeof(char*));
     if (!leschaines) return NULL;
     unsigned int nbrCaract=0;
+
+    pthread_setcancelstate(PTHREAD_CANCEL_DISABLE, NULL);
     if (pthread_mutex_lock(&This->r->mutexMatricePropriete) < 0){
         perror("pthread_mutex_lock");
         exit(1);
@@ -511,6 +513,7 @@ char* Grille_serializeMesCases(Grille *This)
         perror("pthread_mutex_unlock");
         exit(1);
     }
+    pthread_setcancelstate(PTHREAD_CANCEL_ENABLE, NULL);
 
     SerializedThis=malloc((nbrCaract+(5+1)+1+1+3)*sizeof(char));
     offset = sprintf(SerializedThis, "#3a%d\n", This->NbrCasesToMe);

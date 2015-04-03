@@ -20,6 +20,16 @@
 #include "elementterre.h"
 #include "elementpont.h"
 
+void* TimerFunction(void* arg){
+    pthread_setcancelstate(PTHREAD_CANCEL_ENABLE, NULL);
+    pthread_setcanceltype(PTHREAD_CANCEL_ASYNCHRONOUS, NULL);
+    Reseau* This = (Reseau*)arg;
+    sleep(1);
+    This->nbrReponseAttendue[4]=0;
+    pthread_cond_signal(&This->condEverythingRecieved);
+    return EXIT_SUCCESS;
+}
+
 void* HandleIncommingPlayer(void *arg){
     pthread_setcancelstate(PTHREAD_CANCEL_ENABLE, NULL);
     pthread_setcanceltype(PTHREAD_CANCEL_ASYNCHRONOUS, NULL);
@@ -109,9 +119,6 @@ void* HandleInternalMessage(void *arg){
         if (strncmp(recvBuffer, "#3q", 3) == 0){
             printf("Demande de don de carte de la part de %s:%d\n",inet_ntoa(from.sin_addr),htons(from.sin_port));
             toSend=This->g->serializeMesCases(This->g);
-//            FILE* fe=fopen("fic.txt", "w");
-//            fprintf(fe, "%s", toSend);
-//            fclose(fe);
             sendto(This->sockEcouteIncommingClients, toSend, strlen(toSend)+1, 0, (struct sockaddr *) &dst, sizeof(dst));
             free(toSend);
         }
@@ -120,6 +127,16 @@ void* HandleInternalMessage(void *arg){
             Client *c = This->clients->getFrom(This->clients, from);
             unSerialize(recvBuffer+3, This->g, c);
             printf("FIN UNSERIALIZED\n");
+        }
+        else if (strncmp(recvBuffer, "#4q", 3) == 0){
+           //Donner la propriétée
+        }
+        else if (strncmp(recvBuffer, "#4a", 3) == 0){
+            //mettre a jour la matrice de propriété
+            if (This->nbrReponseAttendue[4]-- == 0){
+                pthread_cancel(This->th_AnswerTimeout4);
+                pthread_cond_signal(&This->condEverythingRecieved);
+            }
         }
         else {
             printf("Message recu inconnu\n");
@@ -255,9 +272,15 @@ void Reseau_Init(Reseau* This, Grille* g){
 	This->Clear=Reseau_Clear;
 	This->clients=New_ListeClient();
     pthread_mutex_init(&This->mutexMatricePropriete, NULL);
+    pthread_cond_init(&This->condEverythingRecieved, NULL);
     This->portEcouteInternalMessages=5000;
     This->portEcouteTcp=5100;
     This->portEcouteIncommingClients=5200;
+
+    int i;
+    for (i=0; i<10; ++i){
+        This->nbrReponseAttendue[0]=0;
+    }
     FD_ZERO(&This->degradableSet);
     FD_ZERO(&This->untouchableSet);
     This->g=g;
@@ -271,7 +294,6 @@ void Reseau_Init(Reseau* This, Grille* g){
     if (This->selfPipe[0] > This->maxFd){
         This->maxFd=This->selfPipe[0];
     }
-    int i;
     for (i=0; i < This->maxFd+1; ++i){
         if (FD_ISSET(i, &This->untouchableSet)){
             printf("The master set contain : %d\n", i);
@@ -291,19 +313,29 @@ void Reseau_Init(Reseau* This, Grille* g){
 }
 
 void Reseau_Clear(Reseau *This){
-	pthread_cancel(This->th_ThreadIncommingPlayer);
-	if (pthread_join(This->th_ThreadIncommingPlayer, NULL)) {
-		perror("pthread_join");
-		return; // EXIT_FAILURE;
-	}
+    pthread_cancel(This->th_ThreadIncommingPlayer);
+    if (pthread_join(This->th_ThreadIncommingPlayer, NULL)) {
+        perror("pthread_join");
+        return; // EXIT_FAILURE;
+    }
 	pthread_cancel(This->th_ThreadTcp);
-	if (pthread_join(This->th_ThreadTcp, NULL)) {
-		perror("pthread_join");
-		return; // EXIT_FAILURE;
-	}
+    if (pthread_join(This->th_ThreadTcp, NULL)) {
+        perror("pthread_join");
+        return; // EXIT_FAILURE;
+    }
+    pthread_cancel(This->th_ThreadInternalMessages);
+    if (pthread_join(This->th_ThreadInternalMessages, NULL)) {
+        perror("pthread_join");
+        return; // EXIT_FAILURE;
+    }
+    if (pthread_join(This->th_AnswerTimeout4, NULL)) {
+        perror("pthread_join");
+        return; // EXIT_FAILURE;
+    }
     close(This->selfPipe[0]);
     close(This->selfPipe[1]);
 	pthread_mutex_destroy(&This->mutexMatricePropriete);
+    pthread_cond_destroy(&This->condEverythingRecieved);
 	close(This->sockEcouteIncommingClients);
 	close(This->sockEcouteInternalMessages);
 	close(This->sockEcouteTcp);
@@ -313,7 +345,7 @@ void Reseau_Clear(Reseau *This){
 int creatIncommingClients(Reseau *This)
 {
 	struct sockaddr_in paramSocket;
-    int on=1;
+//    int on=1;
 	if ( (This->sockEcouteIncommingClients = socket(AF_INET, SOCK_DGRAM, 0) ) <0){
 		perror("Creation sockEcouteIncommingClients");
 		exit(1);
@@ -342,7 +374,7 @@ int creatIncommingClients(Reseau *This)
 int creatEcouteInternalMessages(Reseau *This)
 {
     struct sockaddr_in paramSocket;
-    int i, on=1;
+    int i;
 
     if ( (This->sockEcouteInternalMessages= socket(AF_INET, SOCK_DGRAM, 0) ) <0){
         perror("Creation sockEcouteInternalClients");
@@ -377,11 +409,10 @@ int creatEcouteInternalMessages(Reseau *This)
     return EXIT_SUCCESS;
 }
 
-
 int creatEcouteTcp(Reseau *This)
 {
 	struct sockaddr_in paramSocket;
-    int on=1;
+//    int on=1;
 	if ( (This->sockEcouteTcp = socket(AF_INET, SOCK_STREAM, 0) ) <0){
 		perror("Creation sockEcouteTCP");
 		exit(1);
@@ -529,6 +560,8 @@ void tenterConnection(Reseau *This)
 		/* Traitement de la donnée sensible :
 		 * pthread_mutex_lock(pthread_mutex_t *mut);
 		 */
+
+//        pthread_setcancelstate(PTHREAD_CANCEL_DISABLE, NULL);
 //		if (pthread_mutex_lock(&This->mutexMatricePropriete) < 0){
 //			perror("pthread_mutex_lock");
 //			exit(1);
@@ -540,6 +573,7 @@ void tenterConnection(Reseau *This)
 //			perror("pthread_mutex_lock");
 //			exit(1);
 //		}
+//        pthread_setcancelstate(PTHREAD_CANCEL_ENABLE, NULL);
 
 	}
 	if (errno == EAGAIN){
@@ -557,10 +591,53 @@ void askForCarte(Reseau *This){
     for (i=0; i<This->clients->taille; ++i){
         c=This->clients->getNieme(This->clients, i);
         printf("Demande de partie de carte envoyée à : %s:%d\n", inet_ntoa(c->from.sin_addr), htons(c->from.sin_port));
-        if (sendto(This->sockEcouteInternalMessages, "#3q\n", 4, 0, (struct sockaddr*)&c->from, sizeof(c->from)) == -1){
+        if (sendto(This->sockEcouteInternalMessages, "#3q", 3, 0, (struct sockaddr*)&c->from, sizeof(c->from)) == -1){
             perror("Send to __LINE__");
         }
     }
+}
+
+void askForProperty(Reseau *This, ListeCase* lcas){
+    int i, j, offset;
+    Case *cas;
+    Client *cli;
+    ListeClient* lcli = New_ListeClient();
+    char *propDemandeSur;
+    for (i=0; i<lcas->taille; ++i){
+        cas = lcas->getNieme(lcas, i);
+        if (cas->proprietaire == NULL)
+            continue;
+        if ( (cli = lcli->getFrom(lcli, cas->proprietaire->from)) == NULL){
+            lcli->Push(lcli, cas->proprietaire);
+            cli=cas->proprietaire;
+        }
+        cli->casesTo->Push(cli->casesTo, cas);
+        This->nbrReponseAttendue[4]++;
+    }
+    for(i=0 ; i< lcli->taille; ++i){
+        cli=lcli->getNieme(lcli, i);
+        // (5+1) = 1 int + 1\n * 2 car deux coordonnées
+        propDemandeSur=malloc(((5+1)*2*(cli->casesTo->taille*2+1)+3+1)*sizeof(char));
+        offset = sprintf(propDemandeSur, "#4q%d\n", cli->casesTo->taille);
+
+        for(j=0; i<cli->casesTo->taille; ++j){
+            cas=cli->casesTo->getNieme(cli->casesTo, j);
+            offset += sprintf(propDemandeSur+offset, "%d\n%d\n", cas->posX, cas->posY);
+        }
+        offset += sprintf(propDemandeSur+offset, "#");
+
+        printf("Demande de propriété de case envoyée à : %s:%d\n", inet_ntoa(cas->proprietaire->from.sin_addr), htons(cas->proprietaire->from.sin_port));
+        if (sendto(This->sockEcouteInternalMessages, propDemandeSur, strlen(propDemandeSur), 0, (struct sockaddr*)&cas->proprietaire->from, sizeof(cas->proprietaire->from)) == -1){
+            perror("Send to __LINE__");
+        }
+        free(propDemandeSur);
+        cli->casesTo->Free(cli->casesTo);
+    }
+    if (pthread_create(&This->th_AnswerTimeout4, NULL, TimerFunction, This)){
+        perror("pthread_create");
+        return;
+    }
+    lcli->Free(lcli);
 }
 
 void unSerialize(char* str, Grille* g, Client *cli){

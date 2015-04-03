@@ -4,6 +4,7 @@
 #include <unistd.h>
 
 void Client_Init(Client *This){
+    This->casesTo=NULL;
 	This->Clear = Client_Clear;
 }
 

@@ -34,7 +34,7 @@ struct Client* ListeClient_getNieme(ListeClient* This, uint16_t number);
 struct Client* ListeClient_Pop(ListeClient* This);
 ListeClient* New_ListeClient();
 void ListeClient_Init(ListeClient* This);
-Client* ListeClient_getFrom(ListeClient *This, struct sockaddr_in from);
+struct Client* ListeClient_getFrom(ListeClient *This, struct sockaddr_in from);
 Bool ListeClient_remove(ListeClient *This, int sockToFind);
 
 #endif // LISTECLIENT_H
