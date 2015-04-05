@@ -9,6 +9,7 @@ void ListeCase_Init(ListeCase* This){
 	This->getNieme=ListeCase_getNieme;
 	This->Push=ListeCase_Push;
 	This->Pop=ListeCase_Pop;
+	This->Vider=ListeCase_Vider;
 }
 
 ListeCase* New_ListeCase(){
@@ -72,4 +73,14 @@ Case *ListeCase_getNieme(ListeCase *This, uint16_t number)
 		--number;
 	}
 	return tmp->c;
+}
+
+void ListeCase_Vider(ListeCase *This){
+	MaillonListeCase *tmp;
+	while(This->Top != NULL){
+		tmp=This->Top;
+		This->Top=tmp->next;
+		free(tmp);
+	}
+	This->taille = 0;
 }

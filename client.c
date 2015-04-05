@@ -4,7 +4,7 @@
 #include <unistd.h>
 
 void Client_Init(Client *This){
-    This->casesTo=NULL;
+	This->casesTo=New_ListeCase();
 	This->Clear = Client_Clear;
 }
 
@@ -15,9 +15,7 @@ void Client_Free(Client *This){
 
 void Client_Clear(Client *This){
 	close(This->socketTCP);
-//	if (This->casesTo != NULL){
-//		This->casesTo->Free(This->casesTo);
-//	}
+	This->casesTo->Free(This->casesTo);
 }
 
 Client* New_Client(){

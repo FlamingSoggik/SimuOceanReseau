@@ -25,6 +25,7 @@ typedef struct ListeCase {
     void(*Clear)(struct ListeCase*);
 	uint16_t (*Taille)(struct ListeCase*);
 	struct Case*(*getNieme)(struct ListeCase*, uint16_t);
+	void (*Vider)(struct ListeCase *This);
 }ListeCase;
 
 uint16_t ListeCase_Taille(ListeCase* This);
@@ -52,5 +53,7 @@ struct Case* ListeCase_getNieme(ListeCase* This, uint16_t number);
 struct Case* ListeCase_Pop(ListeCase* This);
 ListeCase* New_ListeCase();
 void ListeCase_Init(ListeCase* This);
+
+void ListeCase_Vider(ListeCase *This);
 
 #endif // LISTECASE_H

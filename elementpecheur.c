@@ -41,6 +41,7 @@ char ElementPecheur_Init(Case *c, ElementPecheur* This){
 	This->listeDePeche->Push(This->listeDePeche, ORQUE);
 	This->listeDePeche->Push(This->listeDePeche, BALEINE);
 	This->caseParent=c;
+	c->isLocked=True;
 	This->PositionInitialeX=This->caseParent->posX;
 	This->PositionInitialeY=This->caseParent->posY;
 	This->pecheParCanne=ElementPecheur_pecheParCanne;
@@ -77,7 +78,7 @@ char ElementPecheur_Init(Case *c, ElementPecheur* This){
 
 	This->GetPositionInitialeY=ElementPecheur_getPositionInitialey;
 	This->SetPositionInitialeY=ElementPecheur_setPositionInitialey;
-    This->serialize=ElementPecheur_serialize;
+	This->serialize=ElementPecheur_serialize;
 
 	return 0;
 }
@@ -85,6 +86,7 @@ char ElementPecheur_Init(Case *c, ElementPecheur* This){
 void ElementPecheur_Clear(Element *This){
 	ElementPecheur *p = (ElementPecheur*)This;
 	p->listeDePeche->Free(p->listeDePeche);
+	This->caseParent->isLocked=False;
 }
 
 void ElementPecheur_New_Free(Element* This){
@@ -204,11 +206,10 @@ void ElementPecheur_pecheParCanneSDL(ElementPecheur *This, int16_t x, int16_t y)
 Bool ElementPecheur_peutPecher(ElementPecheur *This, Type t)
 {
 	if (This->listeDePeche->Contain(This->listeDePeche, t) == True){
-			return True;
-		}
+		return True;
+	}
 	return False;
 }
-
 
 void ElementPecheur_pecheParFilet(ElementPecheur *This, char *buffer)
 {
@@ -340,7 +341,6 @@ void ElementPecheur_pecheParFiletSDL(ElementPecheur *This, int16_t x, int16_t y)
 	free(MatriceAccessiblePeche);
 }
 
-
 Bool ElementPecheur_deplacement(ElementPecheur *This, char direction)
 {
 	int16_t deplX = 0, deplY = 0;
@@ -389,7 +389,9 @@ Bool ElementPecheur_deplacement(ElementPecheur *This, char direction)
 	if ((caseDeplacement->liste->HasAPont(caseDeplacement->liste) == 1 || caseDeplacement->liste->HasDirt(caseDeplacement->liste) == 1 || (This->caseParent->liste->HasAPont(This->caseParent->liste) == 0 && This->caseParent->liste->HasDirt(This->caseParent->liste) == 0)) && caseDeplacement->liste->HasAPecheur(caseDeplacement->liste) == 0){
 		//Il y a un pond et pas de pecheur sur ce pont, on peut s'y déplacer
 		// ou alors on est déja dans l'eau donc on peux se déplacer de partout
+		This->caseParent->isLocked=False;
 		This->caseParent->g->moveFromTo(This->caseParent->g, (Element*)This, This->caseParent->posX+deplX, This->caseParent->posY+deplY);
+		This->caseParent->isLocked=True;
 		return True;
 	}
 	else {
@@ -397,7 +399,6 @@ Bool ElementPecheur_deplacement(ElementPecheur *This, char direction)
 		return False;
 	}
 }
-
 
 Bool ElementPecheur_construirePont(ElementPecheur *This, char direction)
 {
@@ -455,13 +456,11 @@ Bool ElementPecheur_construirePont(ElementPecheur *This, char direction)
 	}
 }
 
-
 void ElementPecheur_mourir(ElementPecheur *This)
 {
-    printf("%s\n", __FUNCTION__);
+	printf("%s\n", __FUNCTION__);
 	This->caseParent->g->reinitPecheur(This->caseParent->g, (Element*)This);
 }
-
 
 void ElementPecheur_reinitSac(ElementPecheur *This)
 {
@@ -470,7 +469,7 @@ void ElementPecheur_reinitSac(ElementPecheur *This)
 
 char* ElementPecheur_serialize(Element *This)
 {
-    ElementPecheur* me = (ElementPecheur*) This;
+	ElementPecheur* me = (ElementPecheur*) This;
 	/* Format de la chaine retournée :
 	 * <Type>\n<Variable>\n<Variable>
 	 */
@@ -478,7 +477,7 @@ char* ElementPecheur_serialize(Element *This)
 
 	// 4 : nombre de uint16, 5: nombre de caractère pour un uint16 +1: comptage du retour à la ligne +1 : \0
 	SerializedThis=malloc((6*(5+1)+1)*sizeof(char));
-    sprintf(SerializedThis, "%d\n%d\n%d\n%d\n%d\n%d\n%d\n", me->type, me->sac, me->longueurCanne, me->tailleFilet, me->distanceDeplacement, me->PositionInitialeX, me->PositionInitialeY);
+	sprintf(SerializedThis, "%d\n%d\n%d\n%d\n%d\n%d\n%d\n", me->type, me->sac, me->longueurCanne, me->tailleFilet, me->distanceDeplacement, me->PositionInitialeX, me->PositionInitialeY);
 	return SerializedThis;
 }
 

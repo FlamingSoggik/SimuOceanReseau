@@ -4,6 +4,7 @@
 #include "listeelem.h"
 #include "grille.h"
 #include <stdint.h>
+#include "Bool.h"
 
 struct Grille;
 
@@ -14,6 +15,7 @@ typedef struct Case {
 	uint16_t posY;
     struct Client* proprietaire;
     struct ListeElem *liste;
+	Bool isLocked;
 	void(*Free)(struct Case*);
 	void(*Clear)(struct Case*);
 	void (*Print)(struct Case *This);

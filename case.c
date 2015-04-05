@@ -10,6 +10,7 @@ Case Case_Create(Grille *g, uint16_t posX, uint16_t posY)
     This.posX=posX;
     This.posY=posY;
     This.proprietaire=NULL;
+	This.isLocked=False;
 	This.liste = New_ListeElem();
 	This.Free=Case_Free;
 	This.Clear=Case_Clear;

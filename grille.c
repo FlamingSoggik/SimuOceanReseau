@@ -1,6 +1,10 @@
 ﻿#include "grille.h"
 #include <stdlib.h>
 #include <stdio.h>
+#include <time.h>
+#include <unistd.h>
+#include <string.h>
+#include "errno.h"
 #include "elementanimal.h"
 #include "elementpecheur.h"
 #include "elementpont.h"
@@ -8,9 +12,6 @@
 #include "element.h"
 #include "changermodeterminal.h"
 #include "stringreplace.h"
-#include <time.h>
-#include <unistd.h>
-#include <string.h>
 
 #define EAU "\033[00m"				//NOIR
 #define PVOID "\033[48;5;1m"		//ROUGE FONCE
@@ -60,89 +61,154 @@ void Grille_Init(Grille *This, uint16_t Taille, unsigned char nbPecheurs){
 	This->detruirePont=Grille_detruirePont;
 	This->tab=malloc(sizeof(Case*)*Taille);
 	This->nbPecheur = nbPecheurs;
-    This->NbrCasesToMe=Taille*Taille;
-    This->serializeMesCases=Grille_serializeMesCases;
+	This->NbrCasesToMe=Taille*Taille;
+	This->serializeMesCases=Grille_serializeMesCases;
 	for (i=0;i<Taille;++i){
 		This->tab[i]=malloc(sizeof(Case)*Taille);
 	}
 	for(i=0;i<Taille;++i){
 		for(j=0; j<Taille; ++j){
 			This->tab[i][j]= Case_Create(This, i, j);
-			if (j == 0 || j == Taille-1){
+			if (j == 0 || j == Taille-1 || i == 0 || i == Taille-1){
 				This->tab[i][j].liste->Push(This->tab[i][j].liste, (Element*)New_ElementTerre(&This->tab[i][j]));
 			}
 		}
 	}
-	This->tabPecheur=malloc(This->nbPecheur*sizeof(ElementPecheur*));
-	for(parcours=0; parcours<This->nbPecheur; ++parcours){
-		if (parcours%2){
-			//Pecheur impaire --> pop à droite
-			j=This->Taille-1;
-		}
-		else {
-			// Pecheur paire --> pop à gauche
-			j=0;
-		}
-		int16_t flag = 0;
 
-		while (flag == 0){
-			i=rand()%This->Taille;
-			if(This->tab[i][j].liste->HasAPecheur(This->tab[i][j].liste) == 0)
-				flag = 1;
-		}
-		This->tab[i][j].liste->Push(This->tab[i][j].liste, (Element*)New_ElementPecheur(&This->tab[i][j]));
-		This->tabPecheur[parcours]=(ElementPecheur*)This->tab[i][j].liste->getPecheur(This->tab[i][j].liste);
-	}
 
 	remplirListePredation(This);
-	int16_t nbrCase = Taille*Taille;
-	int16_t nbrEspece = 0;
-	int16_t comptelemespece = 0;
-	Type compteurTypeEspece = TYPEMIN;
+
+	This->r=New_Reseau(This);
+	pthread_setcancelstate(PTHREAD_CANCEL_DISABLE, NULL);
+	if (pthread_mutex_lock(&This->r->mutexMatricePropriete)){
+		perror("pthread_mutex_lock");
+		exit(-10);
+	}
+	if (This->r->carteInitialised == False){
+		//Cas ou on a pas d'autre joueurs en jeu
+		This->tabPecheur=malloc(This->nbPecheur*sizeof(ElementPecheur*));
+		int16_t nbrCase = (Taille-2)*(Taille-2);
+		int16_t nbrEspece = 0;
+		int16_t comptelemespece = 0;
+		Type compteurTypeEspece = TYPEMIN;
 
 
-	while (compteurTypeEspece < TYPEMAX){
-		comptelemespece = 0;
-		switch(compteurTypeEspece){
-			case PLANCTON:
-				nbrEspece = 40*nbrCase/100;
-				break;
-			case CORAIL:
-				nbrEspece = 2*nbrCase/100;
-				break;
-			case BAR:
-				nbrEspece = 5*nbrCase/100;
-				break;
-			case THON:
-				nbrEspece = 5*nbrCase/100;
-				break;
-			case PYRANHA:
-				nbrEspece = 2*nbrCase/100;
-				break;
-			case REQUIN:
-				nbrEspece = 4*nbrCase/100;
-				break;
-			case ORQUE:
-				nbrEspece = 2*nbrCase/100;
-				break;
-			case BALEINE:
-				nbrEspece = 5*nbrCase/100;
-				break;
-			default:
-				nbrEspece = 0;
-				break;
+		while (compteurTypeEspece < TYPEMAX){
+			comptelemespece = 0;
+			switch(compteurTypeEspece){
+				case PLANCTON:
+					nbrEspece = 40*nbrCase/100;
+					break;
+				case CORAIL:
+					nbrEspece = 2*nbrCase/100;
+					break;
+				case BAR:
+					nbrEspece = 5*nbrCase/100;
+					break;
+				case THON:
+					nbrEspece = 5*nbrCase/100;
+					break;
+				case PYRANHA:
+					nbrEspece = 2*nbrCase/100;
+					break;
+				case REQUIN:
+					nbrEspece = 4*nbrCase/100;
+					break;
+				case ORQUE:
+					nbrEspece = 2*nbrCase/100;
+					break;
+				case BALEINE:
+					nbrEspece = 5*nbrCase/100;
+					break;
+				default:
+					nbrEspece = 0;
+					break;
+			}
+			while (comptelemespece != nbrEspece){
+				i = rand()%Taille;
+				j = rand()%Taille;
+				if (This->tab[i][j].liste->HasAnAnimal(This->tab[i][j].liste) == 0 && This->tab[i][j].liste->HasDirt(This->tab[i][j].liste) == 0){
+					This->tab[i][j].liste->Push(This->tab[i][j].liste, (Element*)New_ElementAnimal(&This->tab[i][j], compteurTypeEspece));
+					++comptelemespece;
+				}
+			}
+			++compteurTypeEspece;
 		}
-		while (comptelemespece != nbrEspece){
-			i = rand()%Taille;
-			j = rand()%Taille;
-			if (This->tab[i][j].liste->HasAnAnimal(This->tab[i][j].liste) == 0 && This->tab[i][j].liste->HasDirt(This->tab[i][j].liste) == 0){
-				This->tab[i][j].liste->Push(This->tab[i][j].liste, (Element*)New_ElementAnimal(&This->tab[i][j], compteurTypeEspece));
-				++comptelemespece;
+	}
+
+	Bool flag;
+	int ret;
+	struct timespec ts;
+	ts.tv_sec = 2;
+	ts.tv_nsec = 0;
+	This->tabPecheur=malloc(This->nbPecheur*sizeof(ElementPecheur*));
+	for(parcours=0; parcours<This->nbPecheur; ++parcours){
+		flag = False;
+		while (flag == False){
+			if (rand()%2){
+				if (rand()%2){
+					j=This->Taille-1;
+				}
+				else {
+					j=0;
+				}
+				i=rand()%This->Taille;
+			}
+			else {
+				if (rand()%2){
+					i=This->Taille-1;
+				}
+				else {
+					i=0;
+				}
+				j=rand()%This->Taille;
+			}
+			if(This->tab[i][j].liste->HasAPecheur(This->tab[i][j].liste) == True)
+				continue;
+
+			ListeCase* lc = New_ListeCase();
+			lc->Push(lc, &This->tab[i][j]);
+			This->r->askForProperty(This->r, lc);
+			lc->Free(lc);
+			if (pthread_mutex_unlock(&This->r->mutexMatricePropriete)){
+				perror("pthread_mutex_unlock");
+				exit(-10);
+			}
+			if (pthread_mutex_lock(&This->r->mutexNbrReponseAttendue) < 0){
+				perror("pthread_mutex_lock");
+				exit(1);
+			}
+			while(This->r->nbrReponseAttendue != 0){
+				pthread_cond_wait(&This->r->condEverythingRecieved, &This->r->mutexNbrReponseAttendue);
+			}
+			if ( (ret = pthread_mutex_unlock(&This->r->mutexNbrReponseAttendue)) < 0){
+				if (ret != EPERM){
+					perror("pthread_mutex_lock");
+					exit(1);
+				}
+			}
+			if (pthread_mutex_lock(&This->r->mutexMatricePropriete)){
+				perror("pthread_mutex_unlock");
+				exit(-10);
+			}
+			sleep(5);
+			if (This->tab[i][j].proprietaire != NULL){
+				printf("Je n'ai pas eu la propriété :(\n");
+				continue;
+			}
+			else {
+				This->tab[i][j].liste->Push(This->tab[i][j].liste, (Element*)New_ElementPecheur(&This->tab[i][j]));
+				ElementPecheur* p =(ElementPecheur*)This->tab[i][j].liste->getPecheur(This->tab[i][j].liste);
+				This->tabPecheur[parcours]=p;
+				flag=True;
 			}
 		}
-		++compteurTypeEspece;
 	}
-    This->r=New_Reseau(This);
+	if (pthread_mutex_unlock(&This->r->mutexMatricePropriete)){
+		perror("pthread_mutex_unlock");
+		exit(-10);
+	}
+	pthread_setcancelstate(PTHREAD_CANCEL_ENABLE, NULL);
 }
 
 void Grille_Clear(struct Grille *This){
@@ -159,7 +225,7 @@ void Grille_Clear(struct Grille *This){
 	}
 	free(This->tab);
 	viderListePredation(This);
-    This->r->Free(This->r);
+	This->r->Free(This->r);
 }
 
 void Grille_Print(struct Grille *This){
@@ -293,12 +359,12 @@ void Grille_New_Free(struct Grille *This){
 
 Case*** Grille_getMatriceVoisins(Grille *This, uint16_t posX, uint16_t posY, uint16_t nbSauts)
 {
-//printf("Taille de la grille : %d\n", This->Taille);
+	//printf("Taille de la grille : %d\n", This->Taille);
 	uint16_t taille=2*nbSauts+1;
-//printf("Taille du nouveau tableau : %d\n", taille);
+	//printf("Taille du nouveau tableau : %d\n", taille);
 	//Coordonnées de la case du milieu du nouveau tableau
 	uint16_t cMNT = nbSauts;
-//printf("Centre de la Matrice à renvoyer : %d\n", cMNT);
+	//printf("Centre de la Matrice à renvoyer : %d\n", cMNT);
 	Case* **tableau = malloc(sizeof(Case**)*taille);
 	if (tableau == NULL){
 		puts("ERROR creating matrice in detMatriceVoicins");
@@ -311,41 +377,41 @@ Case*** Grille_getMatriceVoisins(Grille *This, uint16_t posX, uint16_t posY, uin
 	tableau[cMNT][cMNT]=NULL;
 	int16_t j, k;
 	for(i=nbSauts;i>0;--i){
-//printf("Nous somme dans la boucle pour le saut de %d cases\n", i);
+		//printf("Nous somme dans la boucle pour le saut de %d cases\n", i);
 		for(j=posX-i,k=0;j<(double)posX+i+1;++j,++k){
-//printf("J, qui correspond à la valeur de x qui varie afin de completer la première et dernière ligne vaut %d\n", j);
+			//printf("J, qui correspond à la valeur de x qui varie afin de completer la première et dernière ligne vaut %d\n", j);
 			if (j < 0 || j > (double)This->Taille-1 || (double)posY-i < 0 || (double)posY-i > This->Taille-1){
-//printf("La position (ligne superieure) évaluée est en dehors de la Grille ([%d][%d]), la valeur null est placée dans la case [%d][%d]\n", j, posY-i, cMNT-i+k, cMNT-i);
+				//printf("La position (ligne superieure) évaluée est en dehors de la Grille ([%d][%d]), la valeur null est placée dans la case [%d][%d]\n", j, posY-i, cMNT-i+k, cMNT-i);
 				tableau[cMNT-i+k][cMNT-i]= NULL;
 			} else {
-//printf("La position (ligne superieure) évaluée est dans la Grille, l'adresse de la case correspondante ([%d][%d]) est placée dans la case [%d][%d]\n", j, posY-i, cMNT-i+k, cMNT-i);
+				//printf("La position (ligne superieure) évaluée est dans la Grille, l'adresse de la case correspondante ([%d][%d]) est placée dans la case [%d][%d]\n", j, posY-i, cMNT-i+k, cMNT-i);
 				tableau[cMNT-i+k][cMNT-i]=&This->tab[j][posY-i];
 			}
-//printf("\n\n");
+			//printf("\n\n");
 			if (j < 0 || j > (double)This->Taille-1 || (double)posY+i < 0 || (double)posY+i > This->Taille-1){
-//printf("La position (ligne inferieure) évaluée est en dehors de la Grille ([%d][%d]), la valeur null est placée dans la case [%d][%d]\n", j, posY+i, cMNT-i+k, cMNT+i);
+				//printf("La position (ligne inferieure) évaluée est en dehors de la Grille ([%d][%d]), la valeur null est placée dans la case [%d][%d]\n", j, posY+i, cMNT-i+k, cMNT+i);
 				tableau[cMNT-i+k][cMNT+i]= NULL;
 			} else {
-//printf("La position (ligne inferieure) évaluée est dans la Grille, l'adresse de la case correspondante ([%d][%d]) est placée dans la case [%d][%d]\n\n\n\n", j, posY+i, cMNT-i+k, cMNT+i);
+				//printf("La position (ligne inferieure) évaluée est dans la Grille, l'adresse de la case correspondante ([%d][%d]) est placée dans la case [%d][%d]\n\n\n\n", j, posY+i, cMNT-i+k, cMNT+i);
 				tableau[cMNT-i+k][cMNT+i]=&This->tab[j][posY+i];
 			}
 		}
 
 		for(j=posY-i+1,k=1;j<(double)posY+i-1+1;++j,++k){
-//printf("J, qui correspond à la valeur de y qui varie afin de completer la première et dernière colonne vaut %d\n", j);
+			//printf("J, qui correspond à la valeur de y qui varie afin de completer la première et dernière colonne vaut %d\n", j);
 			if (j < 0 || j > (double)This->Taille-1 || (double)posX-i < 0 || (double)posX-i > This->Taille-1){
-//printf("La position (ligne superieure) évaluée est en dehors de la Grille ([%d][%d]), la valeur null est placée dans la case [%d][%d]\n", posX-i, j, cMNT-i, cMNT-i+k);
+				//printf("La position (ligne superieure) évaluée est en dehors de la Grille ([%d][%d]), la valeur null est placée dans la case [%d][%d]\n", posX-i, j, cMNT-i, cMNT-i+k);
 				tableau[cMNT-i][cMNT-i+k]= NULL;
 			} else {
-//printf("La position (ligne superieure) évaluée est dans la Grille, l'adresse de la case correspondante ([%d][%d]) est placée dans la case [%d][%d]\n", posX-i, j, cMNT-i, cMNT-i+k);
+				//printf("La position (ligne superieure) évaluée est dans la Grille, l'adresse de la case correspondante ([%d][%d]) est placée dans la case [%d][%d]\n", posX-i, j, cMNT-i, cMNT-i+k);
 				tableau[cMNT-i][cMNT-i+k]=&This->tab[posX-i][j];
 			}
-//printf("\n\n");
+			//printf("\n\n");
 			if (j < 0 || j > (double)This->Taille-1 || (double)posX+i < 0 || (double)posX+i > This->Taille-1){
-//printf("La position (ligne inferieure) évaluée est en dehors de la Grille ([%d][%d]), la valeur null est placée dans la case [%d][%d]\n", posX+i, j, cMNT+i, cMNT-i+k);
+				//printf("La position (ligne inferieure) évaluée est en dehors de la Grille ([%d][%d]), la valeur null est placée dans la case [%d][%d]\n", posX+i, j, cMNT+i, cMNT-i+k);
 				tableau[cMNT+i][cMNT-i+k]= NULL;
 			} else {
-//printf("La position (ligne inferieure) évaluée est dans la Grille, l'adresse de la case correspondante ([%d][%d]) est placée dans la case [%d][%d]\n\n\n\n", posX+i, j, cMNT+i, cMNT-i+k);
+				//printf("La position (ligne inferieure) évaluée est dans la Grille, l'adresse de la case correspondante ([%d][%d]) est placée dans la case [%d][%d]\n\n\n\n", posX+i, j, cMNT+i, cMNT-i+k);
 				tableau[cMNT+i][cMNT-i+k]=&This->tab[posX+i][j];
 			}
 		}
@@ -369,7 +435,7 @@ void Grille_reinitPecheur(Grille *This, Element *elem)
 	char sensDeTest = 'b';
 	int16_t depl = 1;
 	Case *caseInitiale = &This->tab[pecheur->PositionInitialeX][pecheur->PositionInitialeY];
-	recommencer:
+recommencer:
 	if (caseInitiale->liste->HasAPecheur(caseInitiale->liste) == 1){
 		if (sensDeTest == 'b'){
 			if (pecheur->PositionInitialeX+depl > This->Taille-1){
@@ -393,8 +459,8 @@ void Grille_reinitPecheur(Grille *This, Element *elem)
 		}
 		goto recommencer;
 	}
-    This->moveFromTo(This, (Element*)pecheur, caseInitiale->posX, caseInitiale->posY);
-    //caseInitiale->liste->Push(caseInitiale->liste, (Element*)pecheur);
+	This->moveFromTo(This, (Element*)pecheur, caseInitiale->posX, caseInitiale->posY);
+	//caseInitiale->liste->Push(caseInitiale->liste, (Element*)pecheur);
 	pecheur->reinitSac(pecheur);
 }
 
@@ -515,45 +581,35 @@ void Grille_detruirePont(Grille *This, struct Case *c)
 
 char* Grille_serializeMesCases(Grille *This)
 {
-    /* Format de la chaine retournée :
-     * <nombre de Cases>\n<Case>\n<Case>
-     */
-    int i, j, k, offset;
-    char* SerializedThis;
-    // tableau à double entrée de chaine de caractère contenant les différents éléments
-    char **leschaines = malloc(This->NbrCasesToMe*sizeof(char*));
-    if (!leschaines) return NULL;
-    unsigned int nbrCaract=0;
+	/* Format de la chaine retournée :
+	 * <nombre de Cases>\n<Case>\n<Case>
+	 */
+	int i, j, k, offset;
+	char* SerializedThis;
+	// tableau à double entrée de chaine de caractère contenant les différents éléments
+	char **leschaines = malloc(This->NbrCasesToMe*sizeof(char*));
+	if (!leschaines) return NULL;
+	unsigned int nbrCaract=0;
 
-    pthread_setcancelstate(PTHREAD_CANCEL_DISABLE, NULL);
-    if (pthread_mutex_lock(&This->r->mutexMatricePropriete) < 0){
-        perror("pthread_mutex_lock");
-        exit(1);
-    }
-    k=0;
-    for(i=0;i<This->Taille;++i){
-        for(j=0;j<This->Taille;++j){
-            if (This->tab[i][j].proprietaire == NULL){
-                    leschaines[k]=This->tab[i][j].serialize(&This->tab[i][j]);
-                    nbrCaract+=strlen(leschaines[k]);
-                    ++k;
-            }
-        }
-    }
-    if (pthread_mutex_unlock(&This->r->mutexMatricePropriete) < 0){
-        perror("pthread_mutex_unlock");
-        exit(1);
-    }
-    pthread_setcancelstate(PTHREAD_CANCEL_ENABLE, NULL);
+	k=0;
+	for(i=0;i<This->Taille;++i){
+		for(j=0;j<This->Taille;++j){
+			if (This->tab[i][j].proprietaire == NULL){
+				leschaines[k]=This->tab[i][j].serialize(&This->tab[i][j]);
+				nbrCaract+=strlen(leschaines[k]);
+				++k;
+			}
+		}
+	}
 
-    SerializedThis=malloc((nbrCaract+(5+1)+1+1+3)*sizeof(char));
-    offset = sprintf(SerializedThis, "#3a%d\n", This->NbrCasesToMe);
+	SerializedThis=malloc((nbrCaract+(5+1)+1+1+3)*sizeof(char));
+	offset = sprintf(SerializedThis, "#3a%d\n", This->NbrCasesToMe);
 
-    for(i=0; i<This->NbrCasesToMe; ++i){
-        offset += sprintf(SerializedThis+offset, "%s", leschaines[i]);
-        free(leschaines[i]);
-    }
-    offset += sprintf(SerializedThis+offset, "#");
-    free(leschaines);
-    return SerializedThis;
+	for(i=0; i<This->NbrCasesToMe; ++i){
+		offset += sprintf(SerializedThis+offset, "%s", leschaines[i]);
+		free(leschaines[i]);
+	}
+	offset += sprintf(SerializedThis+offset, "#");
+	free(leschaines);
+	return SerializedThis;
 }

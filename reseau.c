@@ -20,16 +20,6 @@
 #include "elementterre.h"
 #include "elementpont.h"
 
-void* TimerFunction(void* arg){
-	pthread_setcancelstate(PTHREAD_CANCEL_ENABLE, NULL);
-	pthread_setcanceltype(PTHREAD_CANCEL_ASYNCHRONOUS, NULL);
-	Reseau* This = (Reseau*)arg;
-	sleep(1);
-	This->nbrReponseAttendue[4]=0;
-	pthread_cond_signal(&This->condEverythingRecieved);
-	return EXIT_SUCCESS;
-}
-
 void* HandleIncommingPlayer(void *arg){
 	pthread_setcancelstate(PTHREAD_CANCEL_ENABLE, NULL);
 	pthread_setcanceltype(PTHREAD_CANCEL_ASYNCHRONOUS, NULL);
@@ -46,6 +36,9 @@ void* HandleIncommingPlayer(void *arg){
 	for(;;){
 		sizeRecieved=recvfrom(This->sockEcouteIncommingClients, recvBuffer, sizeof(recvBuffer), 0,(struct sockaddr *)&from, &fromlen);
 		if (sizeRecieved <= 0){
+			if (errno == EINTR){
+				continue;
+			}
 			perror("recvfrom");
 			exit(1);
 		}
@@ -102,6 +95,9 @@ void* HandleInternalMessage(void *arg){
 	for(;;){
 		sizeRecieved=recvfrom(This->sockEcouteInternalMessages, recvBuffer, sizeof(recvBuffer), 0,(struct sockaddr *)&from, &fromlen);
 		if (sizeRecieved <= 0){
+			if (errno == EINTR){
+				continue;
+			}
 			perror("recvfrom");
 			exit(1);
 		}
@@ -133,16 +129,29 @@ void* HandleInternalMessage(void *arg){
 			This->carteInitialised=True;
 			printf("FIN UNSERIALIZED\n");
 		}
-		else if (strncmp(recvBuffer, "#4q", 3) == 0){
-			//Donner la propriétée
+		else if (strncmp(recvBuffer, "#5q", 3) == 0){
+			//Donner la visibilité
 			Client *c;
 			c = This->clients->getFromFrom(This->clients, from);
 			if (c == NULL){
 				printf("Call the admin NOOOOOOOOOW %s:%d\n", __FUNCTION__, __LINE__);
 			}
-			toSend=giveProperty(This, recvBuffer+3, c);
-			write(c->socketTCP, toSend, strlen(toSend));
+			toSend=Reseau_giveVisibility(This, recvBuffer+3);
+			sendto(This->sockEcouteInternalMessages, toSend, strlen(toSend)+1, 0, (struct sockaddr *) &dst, sizeof(dst));
 			free(toSend);
+		}
+		else if (strncmp(recvBuffer, "#5a", 3) == 0){
+			//recevoir la visibilité
+			Client *c;
+			c = This->clients->getFromFrom(This->clients, from);
+			if (c == NULL){
+				printf("Call the admin NOOOOOOOOOW %s:%d\n", __FUNCTION__, __LINE__);
+			}
+			Reseau_recupVisibility(This, recvBuffer+3, c);
+			if (This->nbrReponseAttendue-- == 0){
+				printf("Envoi d'un signal %s cas #5a\n", __FUNCTION__);
+//				pthread_cond_signal(&This->condEverythingRecieved);
+			}
 		}
 		else {
 			printf("Unwnown message:\n");
@@ -178,7 +187,7 @@ void* HandleTcpPlayer(void *arg){
 	struct sockaddr_in newClientInfos;
 	unsigned int newClientInfosSize = sizeof(struct sockaddr_in);
 	int newClientSocket, i, done, sizeRecieved, retSelect;
-	char recvBuffer[4096];
+	char recvBuffer[4096], *toSend;
 	for(;;){
 		memcpy(&This->degradableSet, &This->untouchableSet, sizeof(fd_set));
 		retSelect=select(This->maxFd+1, &This->degradableSet, NULL, NULL, NULL);
@@ -240,18 +249,42 @@ void* HandleTcpPlayer(void *arg){
 							sscanf(recvBuffer+3, "%" SCNd16, &val);
 							c->from.sin_port=htons(val);
 						}
-						else if (strncmp(recvBuffer, "#4a", 3) == 0){
-							//mettre a jour la matrice de propriété
+						else if (strncmp(recvBuffer, "#4q", 3) == 0){
+							//Donner la propriétée
 							Client *c;
 							c = This->clients->getFromSockNo(This->clients, i);
 							if (c == NULL){
 								printf("Call the admin NOOOOOOOOOW %s:%d\n", __FUNCTION__, __LINE__);
 							}
-							recupProperty(This, recvBuffer+3, c);
-							if (This->nbrReponseAttendue[4]-- == 0){
-								pthread_cancel(This->th_AnswerTimeout4);
+							toSend=Reseau_giveProperty(This, recvBuffer+3, c);
+							write(c->socketTCP, toSend, strlen(toSend));
+							free(toSend);
+						}
+						else if (strncmp(recvBuffer, "#4a", 3) == 0){
+							//mettre a jour la matrice de propriété
+							pthread_setcancelstate(PTHREAD_CANCEL_DISABLE, NULL);
+							if (pthread_mutex_lock(&This->mutexNbrReponseAttendue) < 0){
+								perror("pthread_mutex_lock");
+								exit(1);
+							}
+							Client *c;
+							c = This->clients->getFromSockNo(This->clients, i);
+							if (c == NULL){
+								printf("Call the admin NOOOOOOOOOW %s:%d\n", __FUNCTION__, __LINE__);
+							}
+							Reseau_recupProperty(This, recvBuffer+3, c);
+							This->nbrReponseAttendue--;
+
+//								printf("Envoi d'un signal %s cas #4a\n", __FUNCTION__);
+							if (This->nbrReponseAttendue == 0){
 								pthread_cond_signal(&This->condEverythingRecieved);
 							}
+
+							if (pthread_mutex_unlock(&This->mutexNbrReponseAttendue) < 0){
+								perror("pthread_mutex_lock");
+								exit(1);
+							}
+							pthread_setcancelstate(PTHREAD_CANCEL_ENABLE, NULL);
 						}
 						else {
 							printf("Should never append\n");
@@ -294,17 +327,26 @@ void Reseau_Free(Reseau* This)
 
 void Reseau_Init(Reseau* This, Grille* g){
 	This->Clear=Reseau_Clear;
+
+	This->askForProperty=Reseau_askForProperty;
+	This->giveProperty=Reseau_giveProperty;
+	This->recupProperty=Reseau_recupProperty;
+
+	This->askForVisibility=Reseau_askForVisibility;
+	This->giveVisibility=Reseau_giveVisibility;
+	This->recupVisibility=Reseau_recupVisibility;
+
+
 	This->clients=New_ListeClient();
 	pthread_mutex_init(&This->mutexMatricePropriete, NULL);
+	pthread_mutex_init(&This->mutexNbrReponseAttendue, NULL);
 	pthread_cond_init(&This->condEverythingRecieved, NULL);
 	This->portEcouteInternalMessages=5000;
 	This->portEcouteTcp=5100;
 	This->portEcouteIncommingClients=5200;
 
-	int i;
-	for (i=0; i<10; ++i){
-		This->nbrReponseAttendue[0]=0;
-	}
+	This->nbrReponseAttendue=0;
+
 	FD_ZERO(&This->degradableSet);
 	FD_ZERO(&This->untouchableSet);
 	This->g=g;
@@ -318,24 +360,16 @@ void Reseau_Init(Reseau* This, Grille* g){
 	if (This->selfPipe[0] > This->maxFd){
 		This->maxFd=This->selfPipe[0];
 	}
-	//	for (i=0; i < This->maxFd+1; ++i){
-	//		if (FD_ISSET(i, &This->untouchableSet)){
-	//			printf("The master set contain : %d\n", i);
-	//		}
-	//	}
 	creatEcouteInternalMessages(This);
 	creatEcouteTcp(This);
 
 	//lancer la demande (Anybody out there ?) avec un timeout de deux secondes
 	// --> etre connecté ou non
+	This->carteInitialised=False;
 	tenterConnection(This);
 	if (This->clients->taille != 0){
 		askForCarte(This);
-		ListeCase* lc = New_ListeCase();
-		lc->Push(lc, &This->g->tab[0][0]);
 		while (This->carteInitialised != True);
-		askForProperty(This, lc);
-		lc->Free(lc);
 	}
 	creatIncommingClients(This);
 	printf("Fin init\n");
@@ -357,12 +391,11 @@ void Reseau_Clear(Reseau *This){
 		perror("pthread_join");
 		return;
 	}
-	if (pthread_join(This->th_AnswerTimeout4, NULL)) {
-		perror("pthread_join:th_AnswerTimeout4");
-	}
+
 	close(This->selfPipe[0]);
 	close(This->selfPipe[1]);
 	pthread_mutex_destroy(&This->mutexMatricePropriete);
+	pthread_mutex_destroy(&This->mutexNbrReponseAttendue);
 	pthread_cond_destroy(&This->condEverythingRecieved);
 	close(This->sockEcouteIncommingClients);
 	close(This->sockEcouteInternalMessages);
@@ -545,7 +578,10 @@ void tenterConnection(Reseau *This){
 	}
 
 	fromlen=sizeof(from);
-	while ((sizeRecieved=recvfrom(socketBroadcast, recvBuffer, sizeof(recvBuffer), 0, (struct sockaddr *)&from, &fromlen)) >= 0){
+	while ((sizeRecieved=recvfrom(socketBroadcast, recvBuffer, sizeof(recvBuffer), 0, (struct sockaddr *)&from, &fromlen)) >= 0 || (sizeRecieved < 0 && errno == EINTR)){
+		if (errno == EINTR){
+			continue;
+		}
 		/* Connection TCP à chaque client */
 		printf("Nouveau serveur à qui se connecter\n");
 		Client *c = New_Client();
@@ -624,7 +660,7 @@ void askForCarte(Reseau *This){
 	}
 }
 
-void askForProperty(Reseau *This, ListeCase* lcas){
+void Reseau_askForProperty(Reseau *This, ListeCase* lcas){
 	int i, j, offset;
 	Case *cas;
 	Client *cli;
@@ -641,15 +677,9 @@ void askForProperty(Reseau *This, ListeCase* lcas){
 			lcli->Push(lcli, cas->proprietaire);
 			cli=cas->proprietaire;
 		}
-		if (cli->casesTo == NULL){
-			cli->casesTo = New_ListeCase();
-			if (cli->casesTo == NULL){
-				return;
-			}
-		}
 		cli->casesTo->Push(cli->casesTo, cas);
-		This->nbrReponseAttendue[4]++;
 	}
+	This->nbrReponseAttendue=lcli->taille;
 	for(i=0 ; i< lcli->taille; ++i){
 		cli=lcli->getNieme(lcli, i);
 		if (cli == NULL){
@@ -666,20 +696,16 @@ void askForProperty(Reseau *This, ListeCase* lcas){
 		offset += sprintf(propDemandeSur+offset, "#");
 
 		printf("Demande de propriété de case envoyée à : %s:%d\n", inet_ntoa(cas->proprietaire->from.sin_addr), htons(cas->proprietaire->from.sin_port));
-		if (sendto(This->sockEcouteInternalMessages, propDemandeSur, strlen(propDemandeSur), 0, (struct sockaddr*)&cas->proprietaire->from, sizeof(cas->proprietaire->from)) == -1){
+		if (write(cli->socketTCP, propDemandeSur, strlen(propDemandeSur)) == -1){
 			perror("Send to __LINE__");
 		}
 		free(propDemandeSur);
-		cli->casesTo->Free(cli->casesTo);
-	}
-	if (pthread_create(&This->th_AnswerTimeout4, NULL, TimerFunction, This)){
-		perror("pthread_create");
-		return;
+		cli->casesTo->Vider(cli->casesTo);
 	}
 	lcli->Free(lcli, 0);
 }
 
-char* giveProperty(Reseau *This, char* str, Client *cli){
+char* Reseau_giveProperty(Reseau *This, char* str, Client *cli){
 	uint16_t xCase, yCase, nbrCase, i, offset;
 	ListeCase *lca = New_ListeCase();
 	Case* ca;
@@ -698,26 +724,22 @@ char* giveProperty(Reseau *This, char* str, Client *cli){
 		perror("fopen");
 		exit(-1);
 	}
-
+	//Le lock - unlock est hors du for pour accélérer le temps de réponse à une demande de propriété (pour ne pas être ejecté)
+	pthread_setcancelstate(PTHREAD_CANCEL_DISABLE, NULL);
+	if (pthread_mutex_lock(&This->mutexMatricePropriete)){
+		perror("pthread_mutex_lock");
+		exit(-10);
+	}
 	fscanf(readStream, "%" SCNd16, &nbrCase);
 	for (i=0; i<nbrCase; ++i){
 		fscanf(readStream, "%" SCNd16, &xCase);
 		fscanf(readStream, "%" SCNd16, &yCase);
-		pthread_setcancelstate(PTHREAD_CANCEL_DISABLE, NULL);
-		if (pthread_mutex_lock(&This->mutexMatricePropriete) < 0){
-			perror("pthread_mutex_lock");
-			exit(1);
-		}
-		if (This->g->tab[xCase][yCase].proprietaire == NULL){
+
+		if (This->g->tab[xCase][yCase].proprietaire == NULL && This->g->tab[xCase][yCase].isLocked == False){
 			ca = &This->g->tab[xCase][yCase];
 			ca->proprietaire=cli;
 			lca->Push(lca, &This->g->tab[xCase][yCase]);
 		}
-		if (pthread_mutex_unlock(&This->mutexMatricePropriete) < 0){
-			perror("pthread_mutex_lock");
-			exit(1);
-		}
-		pthread_setcancelstate(PTHREAD_CANCEL_ENABLE, NULL);
 	}
 	leschaines=malloc(lca->taille*sizeof(char*));
 	if (!leschaines) return NULL;
@@ -728,6 +750,11 @@ char* giveProperty(Reseau *This, char* str, Client *cli){
 		nbrCaract+=strlen(leschaines[i]);
 		++i;
 	}
+	if (pthread_mutex_unlock(&This->mutexMatricePropriete)){
+		perror("pthread_mutex_lock");
+		exit(-10);
+	}
+	pthread_setcancelstate(PTHREAD_CANCEL_ENABLE, NULL);
 	SerializedThis=malloc((nbrCaract+(5+1)+4+1)*sizeof(char));
 	offset = sprintf(SerializedThis, "#4a%d\n", lca->taille);
 
@@ -736,13 +763,14 @@ char* giveProperty(Reseau *This, char* str, Client *cli){
 		free(leschaines[i]);
 	}
 	offset += sprintf(SerializedThis+offset, "#");
+	lca->Free(lca);
 	free(leschaines);
 	fclose(readStream);
 	close(fdRW[1]);
 	return SerializedThis;
 }
 
-Bool recupProperty(Reseau* This, char* str, Client* cli){
+Bool Reseau_recupProperty(Reseau* This, char* str, Client* cli){
 	uint16_t xCase, yCase, nbrCase, nbrElem, i, j;
 	uint16_t type, dernierRepas, sasiete, derniereReproduction;
 	uint16_t sac, longueurCanne, tailleFilet, distanceDeplacement, PositionInitialeX, PositionInitialeY;
@@ -757,17 +785,19 @@ Bool recupProperty(Reseau* This, char* str, Client* cli){
 		perror("fopen");
 		exit(-1);
 	}
+
+
+	pthread_setcancelstate(PTHREAD_CANCEL_DISABLE, NULL);
+	if (pthread_mutex_lock(&This->mutexMatricePropriete)){
+		perror("pthread_mutex_lock");
+		exit(-10);
+	}
 	fscanf(readStream, "%" SCNd16, &nbrCase);
 	for (i=0; i<nbrCase; ++i){
 		fscanf(readStream, "%" SCNd16, &xCase);
 		fscanf(readStream, "%" SCNd16, &yCase);
 		fscanf(readStream, "%" SCNd16, &nbrElem);
 
-		pthread_setcancelstate(PTHREAD_CANCEL_DISABLE, NULL);
-		if (pthread_mutex_lock(&This->mutexMatricePropriete) < 0){
-			perror("pthread_mutex_lock");
-			exit(1);
-		}
 		if (This->g->tab[xCase][yCase].proprietaire == cli){
 			This->g->tab[xCase][yCase].proprietaire = NULL;
 			This->g->tab[xCase][yCase].liste->Clear(This->g->tab[xCase][yCase].liste);
@@ -797,6 +827,7 @@ Bool recupProperty(Reseau* This, char* str, Client* cli){
 					This->g->tab[xCase][yCase].liste->Push(This->g->tab[xCase][yCase].liste, (Element*)t);
 				}
 				else if (type == PECHEUR){
+					printf("Call the admin NOOOOOOOOOW %s:%d\n", __FUNCTION__, __LINE__);
 					fscanf(readStream, "%" SCNd16, &sac);
 					fscanf(readStream, "%" SCNd16, &longueurCanne);
 					fscanf(readStream, "%" SCNd16, &tailleFilet);
@@ -817,7 +848,6 @@ Bool recupProperty(Reseau* This, char* str, Client* cli){
 			}
 		}
 		else {
-			This->g->tab[xCase][yCase].liste->Clear(This->g->tab[xCase][yCase].liste);
 			for (j=0; j<nbrElem ; ++j){
 				fscanf(readStream, "%" SCNd16, &type);
 				if (type >= TYPEMINANIMAL && type <= TYPEMAXANIMAL){
@@ -835,40 +865,19 @@ Bool recupProperty(Reseau* This, char* str, Client* cli){
 				}
 			}
 		}
-		if (pthread_mutex_unlock(&This->mutexMatricePropriete) < 0){
-			perror("pthread_mutex_lock");
-			exit(1);
-		}
-		pthread_setcancelstate(PTHREAD_CANCEL_ENABLE, NULL);
+
 	}
+	if (pthread_mutex_unlock(&This->mutexMatricePropriete)){
+		perror("pthread_mutex_lock");
+		exit(-10);
+	}
+	pthread_setcancelstate(PTHREAD_CANCEL_ENABLE, NULL);
 	fclose(readStream);
 	close(fdRW[1]);
 	return True;
 }
 
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-void askForVisibility(Reseau *This, ListeCase* lcas){
+void Reseau_askForVisibility(Reseau *This, ListeCase* lcas){
 	int i, j, offset;
 	Case *cas;
 	Client *cli;
@@ -892,8 +901,9 @@ void askForVisibility(Reseau *This, ListeCase* lcas){
 			}
 		}
 		cli->casesTo->Push(cli->casesTo, cas);
-		This->nbrReponseAttendue[4]++;
 	}
+
+	This->nbrReponseAttendue=lcli->taille;
 	for(i=0 ; i< lcli->taille; ++i){
 		cli=lcli->getNieme(lcli, i);
 		if (cli == NULL){
@@ -909,21 +919,17 @@ void askForVisibility(Reseau *This, ListeCase* lcas){
 		}
 		offset += sprintf(propDemandeSur+offset, "#");
 
-		printf("Demande de propriété de case envoyée à : %s:%d\n", inet_ntoa(cas->proprietaire->from.sin_addr), htons(cas->proprietaire->from.sin_port));
+		printf("Demande de visibilité de case envoyée à : %s:%d\n", inet_ntoa(cas->proprietaire->from.sin_addr), htons(cas->proprietaire->from.sin_port));
 		if (sendto(This->sockEcouteInternalMessages, propDemandeSur, strlen(propDemandeSur), 0, (struct sockaddr*)&cas->proprietaire->from, sizeof(cas->proprietaire->from)) == -1){
 			perror("Send to __LINE__");
 		}
 		free(propDemandeSur);
 		cli->casesTo->Free(cli->casesTo);
 	}
-	if (pthread_create(&This->th_AnswerTimeout4, NULL, TimerFunction, This)){
-		perror("pthread_create");
-		return;
-	}
 	lcli->Free(lcli, 0);
 }
 
-char* giveVisibility(Reseau *This, char* str){
+char* Reseau_giveVisibility(Reseau *This, char* str){
 	uint16_t xCase, yCase, nbrCase, i, offset;
 	ListeCase *lca = New_ListeCase();
 	Case* ca;
@@ -969,13 +975,14 @@ char* giveVisibility(Reseau *This, char* str){
 		free(leschaines[i]);
 	}
 	offset += sprintf(SerializedThis+offset, "#");
+	lca->Free(lca);
 	free(leschaines);
 	fclose(readStream);
 	close(fdRW[1]);
 	return SerializedThis;
 }
 
-Bool recupVisibility(Reseau* This, char* str, Client* cli){
+Bool Reseau_recupVisibility(Reseau* This, char* str, Client* cli){
 	uint16_t xCase, yCase, nbrCase, nbrElem, i, j;
 	uint16_t type, dernierRepas, sasiete, derniereReproduction;
 	uint16_t sac, longueurCanne, tailleFilet, distanceDeplacement, PositionInitialeX, PositionInitialeY;
@@ -996,11 +1003,6 @@ Bool recupVisibility(Reseau* This, char* str, Client* cli){
 		fscanf(readStream, "%" SCNd16, &yCase);
 		fscanf(readStream, "%" SCNd16, &nbrElem);
 
-		pthread_setcancelstate(PTHREAD_CANCEL_DISABLE, NULL);
-		if (pthread_mutex_lock(&This->mutexMatricePropriete) < 0){
-			perror("pthread_mutex_lock");
-			exit(1);
-		}
 		if (This->g->tab[xCase][yCase].proprietaire == cli){
 			This->g->tab[xCase][yCase].liste->Clear(This->g->tab[xCase][yCase].liste);
 
@@ -1067,23 +1069,11 @@ Bool recupVisibility(Reseau* This, char* str, Client* cli){
 				}
 			}
 		}
-		if (pthread_mutex_unlock(&This->mutexMatricePropriete) < 0){
-			perror("pthread_mutex_lock");
-			exit(1);
-		}
-		pthread_setcancelstate(PTHREAD_CANCEL_ENABLE, NULL);
 	}
 	fclose(readStream);
 	close(fdRW[1]);
 	return True;
 }
-
-
-
-
-
-
-
 
 void unSerialize(Reseau* This, char* str, Client *cli){
 	if (cli == NULL){
@@ -1110,12 +1100,8 @@ void unSerialize(Reseau* This, char* str, Client *cli){
 		fscanf(readStream, "%" SCNd16, &xCase);
 		fscanf(readStream, "%" SCNd16, &yCase);
 		fscanf(readStream, "%" SCNd16, &nbrElem);
-		pthread_setcancelstate(PTHREAD_CANCEL_DISABLE, NULL);
+
 		This->g->tab[xCase][yCase].liste->Clear(This->g->tab[xCase][yCase].liste);
-		if (pthread_mutex_lock(&This->mutexMatricePropriete) < 0){
-			perror("pthread_mutex_lock");
-			exit(1);
-		}
 		This->g->tab[xCase][yCase].proprietaire=cli;
 
 		//printf("Case[%d][%d] : ", xCase, yCase);
@@ -1165,11 +1151,6 @@ void unSerialize(Reseau* This, char* str, Client *cli){
 				This->g->tab[xCase][yCase].liste->Push(This->g->tab[xCase][yCase].liste, (Element*)p);
 			}
 		}
-		if (pthread_mutex_unlock(&This->mutexMatricePropriete) < 0){
-			perror("pthread_mutex_lock");
-			exit(1);
-		}
-		pthread_setcancelstate(PTHREAD_CANCEL_ENABLE, NULL);
 	}
 	fclose(readStream);
 	close(fdRW[1]);
