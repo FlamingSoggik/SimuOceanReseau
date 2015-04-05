@@ -15,6 +15,9 @@ void Client_Free(Client *This){
 
 void Client_Clear(Client *This){
 	close(This->socketTCP);
+//	if (This->casesTo != NULL){
+//		This->casesTo->Free(This->casesTo);
+//	}
 }
 
 Client* New_Client(){

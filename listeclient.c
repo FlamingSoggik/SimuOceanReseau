@@ -9,8 +9,10 @@ void ListeClient_Init(ListeClient* This){
 	This->getNieme=ListeClient_getNieme;
 	This->Push=ListeClient_Push;
 	This->Pop=ListeClient_Pop;
-	This->getFrom=ListeClient_getFrom;
+	This->getFromFrom=ListeClient_getFrom;
+	This->getFromSockNo=ListeClient_getFromSockNo;
 	This->remove=ListeClient_remove;
+	This->removeAll=ListeClient_removeAll;
 }
 
 ListeClient* New_ListeClient(){
@@ -21,16 +23,19 @@ ListeClient* New_ListeClient(){
 	return This;
 }
 
-void ListeClient_New_Free(ListeClient *This){
-	This->Clear(This);
+void ListeClient_New_Free(ListeClient *This, char freeClients){
+	This->Clear(This, freeClients);
 	free(This);
 }
 
-void ListeClient_Clear(ListeClient *This){
+void ListeClient_Clear(ListeClient *This, char freeClients){
 	MaillonListeClient *tmp;
 	while(This->Top)
 	{
 		tmp = This->Top->next;
+		if (freeClients == 1){
+			This->Top->c->Free(This->Top->c);
+		}
 		free(This->Top);
 		--This->taille;
 		This->Top = tmp;
@@ -110,4 +115,31 @@ Bool ListeClient_remove(ListeClient *This, int sockToFind)
 		tmp=tmp->next;
 	}
 	return False;
+}
+
+Bool ListeClient_removeAll(ListeClient *This)
+{
+	MaillonListeClient *tmp;
+	while(This->Top)
+	{
+		tmp = This->Top->next;
+		This->Top->c->Free(This->Top->c);
+		free(This->Top);
+		--This->taille;
+		This->Top = tmp;
+	}
+	return True;
+}
+
+
+Client* ListeClient_getFromSockNo(ListeClient* This, int sockNo)
+{
+	MaillonListeClient *tmp = This->Top;
+	while(tmp != NULL){
+		if (tmp->c->socketTCP == sockNo){
+			return tmp->c;
+		}
+		tmp=tmp->next;
+	}
+	return NULL;
 }

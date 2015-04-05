@@ -17,8 +17,7 @@ int main(int argc, char **argv)
 	if (argc < 4){
 		printf("Taille d'un coté de la grille carré (30 conseillé): ");
 		scanf("%d%*c", &tailleGrille);
-		printf("Nombre de pecheurs (0 .. 10) : ");
-		scanf("%d%*c", &nbpecheurs);
+		printf("Nombre de pecheurs (0 .. 10) : ");		scanf("%d%*c", &nbpecheurs);
 		printf("Interface Graphique avec/sans (a/s) : ");
 		scanf("%c%*c", &interface);
 	} else {
@@ -34,7 +33,7 @@ int main(int argc, char **argv)
         case 'a' :
             g = New_Grille(tailleGrille, nbpecheurs);
             //g=SDL_Print(g);
-            sleep(60);
+			sleep(30);
 
             system("clear");
             g->Print(g);

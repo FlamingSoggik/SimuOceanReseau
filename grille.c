@@ -249,6 +249,37 @@ void Grille_Print(struct Grille *This){
 			printf("—\n");
 		}
 	}
+
+
+
+	printf("\n");
+	printf("\n");
+	printf("\n");
+	for(i=0;i<This->Taille;++i)
+		printf("=====" NORMAL);
+	printf("=\n");
+	for(i=0;i<This->Taille;++i){
+		printf("|");
+		for(j=0; j<This->Taille; ++j){
+			if (This->tab[i][j].proprietaire == NULL){
+				printf(" " PREQUIN "  " NORMAL " |");
+			}
+			else {
+				printf(" " PPONT "  " NORMAL " |");
+			}
+		}
+		printf("\n");
+		if (i == This->Taille-1){
+			for (j=0; j<This->Taille; j++)
+				printf("=====");
+			printf("=\n");
+		}
+		else {
+			for (j=0; j<This->Taille; j++)
+				printf("—————");
+			printf("—\n");
+		}
+	}
 }
 
 void Grille_Free(struct Grille *This){

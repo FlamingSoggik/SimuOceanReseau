@@ -5,8 +5,11 @@
 #include <sys/select.h>
 #include "client.h"
 #include "listeclient.h"
+#include "listecase.h"
+#include "Bool.h"
 
 struct Client;
+struct ListeCase;
 
 typedef struct Reseau
 {
@@ -25,6 +28,7 @@ typedef struct Reseau
 	fd_set untouchableSet;
 	fd_set degradableSet;
 	int maxFd;
+	Bool carteInitialised;
     int selfPipe[2];
     char nbrReponseAttendue[10];
     struct ListeClient* clients;
@@ -49,7 +53,11 @@ int creatIncommingClients(Reseau *This);
 int creatEcouteInternalMessages(Reseau *This);
 int creatEcouteTcp(Reseau *This);
 
-void unSerialize(char* str, struct Grille* g, struct Client *cli);
+void unSerialize(Reseau* This, char* str, struct Client *cli);
 void askForCarte(Reseau *This);
+
+void askForProperty(Reseau *This, struct ListeCase* lcas);
+char* giveProperty(Reseau *This, char* str, struct Client *cli);
+Bool recupProperty(Reseau* This, char* str, struct Client*cli);
 
 #endif // RESEAU_H

@@ -32,12 +32,12 @@ void Case_Print(Case *This){
 
 char* Case_serialize(Case *This)
 {
-printf("Case_serialized ");
+//printf("Case_serialized ");
 	char* SerializedThis;
 	char* ListeElemSerialized = This->liste->serialize(This->liste);
 	// 4 : nombre de uint16, 5: nombre de caractère pour un uint16 +1: comptage du retour à la ligne +1 : \0
 	SerializedThis=malloc((2*(5+1)+strlen(ListeElemSerialized)+1)*sizeof(char));
-printf("J'envoie : posX:%d posY:%d\nMon contenu est \n%s", This->posX, This->posY, ListeElemSerialized);
+//printf("J'envoie : posX:%d posY:%d\nMon contenu est \n%s", This->posX, This->posY, ListeElemSerialized);
 	sprintf(SerializedThis, "%d\n%d\n%s", This->posX, This->posY, ListeElemSerialized);
 	free(ListeElemSerialized);
 	return SerializedThis;
