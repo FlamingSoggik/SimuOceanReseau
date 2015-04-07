@@ -46,6 +46,9 @@ typedef struct Reseau
 	char* (*giveVisibility)(struct Reseau *This, char* str);
 	Bool (*recupVisibility)(struct Reseau* This, char* str, struct Client* cli);
 
+	void (*sendWin)(struct Reseau *This);
+
+
 } Reseau;
 
 // Constructeur/Destructeur dynamique
@@ -74,5 +77,7 @@ Bool Reseau_recupProperty(Reseau* This, char* str, struct Client*cli);
 void Reseau_askForVisibility(Reseau *This, struct ListeCase* lcas);
 char* Reseau_giveVisibility(Reseau *This, char* str);
 Bool Reseau_recupVisibility(Reseau* This, char* str, struct Client* cli);
+
+void Reseau_sendWin(struct Reseau *This);
 
 #endif // RESEAU_H

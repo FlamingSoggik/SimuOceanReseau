@@ -352,6 +352,7 @@ void Reseau_Init(Reseau* This, Grille* g){
 	This->giveVisibility=Reseau_giveVisibility;
 	This->recupVisibility=Reseau_recupVisibility;
 
+	This->sendWin=Reseau_sendWin;
 
 	This->clients=New_ListeClient();
 	pthread_mutex_init(&This->mutexMatricePropriete, NULL);
@@ -1225,3 +1226,23 @@ void unSerialize(Reseau* This, char* str, Client *cli){
 	close(fdRW[1]);
 }
 
+
+
+void Reseau_sendWin(Reseau* This)
+{
+	int i;
+	Client *cli;
+	for(i=0 ; i< This->clients->taille; ++i){
+		cli=This->clients->getNieme(This->clients, i);
+		if (cli == NULL){
+			printf("Call the admin NOOOOOOOOOW %s:%d\n", __FUNCTION__, __LINE__);
+			continue;
+		}
+		// (5+1) = 1 int + 1\n * 2 car deux coordonnées
+
+
+		if (sendto(This->sockEcouteInternalMessages, "#6#\n", 4, 0, (struct sockaddr*)&cli->from, sizeof(cli->from)) == -1){
+			perror("Send to __LINE__");
+		}
+	}
+}

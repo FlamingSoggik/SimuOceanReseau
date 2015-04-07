@@ -78,6 +78,7 @@ char ElementPecheur_Init(Case *c, ElementPecheur* This){
 
 	This->GetPositionInitialeY=ElementPecheur_getPositionInitialey;
 	This->SetPositionInitialeY=ElementPecheur_setPositionInitialey;
+	This->testVictory=ElementPecheur_testVictory;
 	This->serialize=ElementPecheur_serialize;
 
 	return 0;
@@ -707,7 +708,6 @@ Bool ElementPecheur_deplacement(ElementPecheur *This, char direction)
 			}
 			pthread_setcancelstate(PTHREAD_CANCEL_ENABLE, NULL);
 			lc->Free(lc);
-			printf("%s : Normalement tout s'est bien passé\n", __FUNCTION__);
 			return True;
 		}
 		/********************* Si on peux PAS se déplacer sur cette case *********************/
@@ -963,4 +963,30 @@ uint16_t ElementPecheur_getPositionInitialey(struct ElementPecheur *This){
 
 void ElementPecheur_setPositionInitialey(struct ElementPecheur *This, uint16_t toset){
 	This->PositionInitialeY=toset;
+}
+
+void ElementPecheur_testVictory(struct ElementPecheur *This, int16_t joueur)
+{
+	if ((This->PositionInitialeX == This->caseParent->g->Taille-1) && (This->caseParent->posX == 0))
+	{
+		//Celui la start en bas\n");
+		This->caseParent->g->victoire=joueur;
+	}
+
+	if ((This->PositionInitialeX == 0) && (This->caseParent->posX == This->caseParent->g->Taille-1))
+	{
+		//Celui la start en haut\n");
+		This->caseParent->g->victoire=joueur;
+	}
+
+	if ((This->PositionInitialeY == 0) && (This->caseParent->posY == This->caseParent->g->Taille-1))
+	{
+		//Celui la start  à gauche \n");
+		This->caseParent->g->victoire=joueur;
+	}
+	if ((This->PositionInitialeY == This->caseParent->g->Taille-1) && (This->caseParent->posY == 0))
+	{
+		//Celui la start à droite \n");
+		This->caseParent->g->victoire=joueur;
+	}
 }

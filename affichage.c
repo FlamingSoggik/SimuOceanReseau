@@ -16,7 +16,7 @@ struct Grille* SDL_Print(struct Grille *grill){
 	SDL_Event event;
 	int16_t continuer=1;
 	int16_t select_curseur2=0;
-	int16_t i=0; int16_t j=0, nbpecheurs=0;
+	int16_t i=0; int16_t j=0;
 	int16_t Est_Un_Dev =0;
 	int16_t Compteur_Tours=0, Refresh_Timer=1;
 	ElementAnimal_Constantes *C_Selected;
@@ -27,7 +27,6 @@ struct Grille* SDL_Print(struct Grille *grill){
 	int16_t pointeurX, pointeurY;
 	int16_t Actif_Peche=0;
 	double Arrondivision=0;
-    int16_t victoire=-1;
 
 	SDLCase ***carre = malloc(sizeof(SDLCase**)*grill->Taille);
 	uint16_t k;
@@ -193,10 +192,10 @@ struct Grille* SDL_Print(struct Grille *grill){
                                 if (Commande_Selected == 1)
                                 {
                                     boolean=grill->tabPecheur[TourDuJoueur]->deplacement(grill->tabPecheur[TourDuJoueur], '1');
-                                    victoire = Test_Victory(ecran, grill, police, ScreenH, ScreenW, TourDuJoueur );
+									grill->tabPecheur[TourDuJoueur]->testVictory(grill->tabPecheur[TourDuJoueur], TourDuJoueur);
                                 }
 								if (Commande_Selected ==2)
-									boolean = grill->tabPecheur[TourDuJoueur]->construirePont(grill->tabPecheur[TourDuJoueur], '1');
+									grill->tabPecheur[TourDuJoueur]->testVictory(grill->tabPecheur[TourDuJoueur], TourDuJoueur);
 
 								if(boolean)
                                 {
@@ -212,8 +211,8 @@ struct Grille* SDL_Print(struct Grille *grill){
 							{
                                 if (Commande_Selected == 1)
                                 {
-                                    boolean=grill->tabPecheur[TourDuJoueur]->deplacement(grill->tabPecheur[TourDuJoueur], '2');
-                                    victoire = Test_Victory(ecran, grill, police, ScreenH, ScreenW, TourDuJoueur );
+									boolean=grill->tabPecheur[TourDuJoueur]->deplacement(grill->tabPecheur[TourDuJoueur], '2');
+									grill->tabPecheur[TourDuJoueur]->testVictory(grill->tabPecheur[TourDuJoueur], TourDuJoueur);
                                 }
 
 								if (Commande_Selected ==2)
@@ -234,8 +233,8 @@ struct Grille* SDL_Print(struct Grille *grill){
 
                                 if (Commande_Selected == 1)
                                 {
-                                    boolean=grill->tabPecheur[TourDuJoueur]->deplacement(grill->tabPecheur[TourDuJoueur], '3');
-                                    victoire = Test_Victory(ecran, grill, police, ScreenH, ScreenW, TourDuJoueur );
+									boolean=grill->tabPecheur[TourDuJoueur]->deplacement(grill->tabPecheur[TourDuJoueur], '3');
+									grill->tabPecheur[TourDuJoueur]->testVictory(grill->tabPecheur[TourDuJoueur], TourDuJoueur);
                                 }
 								if (Commande_Selected ==2)
 									boolean = grill->tabPecheur[TourDuJoueur]->construirePont(grill->tabPecheur[TourDuJoueur], '3');
@@ -255,8 +254,8 @@ struct Grille* SDL_Print(struct Grille *grill){
 
                                 if (Commande_Selected == 1)
                                 {
-                                    boolean=grill->tabPecheur[TourDuJoueur]->deplacement(grill->tabPecheur[TourDuJoueur], '4');
-                                    victoire = Test_Victory(ecran, grill, police, ScreenH, ScreenW, TourDuJoueur );
+									boolean=grill->tabPecheur[TourDuJoueur]->deplacement(grill->tabPecheur[TourDuJoueur], '4');
+									grill->tabPecheur[TourDuJoueur]->testVictory(grill->tabPecheur[TourDuJoueur], TourDuJoueur);
                                 }
 								if (Commande_Selected ==2)
 									boolean = grill->tabPecheur[TourDuJoueur]->construirePont(grill->tabPecheur[TourDuJoueur], '4');
@@ -278,8 +277,8 @@ struct Grille* SDL_Print(struct Grille *grill){
 
 								if (Commande_Selected == 1)
                                 {
-                                    boolean=grill->tabPecheur[TourDuJoueur]->deplacement(grill->tabPecheur[TourDuJoueur], '5');
-                                    victoire = Test_Victory(ecran, grill, police, ScreenH, ScreenW, TourDuJoueur );
+									boolean=grill->tabPecheur[TourDuJoueur]->deplacement(grill->tabPecheur[TourDuJoueur], '5');
+									grill->tabPecheur[TourDuJoueur]->testVictory(grill->tabPecheur[TourDuJoueur], TourDuJoueur);
                                 }
 								if (Commande_Selected ==2)
 									boolean = grill->tabPecheur[TourDuJoueur]->construirePont(grill->tabPecheur[TourDuJoueur], '5');
@@ -300,7 +299,7 @@ struct Grille* SDL_Print(struct Grille *grill){
 								if (Commande_Selected == 1)
                                 {
 									boolean=grill->tabPecheur[TourDuJoueur]->deplacement(grill->tabPecheur[TourDuJoueur], '6');
-                                    victoire = Test_Victory(ecran, grill, police, ScreenH, ScreenW, TourDuJoueur );
+									grill->tabPecheur[TourDuJoueur]->testVictory(grill->tabPecheur[TourDuJoueur], TourDuJoueur);
                                 }
 								if (Commande_Selected ==2)
                                     boolean = grill->tabPecheur[TourDuJoueur]->construirePont(grill->tabPecheur[TourDuJoueur], '6');
@@ -320,8 +319,8 @@ struct Grille* SDL_Print(struct Grille *grill){
 
                                 if (Commande_Selected == 1)
                                 {
-                                    boolean=grill->tabPecheur[TourDuJoueur]->deplacement(grill->tabPecheur[TourDuJoueur], '7');
-                                    victoire = Test_Victory(ecran, grill, police, ScreenH, ScreenW, TourDuJoueur );
+									boolean=grill->tabPecheur[TourDuJoueur]->deplacement(grill->tabPecheur[TourDuJoueur], '7');
+									grill->tabPecheur[TourDuJoueur]->testVictory(grill->tabPecheur[TourDuJoueur], TourDuJoueur);
                                 }
 								if (Commande_Selected ==2)
 									boolean = grill->tabPecheur[TourDuJoueur]->construirePont(grill->tabPecheur[TourDuJoueur], '7');
@@ -341,8 +340,8 @@ struct Grille* SDL_Print(struct Grille *grill){
 
                                 if (Commande_Selected == 1)
                                 {
-                                    boolean=grill->tabPecheur[TourDuJoueur]->deplacement(grill->tabPecheur[TourDuJoueur], '8');
-                                    victoire = Test_Victory(ecran, grill, police, ScreenH, ScreenW, TourDuJoueur );
+									boolean=grill->tabPecheur[TourDuJoueur]->deplacement(grill->tabPecheur[TourDuJoueur], '8');
+									grill->tabPecheur[TourDuJoueur]->testVictory(grill->tabPecheur[TourDuJoueur], TourDuJoueur);
                                 }
 								if (Commande_Selected ==2)
 									boolean = grill->tabPecheur[TourDuJoueur]->construirePont(grill->tabPecheur[TourDuJoueur], '8');
@@ -360,8 +359,8 @@ struct Grille* SDL_Print(struct Grille *grill){
 
                                 if (Commande_Selected == 1)
                                 {
-                                    boolean=grill->tabPecheur[TourDuJoueur]->deplacement(grill->tabPecheur[TourDuJoueur], '9');
-                                    victoire = Test_Victory(ecran, grill, police, ScreenH, ScreenW, TourDuJoueur );
+									boolean=grill->tabPecheur[TourDuJoueur]->deplacement(grill->tabPecheur[TourDuJoueur], '9');
+									grill->tabPecheur[TourDuJoueur]->testVictory(grill->tabPecheur[TourDuJoueur], TourDuJoueur);
                                 }
 								if (Commande_Selected ==2)
 									boolean = grill->tabPecheur[TourDuJoueur]->construirePont(grill->tabPecheur[TourDuJoueur], '9');
@@ -522,14 +521,11 @@ struct Grille* SDL_Print(struct Grille *grill){
 		/* Opérations */
 
 
-        if (victoire!=-1) // Victoire d'un joueur
+		if (grill->victoire!=-1) // grill->victoire d'un joueur
         {
-
-Fin_Partie( ecran, police_fin, victoire/*num du joueur gagnant*/, ScreenH, ScreenW, grill->nbPecheur);
-
-
+			grill->r->sendWin(grill->r);
+			Fin_Partie( ecran, police_fin, grill->victoire/*num du joueur gagnant*/, ScreenH, ScreenW, grill->nbPecheur);
         }
-
         else {
 
 
@@ -565,7 +561,7 @@ Fin_Partie( ecran, police_fin, victoire/*num du joueur gagnant*/, ScreenH, Scree
 		}
 
 
-        if(Est_Un_Dev==2 && victoire==-1) // Mode Graphique
+		if(Est_Un_Dev==2 && grill->victoire==-1) // Mode Graphique
 		{
 			for(i=0; i<NBR_CASES; i++)
 				for(j=0; j<NBR_CASES; j++)
@@ -1063,8 +1059,6 @@ void Init_Tab(int16_t *tab)
 void Print_Graphique(SDL_Surface *graph, int16_t GraphH, int16_t *nbr_espece, int16_t NBR_CASES, Grille *grill)
 {
 
-
-
 	SDL_Surface *Gros_Pixel=NULL;
 	Gros_Pixel=SDL_CreateRGBSurface(SDL_HWSURFACE, 2, 2, 32, 0, 0, 0, 0);
 
@@ -1121,65 +1115,23 @@ void Print_NbTour(SDL_Surface *ecran, Grille *grill, TTF_Font* police, int16_t S
 
 }
 
-int16_t Test_Victory(SDL_Surface *ecran, Grille *grill, TTF_Font* police, int16_t ScreenH, int16_t ScreenW, int joueur )
-{
-    int16_t victory=0;
-
-
-
-    if ((grill->tabPecheur[joueur]->PositionInitialeX == grill->Taille-1) && (grill->tabPecheur[joueur]->caseParent->posX == 0))
-    {
-        //Celui la start en bas\n");
-        victory=1;
-
-    }
-
-    if ((grill->tabPecheur[joueur]->PositionInitialeX == 0) && (grill->tabPecheur[joueur]->caseParent->posX == grill->Taille-1))
-    {
-        //Celui la start en haut\n");
-        victory=1;
-    }
-
-    if ((grill->tabPecheur[joueur]->PositionInitialeY == 0) && (grill->tabPecheur[joueur]->caseParent->posY == grill->Taille-1))
-    {
-        //Celui la start  à gauche \n");
-        victory=1;
-    }
-
-    if ((grill->tabPecheur[joueur]->PositionInitialeY == grill->Taille-1) && (grill->tabPecheur[joueur]->caseParent->posY == 0))
-    {
-        //Celui la start à droite \n");
-        victory=1;
-    }
-
-    if (victory==1)
-    {
-        return joueur;
-    }
-
-
-    else
-        return -1;
-}
-
-
 void Fin_Partie( SDL_Surface *ecran, TTF_Font* police, int joueur, int16_t ScreenH, int16_t ScreenW, int nbpecheur )
 {
     SDL_Surface *victory=NULL;
-    SDL_Color Couleur_Victoire = {187, 11, 11,0};
+	SDL_Color Couleur_victoire = {187, 11, 11,0};
 
     if ( nbpecheur >= 2 )
     {
         char texte[30]="";
         sprintf(texte, "YOU WIN\nJoueur %d", joueur);
-        victory = TTF_RenderText_Blended(police, texte, Couleur_Victoire);
+		victory = TTF_RenderText_Blended(police, texte, Couleur_victoire);
     }
     if ( nbpecheur < 2 )
     {
         char texte[30]="";
         sprintf(texte, "YOU WIN");
 
-        victory = TTF_RenderText_Blended(police, texte, Couleur_Victoire);
+		victory = TTF_RenderText_Blended(police, texte, Couleur_victoire);
     }
 
 

@@ -54,6 +54,7 @@ typedef struct ElementPecheur
 		uint16_t (*GetPositionInitialeY)(struct ElementPecheur*);
 		void (*SetPositionInitialeY)(struct ElementPecheur* , uint16_t);
 
+		void (*testVictory)(struct ElementPecheur* , int16_t);
 
 		char estSelectionne;
 		void (*pecheParCanne)(struct ElementPecheur*, char*);
@@ -155,6 +156,8 @@ void ElementPecheur_setPositionInitialex(struct ElementPecheur *This, uint16_t t
 uint16_t ElementPecheur_getPositionInitialey(struct ElementPecheur *This);
 void ElementPecheur_setPositionInitialey(struct ElementPecheur *This, uint16_t toset);
 
+
+void ElementPecheur_testVictory(struct ElementPecheur *This, int16_t joueur);
 
 char* ElementPecheur_serialize(Element *This);
 
