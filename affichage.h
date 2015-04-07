@@ -28,5 +28,8 @@ ElementAnimal_Constantes *Edit_Constantes(int16_t Plus_Ou_Moins, int16_t positio
 void Init_Tab(int16_t *tab);
 void Print_Graphique(SDL_Surface *graph, int16_t GraphH, int16_t *nbr_espece, int16_t NBR_CASES, Grille *grill);
 void Print_NbTour(SDL_Surface *ecran, Grille *grill, TTF_Font* police, int16_t ScreenH, int16_t ScreenW );
+int16_t Test_Victory(SDL_Surface *ecran, Grille *grill, TTF_Font* police, int16_t ScreenH, int16_t ScreenW, int joueur );
+void Fin_Partie( SDL_Surface *ecran, TTF_Font* police, int joueur, int16_t ScreenH, int16_t ScreenW, int nbpecheur );
+
 
 #endif // AFFICHAGE_H
