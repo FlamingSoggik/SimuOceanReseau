@@ -155,7 +155,7 @@ void* HandleInternalMessage(void *arg){
 				exit(1);
 			}
 			This->nbrReponseAttendue--;
-			if (This->nbrReponseAttendue == 0){
+			if (This->nbrReponseAttendue <= 0){
 				pthread_cond_signal(&This->condEverythingRecieved);
 			}
 
@@ -164,6 +164,10 @@ void* HandleInternalMessage(void *arg){
 				exit(1);
 			}
 			pthread_setcancelstate(PTHREAD_CANCEL_ENABLE, NULL);
+		}
+		else if (strncmp(recvBuffer, "#6#", 3) == 0){
+			//recevoir message de défaite
+			This->g->victoire=-2;
 		}
 		else {
 			printf("Unwnown message:\n");
@@ -288,7 +292,7 @@ void* HandleTcpPlayer(void *arg){
 								exit(1);
 							}
 							This->nbrReponseAttendue--;
-							if (This->nbrReponseAttendue == 0){
+							if (This->nbrReponseAttendue <= 0){
 								pthread_cond_signal(&This->condEverythingRecieved);
 							}
 
@@ -697,7 +701,7 @@ void Reseau_askForProperty(Reseau *This, ListeCase* lcas){
 		exit(-10);
 	}
 	This->nbrReponseAttendue=lcli->taille;
-	if (This->nbrReponseAttendue){
+	if (This->nbrReponseAttendue <= 0){
 		pthread_cond_signal(&This->condEverythingRecieved);
 	}
 

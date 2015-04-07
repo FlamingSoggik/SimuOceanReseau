@@ -18,25 +18,6 @@
 #define max(a,b) (a>=b?a:b)
 #define min(a,b) (a>=b?b:a)
 
-
-#define EAU "\033[00m"				//NOIR
-#define PVOID "\033[48;5;1m"		//ROUGE FONCE
-#define PPLANCTON "\033[48;5;2m"	//VERT CLAIR
-#define PCORAIL "\033[48;5;9m"		//ROUGE CLAIR
-#define PBAR "\033[48;5;184m"		//MARON-JAUNE
-#define PTHON "\033[48;5;8m"		//GRIS
-#define PPOLLUTION "\033[48;5;7m"	//GRIS TRES CLAIR
-#define PPYRANHA "\033[48;5;90m"	//VIOLET
-#define PREQUIN "\033[48;5;18m"		//BLEU FONCE
-#define PORQUE "\033[48;5;27m"		//BLEU CLAIR
-#define PBALEINE "\033[48;5;22m"	//VERT FONCE
-#define PPONT "\033[48;5;136m"		//MARRON CLAIR
-#define PTERRE "\033[48;5;130m"		//MARRON
-#define PPECHEUR "\033[48;5;48m"	//VERT-BLEU
-#define NORMAL "\033[00m"			//NOIR
-#define SELECTIONE "\033[48;5;231m"	//BLANC
-#define PGRAS "\033[01m"
-
 ElementPecheur* New_ElementPecheur(Case *c){
 	ElementPecheur* This = malloc(sizeof(ElementPecheur));
 	if (!This) return NULL;
@@ -200,7 +181,7 @@ void ElementPecheur_pecheParCanne(ElementPecheur *This, char *buffer)
 		perror("pthread_mutex_lock");
 		exit(1);
 	}
-	while(This->caseParent->g->r->nbrReponseAttendue != 0){
+	while(This->caseParent->g->r->nbrReponseAttendue > 0){
 		pthread_cond_wait(&This->caseParent->g->r->condEverythingRecieved, &This->caseParent->g->r->mutexNbrReponseAttendue);
 	}
 	if ( pthread_mutex_unlock(&This->caseParent->g->r->mutexNbrReponseAttendue) < 0){
@@ -229,7 +210,7 @@ void ElementPecheur_pecheParCanne(ElementPecheur *This, char *buffer)
 			perror("pthread_mutex_lock");
 			exit(1);
 		}
-		while(This->caseParent->g->r->nbrReponseAttendue != 0){
+		while(This->caseParent->g->r->nbrReponseAttendue > 0){
 			pthread_cond_wait(&This->caseParent->g->r->condEverythingRecieved, &This->caseParent->g->r->mutexNbrReponseAttendue);
 		}
 		if ( pthread_mutex_unlock(&This->caseParent->g->r->mutexNbrReponseAttendue) < 0){
@@ -287,7 +268,7 @@ void ElementPecheur_pecheParCanneSDL(ElementPecheur *This, int16_t x, int16_t y)
 		perror("pthread_mutex_lock");
 		exit(1);
 	}
-	while(This->caseParent->g->r->nbrReponseAttendue != 0){
+	while(This->caseParent->g->r->nbrReponseAttendue > 0){
 		pthread_cond_wait(&This->caseParent->g->r->condEverythingRecieved, &This->caseParent->g->r->mutexNbrReponseAttendue);
 	}
 	if ( pthread_mutex_unlock(&This->caseParent->g->r->mutexNbrReponseAttendue) < 0){
@@ -315,7 +296,7 @@ void ElementPecheur_pecheParCanneSDL(ElementPecheur *This, int16_t x, int16_t y)
 			perror("pthread_mutex_lock");
 			exit(1);
 		}
-		while(This->caseParent->g->r->nbrReponseAttendue != 0){
+		while(This->caseParent->g->r->nbrReponseAttendue > 0){
 			pthread_cond_wait(&This->caseParent->g->r->condEverythingRecieved, &This->caseParent->g->r->mutexNbrReponseAttendue);
 		}
 		if ( pthread_mutex_unlock(&This->caseParent->g->r->mutexNbrReponseAttendue) < 0){
@@ -433,33 +414,6 @@ void ElementPecheur_pecheParFilet(ElementPecheur *This, char *buffer)
 	MatriceAccessiblePeche=This->caseParent->g->getMatriceVoisins(This->caseParent->g, This->caseParent->posX+deplX, This->caseParent->posY+deplY, This->tailleFilet);
 	MatriceAccessiblePeche[This->tailleFilet][This->tailleFilet]=&(This->caseParent->g->tab[This->caseParent->posX+deplX][This->caseParent->posY+deplX]);
 
-	printf("\n");
-	for(i=0;i<(This->tailleFilet*2+1);++i)
-		printf("=====" NORMAL);
-	printf("=\n");
-	for(i=0;i<(This->tailleFilet*2+1);++i){
-		printf("|");
-		for(j=0; j<(This->tailleFilet*2+1); ++j){
-			if (MatriceAccessiblePeche[i][j] == NULL){
-				printf(" " PREQUIN "  " NORMAL " |");
-			}
-			else {
-				printf(" " PPONT "  " NORMAL " |");
-			}
-		}
-		printf("\n");
-		if (i == This->tailleFilet*2){
-			for (j=0; j<(This->tailleFilet*2+1); j++)
-				printf("=====");
-			printf("=\n");
-		}
-		else {
-			for (j=0; j<(This->tailleFilet*2+1); j++)
-				printf("—————");
-			printf("—\n");
-		}
-	}
-
 	for(i=0;i<2*This->tailleFilet+1.0;++i){
 		for(j=0;j<2*This->tailleFilet+1.0;++j){
 			if (MatriceAccessiblePeche[i][j] != NULL){
@@ -482,7 +436,7 @@ void ElementPecheur_pecheParFilet(ElementPecheur *This, char *buffer)
 			perror("pthread_mutex_lock");
 			exit(1);
 		}
-		while(This->caseParent->g->r->nbrReponseAttendue != 0){
+		while(This->caseParent->g->r->nbrReponseAttendue > 0){
 			pthread_cond_wait(&This->caseParent->g->r->condEverythingRecieved, &This->caseParent->g->r->mutexNbrReponseAttendue);
 		}
 		if ( pthread_mutex_unlock(&This->caseParent->g->r->mutexNbrReponseAttendue) < 0){
@@ -510,59 +464,6 @@ void ElementPecheur_pecheParFilet(ElementPecheur *This, char *buffer)
 	lc->Vider(lc);
 
 
-	printf("\n");
-	for(i=0;i<(This->tailleFilet*2+1);++i)
-		printf("=====" NORMAL);
-	printf("=\n");
-	for(i=0;i<(This->tailleFilet*2+1);++i){
-		printf("|");
-		for(j=0; j<(This->tailleFilet*2+1); ++j){
-			if (MatriceAccessiblePeche[i][j] == NULL){
-				printf(" " PREQUIN "  " NORMAL " |");
-			}
-			else {
-				printf(" " PPONT "  " NORMAL " |");
-			}
-		}
-		printf("\n");
-		if (i == This->tailleFilet*2){
-			for (j=0; j<(This->tailleFilet*2+1); j++)
-				printf("=====");
-			printf("=\n");
-		}
-		else {
-			for (j=0; j<(This->tailleFilet*2+1); j++)
-				printf("—————");
-			printf("—\n");
-		}
-	}
-
-	printf("\n");
-	for(i=0;i<(This->tailleFilet*2+1);++i)
-		printf("=====" NORMAL);
-	printf("=\n");
-	for(i=0;i<(This->tailleFilet*2+1);++i){
-		printf("|");
-		for(j=0; j<(This->tailleFilet*2+1); ++j){
-			if (MatriceAccessiblePeche[i][j] != NULL && MatriceAccessiblePeche[i][j]->proprietaire != NULL){
-				printf(" " PREQUIN "  " NORMAL " |");
-			}
-			else {
-				printf(" " PPONT "  " NORMAL " |");
-			}
-		}
-		printf("\n");
-		if (i == This->tailleFilet*2){
-			for (j=0; j<(This->tailleFilet*2+1); j++)
-				printf("=====");
-			printf("=\n");
-		}
-		else {
-			for (j=0; j<(This->tailleFilet*2+1); j++)
-				printf("—————");
-			printf("—\n");
-		}
-	}
 	for(i=0;i<2*This->tailleFilet+1.0;++i){
 		for(j=0;j<2*This->tailleFilet+1.0;++j){
 			if (MatriceAccessiblePeche[i][j] != NULL && MatriceAccessiblePeche[i][j]->proprietaire == NULL) {
@@ -576,12 +477,6 @@ void ElementPecheur_pecheParFilet(ElementPecheur *This, char *buffer)
 			}
 		}
 	}
-//	for(i=0; i<2*This->tailleFilet+1.0; ++i){
-//		for(j=0; j<2*This->tailleFilet+1.0; ++j){
-//			if (MatriceAccessiblePeche[i][j] != NULL && MatriceAccessiblePeche[i][j]->proprietaire == NULL)
-//				MatriceAccessiblePeche[i][j]->isLocked = False;
-//		}
-//	}
 	if (pthread_mutex_unlock(&This->caseParent->g->r->mutexMatricePropriete)){
 			perror("pthread_mutex_unlock");
 			exit(-10);
@@ -643,7 +538,7 @@ void ElementPecheur_pecheParFiletSDL(ElementPecheur *This, int16_t x, int16_t y)
 			perror("pthread_mutex_lock");
 			exit(1);
 		}
-		while(This->caseParent->g->r->nbrReponseAttendue != 0){
+		while(This->caseParent->g->r->nbrReponseAttendue > 0){
 			pthread_cond_wait(&This->caseParent->g->r->condEverythingRecieved, &This->caseParent->g->r->mutexNbrReponseAttendue);
 		}
 		if ( pthread_mutex_unlock(&This->caseParent->g->r->mutexNbrReponseAttendue) < 0){
@@ -757,7 +652,7 @@ Bool ElementPecheur_deplacement(ElementPecheur *This, char direction)
 		perror("pthread_mutex_lock");
 		exit(1);
 	}
-	while(This->caseParent->g->r->nbrReponseAttendue != 0){
+	while(This->caseParent->g->r->nbrReponseAttendue > 0){
 		pthread_cond_wait(&This->caseParent->g->r->condEverythingRecieved, &This->caseParent->g->r->mutexNbrReponseAttendue);
 	}
 	if ( pthread_mutex_unlock(&This->caseParent->g->r->mutexNbrReponseAttendue) < 0){
@@ -788,7 +683,7 @@ Bool ElementPecheur_deplacement(ElementPecheur *This, char direction)
 			perror("pthread_mutex_lock");
 			exit(1);
 		}
-		while(This->caseParent->g->r->nbrReponseAttendue != 0){
+		while(This->caseParent->g->r->nbrReponseAttendue > 0){
 			pthread_cond_wait(&This->caseParent->g->r->condEverythingRecieved, &This->caseParent->g->r->mutexNbrReponseAttendue);
 		}
 		if ( pthread_mutex_unlock(&This->caseParent->g->r->mutexNbrReponseAttendue) < 0){
@@ -901,7 +796,7 @@ Bool ElementPecheur_construirePont(ElementPecheur *This, char direction)
 		perror("pthread_mutex_lock");
 		exit(1);
 	}
-	while(This->caseParent->g->r->nbrReponseAttendue != 0){
+	while(This->caseParent->g->r->nbrReponseAttendue > 0){
 		pthread_cond_wait(&This->caseParent->g->r->condEverythingRecieved, &This->caseParent->g->r->mutexNbrReponseAttendue);
 	}
 	if ( pthread_mutex_unlock(&This->caseParent->g->r->mutexNbrReponseAttendue) < 0){
@@ -936,7 +831,7 @@ Bool ElementPecheur_construirePont(ElementPecheur *This, char direction)
 			perror("pthread_mutex_lock");
 			exit(1);
 		}
-		while(This->caseParent->g->r->nbrReponseAttendue != 0){
+		while(This->caseParent->g->r->nbrReponseAttendue > 0){
 			pthread_cond_wait(&This->caseParent->g->r->condEverythingRecieved, &This->caseParent->g->r->mutexNbrReponseAttendue);
 		}
 		if ( pthread_mutex_unlock(&This->caseParent->g->r->mutexNbrReponseAttendue) < 0){

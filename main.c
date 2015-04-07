@@ -11,8 +11,7 @@
 
 int main(int argc, char **argv)
 {
-    Grille *g;
-	int i, j;
+	Grille *g;
 	int nbpecheurs = 0, tailleGrille=0;
 	char interface = -1;
 	if (argc < 4){

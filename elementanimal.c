@@ -318,7 +318,7 @@ void ElementAnimal_predation(ElementAnimal *This)
 			perror("pthread_mutex_lock");
 			exit(1);
 		}
-		while(This->caseParent->g->r->nbrReponseAttendue != 0){
+		while(This->caseParent->g->r->nbrReponseAttendue > 0){
 			pthread_cond_wait(&This->caseParent->g->r->condEverythingRecieved, &This->caseParent->g->r->mutexNbrReponseAttendue);
 		}
 		if ( pthread_mutex_unlock(&This->caseParent->g->r->mutexNbrReponseAttendue) < 0){
@@ -518,7 +518,7 @@ void ElementAnimal_deplacement(ElementAnimal *This){
 			perror("pthread_mutex_lock");
 			exit(1);
 		}
-		while(This->caseParent->g->r->nbrReponseAttendue != 0){
+		while(This->caseParent->g->r->nbrReponseAttendue > 0){
 			pthread_cond_wait(&This->caseParent->g->r->condEverythingRecieved, &This->caseParent->g->r->mutexNbrReponseAttendue);
 		}
 		if ( pthread_mutex_unlock(&This->caseParent->g->r->mutexNbrReponseAttendue) < 0){
@@ -675,7 +675,7 @@ void ElementAnimal_reproduction(ElementAnimal *This){
 			perror("pthread_mutex_lock");
 			exit(1);
 		}
-		while(This->caseParent->g->r->nbrReponseAttendue != 0){
+		while(This->caseParent->g->r->nbrReponseAttendue > 0){
 			pthread_cond_wait(&This->caseParent->g->r->condEverythingRecieved, &This->caseParent->g->r->mutexNbrReponseAttendue);
 		}
 		if ( pthread_mutex_unlock(&This->caseParent->g->r->mutexNbrReponseAttendue) < 0){

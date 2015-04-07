@@ -42,6 +42,7 @@ typedef struct Grille
 	/// \brief tabPecheur Tableau contenant les pecheurs à faire jouer
 	///
     uint16_t NbrCasesToMe;
+	char victoire;
 	struct ElementPecheur** tabPecheur;
 	void (*Free)(struct Grille *This);
 	void (*Clear)(struct Grille *This);

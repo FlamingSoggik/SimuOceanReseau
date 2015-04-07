@@ -61,6 +61,7 @@ void Grille_Init(Grille *This, uint16_t Taille, unsigned char nbPecheurs){
 	This->detruirePont=Grille_detruirePont;
 	This->tab=malloc(sizeof(Case*)*Taille);
 	This->nbPecheur = nbPecheurs;
+	This->victoire=-1;
 	This->NbrCasesToMe=Taille*Taille;
 	This->serializeMesCases=Grille_serializeMesCases;
 	for (i=0;i<Taille;++i){
@@ -467,10 +468,7 @@ void Grille_faireTour(Grille *This, char isSdl){
 	ElementPecheur *p;
 	for (i=0; i<This->Taille; ++i){
 		for (j=0; j<This->Taille; ++j){
-			if (This->tab[i][j].proprietaire == NULL)
-				printf("Traitement de la case [%d][%d]", i, j);
 			if (This->tab[i][j].proprietaire == NULL && This->tab[i][j].liste->HasAnAnimal(This->tab[i][j].liste)){
-				printf("animal à traiter\n");
 				e=(ElementAnimal*)This->tab[i][j].liste->getAnimal(This->tab[i][j].liste);
 				if (e->doitJouerCeTour(e) == False)
 					continue;
@@ -486,7 +484,6 @@ void Grille_faireTour(Grille *This, char isSdl){
 				}
 			}
 			else if (This->tab[i][j].proprietaire == NULL){
-				printf("pas d'animal à traiter\n");
 			}
 			e=NULL;
 		}
