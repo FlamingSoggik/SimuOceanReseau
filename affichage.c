@@ -344,7 +344,6 @@ struct Grille* SDL_Print(struct Grille *grill){
 						case SDLK_KP8:
 							if (TourDuJoueur != -1)
 							{
-
                                 if (Commande_Selected == 1)
                                 {
 									boolean=grill->tabPecheur[TourDuJoueur]->deplacement(grill->tabPecheur[TourDuJoueur], '8');
@@ -358,7 +357,6 @@ struct Grille* SDL_Print(struct Grille *grill){
 									TourDuJoueur=TourDuJoueur+1;
 									if (TourDuJoueur==grill->nbPecheur) TourDuJoueur=-1;
 								}
-
 							}
 							break;
 						case SDLK_KP9:
