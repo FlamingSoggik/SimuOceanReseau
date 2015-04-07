@@ -521,11 +521,17 @@ struct Grille* SDL_Print(struct Grille *grill){
 		/* Opérations */
 
 
-		if (grill->victoire!=-1) // grill->victoire d'un joueur
+        if (grill->victoire > -1) // grill->victoire d'un joueur
         {
 			grill->r->sendWin(grill->r);
 			Fin_Partie( ecran, police_fin, grill->victoire/*num du joueur gagnant*/, ScreenH, ScreenW, grill->nbPecheur);
         }
+
+        else if (grill->victoire == -2) // Défaite
+        {
+            Fin_Partie( ecran, police_fin, grill->victoire/*num du joueur gagnant*/, ScreenH, ScreenW, grill->nbPecheur);
+        }
+
         else {
 
 
@@ -1119,25 +1125,34 @@ void Fin_Partie( SDL_Surface *ecran, TTF_Font* police, int joueur, int16_t Scree
 {
     SDL_Surface *victory=NULL;
 	SDL_Color Couleur_victoire = {187, 11, 11,0};
+    SDL_Color Couleur_defaite = {187, 11, 11,0};
 
-    if ( nbpecheur >= 2 )
+    if (joueur == -2) // PERDU
     {
         char texte[30]="";
-        sprintf(texte, "YOU WIN\nJoueur %d", joueur);
-		victory = TTF_RenderText_Blended(police, texte, Couleur_victoire);
+        sprintf(texte, "YOU LOOSE");
+        victory = TTF_RenderText_Blended(police, texte, Couleur_defaite);
     }
-    if ( nbpecheur < 2 )
+
+    else if ( nbpecheur >= 2 )
     {
         char texte[30]="";
         sprintf(texte, "YOU WIN");
+		victory = TTF_RenderText_Blended(police, texte, Couleur_victoire);
+        Blit_Image(ecran, victory, ScreenW/2-250, ScreenH/2+70);
+        sprintf(texte, "Joueur %d,", joueur);
+        victory = TTF_RenderText_Blended(police, texte, Couleur_victoire);
+    }
 
+    else if ( nbpecheur < 2 )
+    {
+        char texte[30]="";
+        sprintf(texte, "YOU WIN");
 		victory = TTF_RenderText_Blended(police, texte, Couleur_victoire);
     }
 
-
     Blit_Image(ecran, victory, ScreenW/2-150, ScreenH/2);
-
- SDL_FreeSurface(victory);
+    SDL_FreeSurface(victory);
 
 
 }
