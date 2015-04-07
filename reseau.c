@@ -772,7 +772,7 @@ char* Reseau_giveProperty(Reseau *This, char* str, Client *cli){
 		exit(-10);
 	}
 	fscanf(readStream, "%" SCNd16, &nbrCase);
-	printf("Demande de propriété recue %d cases demandées\n", nbrCase);
+	//printf("Demande de propriété recue %d cases demandées\n", nbrCase);
 	for (i=0; i<nbrCase; ++i){
 		fscanf(readStream, "%" SCNd16, &xCase);
 		fscanf(readStream, "%" SCNd16, &yCase);
@@ -1179,6 +1179,7 @@ Bool Reseau_recupCoordinatesEnnemy(Reseau* This, char* str, Client* cli){
 		posY = -1;
 	cli->posX=posX;
 	cli->posY=posY;
+	printf("Le joueur %s:%d est maintenant en [%d][%d]\n", inet_ntoa(cli->from.sin_addr), htons(cli->from.sin_port), cli->posX, cli->posY);
 	fclose(readStream);
 	close(fdRW[1]);
 	return True;

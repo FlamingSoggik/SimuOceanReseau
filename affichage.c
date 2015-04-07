@@ -193,9 +193,10 @@ struct Grille* SDL_Print(struct Grille *grill){
                                 {
                                     boolean=grill->tabPecheur[TourDuJoueur]->deplacement(grill->tabPecheur[TourDuJoueur], '1');
 									grill->tabPecheur[TourDuJoueur]->testVictory(grill->tabPecheur[TourDuJoueur], TourDuJoueur);
+									grill->r->sendPos(grill->r, grill->tabPecheur[TourDuJoueur]);
                                 }
 								if (Commande_Selected ==2)
-									grill->tabPecheur[TourDuJoueur]->testVictory(grill->tabPecheur[TourDuJoueur], TourDuJoueur);
+									boolean = grill->tabPecheur[TourDuJoueur]->construirePont(grill->tabPecheur[TourDuJoueur], '1');
 
 								if(boolean)
                                 {
@@ -213,6 +214,7 @@ struct Grille* SDL_Print(struct Grille *grill){
                                 {
 									boolean=grill->tabPecheur[TourDuJoueur]->deplacement(grill->tabPecheur[TourDuJoueur], '2');
 									grill->tabPecheur[TourDuJoueur]->testVictory(grill->tabPecheur[TourDuJoueur], TourDuJoueur);
+									grill->r->sendPos(grill->r, grill->tabPecheur[TourDuJoueur]);
                                 }
 
 								if (Commande_Selected ==2)
@@ -235,6 +237,7 @@ struct Grille* SDL_Print(struct Grille *grill){
                                 {
 									boolean=grill->tabPecheur[TourDuJoueur]->deplacement(grill->tabPecheur[TourDuJoueur], '3');
 									grill->tabPecheur[TourDuJoueur]->testVictory(grill->tabPecheur[TourDuJoueur], TourDuJoueur);
+									grill->r->sendPos(grill->r, grill->tabPecheur[TourDuJoueur]);
                                 }
 								if (Commande_Selected ==2)
 									boolean = grill->tabPecheur[TourDuJoueur]->construirePont(grill->tabPecheur[TourDuJoueur], '3');
@@ -256,6 +259,7 @@ struct Grille* SDL_Print(struct Grille *grill){
                                 {
 									boolean=grill->tabPecheur[TourDuJoueur]->deplacement(grill->tabPecheur[TourDuJoueur], '4');
 									grill->tabPecheur[TourDuJoueur]->testVictory(grill->tabPecheur[TourDuJoueur], TourDuJoueur);
+									grill->r->sendPos(grill->r, grill->tabPecheur[TourDuJoueur]);
                                 }
 								if (Commande_Selected ==2)
 									boolean = grill->tabPecheur[TourDuJoueur]->construirePont(grill->tabPecheur[TourDuJoueur], '4');
@@ -279,6 +283,7 @@ struct Grille* SDL_Print(struct Grille *grill){
                                 {
 									boolean=grill->tabPecheur[TourDuJoueur]->deplacement(grill->tabPecheur[TourDuJoueur], '5');
 									grill->tabPecheur[TourDuJoueur]->testVictory(grill->tabPecheur[TourDuJoueur], TourDuJoueur);
+									grill->r->sendPos(grill->r, grill->tabPecheur[TourDuJoueur]);
                                 }
 								if (Commande_Selected ==2)
 									boolean = grill->tabPecheur[TourDuJoueur]->construirePont(grill->tabPecheur[TourDuJoueur], '5');
@@ -300,6 +305,7 @@ struct Grille* SDL_Print(struct Grille *grill){
                                 {
 									boolean=grill->tabPecheur[TourDuJoueur]->deplacement(grill->tabPecheur[TourDuJoueur], '6');
 									grill->tabPecheur[TourDuJoueur]->testVictory(grill->tabPecheur[TourDuJoueur], TourDuJoueur);
+									grill->r->sendPos(grill->r, grill->tabPecheur[TourDuJoueur]);
                                 }
 								if (Commande_Selected ==2)
                                     boolean = grill->tabPecheur[TourDuJoueur]->construirePont(grill->tabPecheur[TourDuJoueur], '6');
@@ -321,6 +327,7 @@ struct Grille* SDL_Print(struct Grille *grill){
                                 {
 									boolean=grill->tabPecheur[TourDuJoueur]->deplacement(grill->tabPecheur[TourDuJoueur], '7');
 									grill->tabPecheur[TourDuJoueur]->testVictory(grill->tabPecheur[TourDuJoueur], TourDuJoueur);
+									grill->r->sendPos(grill->r, grill->tabPecheur[TourDuJoueur]);
                                 }
 								if (Commande_Selected ==2)
 									boolean = grill->tabPecheur[TourDuJoueur]->construirePont(grill->tabPecheur[TourDuJoueur], '7');
@@ -342,6 +349,7 @@ struct Grille* SDL_Print(struct Grille *grill){
                                 {
 									boolean=grill->tabPecheur[TourDuJoueur]->deplacement(grill->tabPecheur[TourDuJoueur], '8');
 									grill->tabPecheur[TourDuJoueur]->testVictory(grill->tabPecheur[TourDuJoueur], TourDuJoueur);
+									grill->r->sendPos(grill->r, grill->tabPecheur[TourDuJoueur]);
                                 }
 								if (Commande_Selected ==2)
 									boolean = grill->tabPecheur[TourDuJoueur]->construirePont(grill->tabPecheur[TourDuJoueur], '8');
@@ -361,6 +369,7 @@ struct Grille* SDL_Print(struct Grille *grill){
                                 {
 									boolean=grill->tabPecheur[TourDuJoueur]->deplacement(grill->tabPecheur[TourDuJoueur], '9');
 									grill->tabPecheur[TourDuJoueur]->testVictory(grill->tabPecheur[TourDuJoueur], TourDuJoueur);
+									grill->r->sendPos(grill->r, grill->tabPecheur[TourDuJoueur]);
                                 }
 								if (Commande_Selected ==2)
 									boolean = grill->tabPecheur[TourDuJoueur]->construirePont(grill->tabPecheur[TourDuJoueur], '9');
@@ -1125,7 +1134,7 @@ void Fin_Partie( SDL_Surface *ecran, TTF_Font* police, int joueur, int16_t Scree
 {
     SDL_Surface *victory=NULL;
 	SDL_Color Couleur_victoire = {187, 11, 11,0};
-    SDL_Color Couleur_defaite = {187, 11, 11,0};
+	SDL_Color Couleur_defaite = {22, 182, 78,0};
 
     if (joueur == -2) // PERDU
     {
