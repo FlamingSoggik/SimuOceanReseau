@@ -48,7 +48,7 @@ void* HandleIncommingPlayer(void *arg){
 		}
 		if (strncmp(recvBuffer, "#1q", 3) == 0){
 			hp=gethostbyaddr( &from.sin_addr,sizeof(from.sin_addr) , AF_INET);
-			printf("Demande de connection recue de la part de %s:%d\n",inet_ntoa(from.sin_addr),htons(from.sin_port));
+			//printf("Demande de connection recue de la part de %s:%d\n",inet_ntoa(from.sin_addr),htons(from.sin_port));
 
 			sprintf(sendbuffer, "#1a\n%d\n%d\n", This->portEcouteTcp, This->portEcouteInternalMessages);
 
@@ -339,7 +339,7 @@ void Reseau_Free(Reseau* This)
 
 void Reseau_Init(Reseau* This, Grille* g){
 	This->Clear=Reseau_Clear;
-
+	This->flag=0;
 	This->askForProperty=Reseau_askForProperty;
 	This->giveProperty=Reseau_giveProperty;
 	This->recupProperty=Reseau_recupProperty;
@@ -833,7 +833,9 @@ Bool Reseau_recupProperty(Reseau* This, char* str, Client* cli){
 		if (This->g->tab[xCase][yCase].proprietaire == cli){
 			This->g->tab[xCase][yCase].proprietaire = NULL;
 			++This->g->NbrCasesToMe;
-			This->g->tab[xCase][yCase].isLocked=True;
+			if (This->flag==1){
+				This->g->tab[xCase][yCase].isLocked=True;
+			}
 			This->g->tab[xCase][yCase].liste->Clear(This->g->tab[xCase][yCase].liste);
 
 			for (j=0; j<nbrElem ; ++j){

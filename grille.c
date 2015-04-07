@@ -467,7 +467,10 @@ void Grille_faireTour(Grille *This, char isSdl){
 	ElementPecheur *p;
 	for (i=0; i<This->Taille; ++i){
 		for (j=0; j<This->Taille; ++j){
+			if (This->tab[i][j].proprietaire == NULL)
+				printf("Traitement de la case [%d][%d]", i, j);
 			if (This->tab[i][j].proprietaire == NULL && This->tab[i][j].liste->HasAnAnimal(This->tab[i][j].liste)){
+				printf("animal à traiter\n");
 				e=(ElementAnimal*)This->tab[i][j].liste->getAnimal(This->tab[i][j].liste);
 				if (e->doitJouerCeTour(e) == False)
 					continue;
@@ -481,6 +484,9 @@ void Grille_faireTour(Grille *This, char isSdl){
 					e->tour(e);
 					e->aFaitSonTour(e);
 				}
+			}
+			else {
+				printf("pas d'animal à traiter\n");
 			}
 			e=NULL;
 		}
