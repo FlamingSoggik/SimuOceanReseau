@@ -10,6 +10,7 @@
 
 struct Client;
 struct ListeCase;
+struct ElementPecheur;
 
 typedef struct Reseau
 {
@@ -47,6 +48,7 @@ typedef struct Reseau
 	Bool (*recupVisibility)(struct Reseau* This, char* str, struct Client* cli);
 
 	void (*sendWin)(struct Reseau *This);
+	void (*sendPos)(struct Reseau *This, struct ElementPecheur*);
 
 
 } Reseau;
@@ -79,5 +81,7 @@ char* Reseau_giveVisibility(Reseau *This, char* str);
 Bool Reseau_recupVisibility(Reseau* This, char* str, struct Client* cli);
 
 void Reseau_sendWin(struct Reseau *This);
+Bool Reseau_recupCoordinatesEnnemy(Reseau* This, char* str, struct Client* cli);
+void Reseau_sendPos(Reseau* This, struct ElementPecheur* p);
 
 #endif // RESEAU_H

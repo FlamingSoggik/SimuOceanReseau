@@ -169,6 +169,15 @@ void* HandleInternalMessage(void *arg){
 			//recevoir message de défaite
 			This->g->victoire=-2;
 		}
+		else if (strncmp(recvBuffer, "#7#", 3) == 0){
+			//recevoir message de défaite
+			Client *c;
+			c = This->clients->getFromFrom(This->clients, from);
+			if (c == NULL){
+				printf("Call the admin NOOOOOOOOOW %s:%d\n", __FUNCTION__, __LINE__);
+			}
+			Reseau_recupCoordinatesEnnemy(This, recvBuffer+3, c);
+		}
 		else {
 			printf("Unwnown message:\n");
 			recvBuffer[sizeRecieved]='\0';
@@ -353,6 +362,7 @@ void Reseau_Init(Reseau* This, Grille* g){
 	This->recupVisibility=Reseau_recupVisibility;
 
 	This->sendWin=Reseau_sendWin;
+	This->sendPos=Reseau_sendPos;
 
 	This->clients=New_ListeClient();
 	pthread_mutex_init(&This->mutexMatricePropriete, NULL);
@@ -726,7 +736,7 @@ void Reseau_askForProperty(Reseau *This, ListeCase* lcas){
 		}
 		offset += sprintf(propDemandeSur+offset, "#");
 
-		printf("Demande de propriété de case envoyée à : %s:%d\n", inet_ntoa(cas->proprietaire->from.sin_addr), htons(cas->proprietaire->from.sin_port));
+		//printf("Demande de propriété de case envoyée à : %s:%d\n", inet_ntoa(cas->proprietaire->from.sin_addr), htons(cas->proprietaire->from.sin_port));
 		if (write(cli->socketTCP, propDemandeSur, strlen(propDemandeSur)) == -1){
 			perror("Send to __LINE__");
 		}
@@ -1145,6 +1155,35 @@ Bool Reseau_recupVisibility(Reseau* This, char* str, Client* cli){
 	return True;
 }
 
+Bool Reseau_recupCoordinatesEnnemy(Reseau* This, char* str, Client* cli){
+
+	int fdRW[2];
+	if (pipe(fdRW) < 0){
+		perror("Pipe");
+		return False;
+	}
+	FILE* readStream=fdopen(fdRW[0], "r");
+	write(fdRW[1], str, strlen(str));
+	if (readStream == NULL){
+		perror("fopen");
+		exit(-1);
+	}
+
+	int16_t posX, posY;
+	fscanf(readStream, "%" SCNd16, &posX);
+	fscanf(readStream, "%" SCNd16, &posY);
+
+	if (posX < 0 || posX >= This->g->Taille)
+		posX = -1;
+	if (posY < 0 || posY >= This->g->Taille)
+		posY = -1;
+	cli->posX=posX;
+	cli->posY=posY;
+	fclose(readStream);
+	close(fdRW[1]);
+	return True;
+}
+
 void unSerialize(Reseau* This, char* str, Client *cli){
 	if (cli == NULL){
 		printf("unSerialize recieved NULL");
@@ -1242,6 +1281,26 @@ void Reseau_sendWin(Reseau* This)
 
 
 		if (sendto(This->sockEcouteInternalMessages, "#6#\n", 4, 0, (struct sockaddr*)&cli->from, sizeof(cli->from)) == -1){
+			perror("Send to __LINE__");
+		}
+	}
+}
+
+void Reseau_sendPos(Reseau* This, ElementPecheur* p)
+{
+	int i;
+	Client *cli;
+	char *toSend;
+	for(i=0 ; i< This->clients->taille; ++i){
+		cli=This->clients->getNieme(This->clients, i);
+		if (cli == NULL){
+			printf("Call the admin NOOOOOOOOOW %s:%d\n", __FUNCTION__, __LINE__);
+			continue;
+		}
+		// (5+1) = 1 int + 1\n * 2 car deux coordonnées
+		toSend=malloc((5+1)*2+4);
+		sprintf(toSend, "#7#%d\n%d\n", p->caseParent->posX, p->caseParent->posY);
+		if (sendto(This->sockEcouteInternalMessages, toSend, strlen(toSend), 0, (struct sockaddr*)&cli->from, sizeof(cli->from)) == -1){
 			perror("Send to __LINE__");
 		}
 	}

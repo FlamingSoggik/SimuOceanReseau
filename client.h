@@ -11,6 +11,8 @@ typedef struct Client{
         struct ListeCase* casesTo;
 		void (*Free)(struct Client *This);
 		void (*Clear)(struct Client *This);
+		int16_t posX;
+		int16_t posY;
 }Client;
 
 Client* New_Client();

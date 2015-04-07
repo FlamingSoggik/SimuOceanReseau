@@ -514,6 +514,7 @@ void Grille_faireTour(Grille *This, char isSdl){
 					mode_raw(0);
 					p->deplacement(p, c);
 					p->testVictory(p, i);
+					p->caseParent->g->r->sendPos(p->caseParent->g->r, p);
 				}
 				else if (c == 'p'){
 					printf("Choisisez le type de peche : Peche par canne (c) ou par filet(f)\n");

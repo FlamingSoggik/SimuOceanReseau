@@ -6,6 +6,8 @@
 void Client_Init(Client *This){
 	This->casesTo=New_ListeCase();
 	This->Clear = Client_Clear;
+	This->posX=0;
+	This->posY=0;
 }
 
 void Client_Free(Client *This){
