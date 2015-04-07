@@ -48,7 +48,7 @@ void* HandleIncommingPlayer(void *arg){
 		}
 		if (strncmp(recvBuffer, "#1q", 3) == 0){
 			hp=gethostbyaddr( &from.sin_addr,sizeof(from.sin_addr) , AF_INET);
-			printf("Demande de connection recue de la part de %s:%d\n",inet_ntoa(from.sin_addr),htons(from.sin_port));
+			//printf("Demande de connection recue de la part de %s:%d\n",inet_ntoa(from.sin_addr),htons(from.sin_port));
 
 			sprintf(sendbuffer, "#1a\n%d\n%d\n", This->portEcouteTcp, This->portEcouteInternalMessages);
 
@@ -148,10 +148,26 @@ void* HandleInternalMessage(void *arg){
 				printf("Call the admin NOOOOOOOOOW %s:%d\n", __FUNCTION__, __LINE__);
 			}
 			Reseau_recupVisibility(This, recvBuffer+3, c);
-			if (This->nbrReponseAttendue-- == 0){
-				printf("Envoi d'un signal %s cas #5a\n", __FUNCTION__);
-//				pthread_cond_signal(&This->condEverythingRecieved);
+
+			pthread_setcancelstate(PTHREAD_CANCEL_DISABLE, NULL);
+			if (pthread_mutex_lock(&This->mutexNbrReponseAttendue) < 0){
+				perror("pthread_mutex_lock");
+				exit(1);
 			}
+			This->nbrReponseAttendue--;
+			if (This->nbrReponseAttendue <= 0){
+				pthread_cond_signal(&This->condEverythingRecieved);
+			}
+
+			if (pthread_mutex_unlock(&This->mutexNbrReponseAttendue) < 0){
+				perror("pthread_mutex_unlock");
+				exit(1);
+			}
+			pthread_setcancelstate(PTHREAD_CANCEL_ENABLE, NULL);
+		}
+		else if (strncmp(recvBuffer, "#6#", 3) == 0){
+			//recevoir message de défaite
+			This->g->victoire=-2;
 		}
 		else {
 			printf("Unwnown message:\n");
@@ -245,7 +261,7 @@ void* HandleTcpPlayer(void *arg){
 							if (c == NULL){
 								printf("Call the admin NOOOOOOOOOW %s:%d\n", __FUNCTION__, __LINE__);
 							}
-							uint16_t val;
+							uint16_t val=0;
 							sscanf(recvBuffer+3, "%" SCNd16, &val);
 							c->from.sin_port=htons(val);
 						}
@@ -262,26 +278,26 @@ void* HandleTcpPlayer(void *arg){
 						}
 						else if (strncmp(recvBuffer, "#4a", 3) == 0){
 							//mettre a jour la matrice de propriété
-							pthread_setcancelstate(PTHREAD_CANCEL_DISABLE, NULL);
-							if (pthread_mutex_lock(&This->mutexNbrReponseAttendue) < 0){
-								perror("pthread_mutex_lock");
-								exit(1);
-							}
+
 							Client *c;
 							c = This->clients->getFromSockNo(This->clients, i);
 							if (c == NULL){
 								printf("Call the admin NOOOOOOOOOW %s:%d\n", __FUNCTION__, __LINE__);
 							}
 							Reseau_recupProperty(This, recvBuffer+3, c);
-							This->nbrReponseAttendue--;
 
-//								printf("Envoi d'un signal %s cas #4a\n", __FUNCTION__);
-							if (This->nbrReponseAttendue == 0){
+							pthread_setcancelstate(PTHREAD_CANCEL_DISABLE, NULL);
+							if (pthread_mutex_lock(&This->mutexNbrReponseAttendue) < 0){
+								perror("pthread_mutex_lock");
+								exit(1);
+							}
+							This->nbrReponseAttendue--;
+							if (This->nbrReponseAttendue <= 0){
 								pthread_cond_signal(&This->condEverythingRecieved);
 							}
 
 							if (pthread_mutex_unlock(&This->mutexNbrReponseAttendue) < 0){
-								perror("pthread_mutex_lock");
+								perror("pthread_mutex_unlock");
 								exit(1);
 							}
 							pthread_setcancelstate(PTHREAD_CANCEL_ENABLE, NULL);
@@ -327,7 +343,7 @@ void Reseau_Free(Reseau* This)
 
 void Reseau_Init(Reseau* This, Grille* g){
 	This->Clear=Reseau_Clear;
-
+	This->flag=0;
 	This->askForProperty=Reseau_askForProperty;
 	This->giveProperty=Reseau_giveProperty;
 	This->recupProperty=Reseau_recupProperty;
@@ -630,7 +646,7 @@ void tenterConnection(Reseau *This){
 		 * pthread_mutex_unlock(pthread_mutex_t *mut);
 		 */
 		//		if (pthread_mutex_unlock(&This->mutexMatricePropriete) < 0){
-		//			perror("pthread_mutex_lock");
+		//			perror("pthread_mutex_unlock");
 		//			exit(1);
 		//		}
 		//        pthread_setcancelstate(PTHREAD_CANCEL_ENABLE, NULL);
@@ -679,7 +695,21 @@ void Reseau_askForProperty(Reseau *This, ListeCase* lcas){
 		}
 		cli->casesTo->Push(cli->casesTo, cas);
 	}
+	pthread_setcancelstate(PTHREAD_CANCEL_DISABLE, NULL);
+	if (pthread_mutex_lock(&This->mutexNbrReponseAttendue)){
+		perror("pthread_mutex_lock");
+		exit(-10);
+	}
 	This->nbrReponseAttendue=lcli->taille;
+	if (This->nbrReponseAttendue <= 0){
+		pthread_cond_signal(&This->condEverythingRecieved);
+	}
+
+	if (pthread_mutex_unlock(&This->mutexNbrReponseAttendue) < 0){
+		perror("pthread_mutex_unlock");
+		exit(-10);
+	}
+	pthread_setcancelstate(PTHREAD_CANCEL_ENABLE, NULL);
 	for(i=0 ; i< lcli->taille; ++i){
 		cli=lcli->getNieme(lcli, i);
 		if (cli == NULL){
@@ -731,14 +761,18 @@ char* Reseau_giveProperty(Reseau *This, char* str, Client *cli){
 		exit(-10);
 	}
 	fscanf(readStream, "%" SCNd16, &nbrCase);
+	printf("Demande de propriété recue %d cases demandées\n", nbrCase);
 	for (i=0; i<nbrCase; ++i){
 		fscanf(readStream, "%" SCNd16, &xCase);
 		fscanf(readStream, "%" SCNd16, &yCase);
+		//printf("Puis-je donner la case [%d][%d] : ", xCase, yCase);
 
-		if (This->g->tab[xCase][yCase].proprietaire == NULL && This->g->tab[xCase][yCase].isLocked == False){
+		if (This->g->tab[xCase][yCase].proprietaire == NULL && This->g->tab[xCase][yCase].liste->HasAPecheur(This->g->tab[xCase][yCase].liste) == False){
 			ca = &This->g->tab[xCase][yCase];
+			--This->g->NbrCasesToMe;
 			ca->proprietaire=cli;
 			lca->Push(lca, &This->g->tab[xCase][yCase]);
+			//printf("OUI\n");
 		}
 	}
 	leschaines=malloc(lca->taille*sizeof(char*));
@@ -748,10 +782,9 @@ char* Reseau_giveProperty(Reseau *This, char* str, Client *cli){
 		ca=lca->getNieme(lca, i);
 		leschaines[i]=ca->serialize(ca);
 		nbrCaract+=strlen(leschaines[i]);
-		++i;
 	}
-	if (pthread_mutex_unlock(&This->mutexMatricePropriete)){
-		perror("pthread_mutex_lock");
+	if (pthread_mutex_unlock(&This->mutexMatricePropriete) < 0){
+		perror("pthread_mutex_unlock");
 		exit(-10);
 	}
 	pthread_setcancelstate(PTHREAD_CANCEL_ENABLE, NULL);
@@ -759,6 +792,8 @@ char* Reseau_giveProperty(Reseau *This, char* str, Client *cli){
 	offset = sprintf(SerializedThis, "#4a%d\n", lca->taille);
 
 	for(i=0; i<lca->taille; ++i){
+		if (leschaines[i] == NULL)
+			continue;
 		offset += sprintf(SerializedThis+offset, "%s", leschaines[i]);
 		free(leschaines[i]);
 	}
@@ -767,6 +802,7 @@ char* Reseau_giveProperty(Reseau *This, char* str, Client *cli){
 	free(leschaines);
 	fclose(readStream);
 	close(fdRW[1]);
+	//printf("Je vais renvoyer : %s\n", SerializedThis);
 	return SerializedThis;
 }
 
@@ -800,6 +836,10 @@ Bool Reseau_recupProperty(Reseau* This, char* str, Client* cli){
 
 		if (This->g->tab[xCase][yCase].proprietaire == cli){
 			This->g->tab[xCase][yCase].proprietaire = NULL;
+			++This->g->NbrCasesToMe;
+			if (This->flag==1){
+//				This->g->tab[xCase][yCase].isLocked=True;
+			}
 			This->g->tab[xCase][yCase].liste->Clear(This->g->tab[xCase][yCase].liste);
 
 			for (j=0; j<nbrElem ; ++j){
@@ -867,8 +907,8 @@ Bool Reseau_recupProperty(Reseau* This, char* str, Client* cli){
 		}
 
 	}
-	if (pthread_mutex_unlock(&This->mutexMatricePropriete)){
-		perror("pthread_mutex_lock");
+	if (pthread_mutex_unlock(&This->mutexMatricePropriete) < 0){
+		perror("pthread_mutex_unlock");
 		exit(-10);
 	}
 	pthread_setcancelstate(PTHREAD_CANCEL_ENABLE, NULL);
@@ -903,7 +943,17 @@ void Reseau_askForVisibility(Reseau *This, ListeCase* lcas){
 		cli->casesTo->Push(cli->casesTo, cas);
 	}
 
+	pthread_setcancelstate(PTHREAD_CANCEL_DISABLE, NULL);
+	if (pthread_mutex_lock(&This->mutexMatricePropriete)){
+		perror("pthread_mutex_lock");
+		exit(-10);
+	}
 	This->nbrReponseAttendue=lcli->taille;
+	if (pthread_mutex_unlock(&This->mutexMatricePropriete) < 0){
+		perror("pthread_mutex_unlock");
+		exit(-10);
+	}
+	pthread_setcancelstate(PTHREAD_CANCEL_ENABLE, NULL);
 	for(i=0 ; i< lcli->taille; ++i){
 		cli=lcli->getNieme(lcli, i);
 		if (cli == NULL){
@@ -924,7 +974,7 @@ void Reseau_askForVisibility(Reseau *This, ListeCase* lcas){
 			perror("Send to __LINE__");
 		}
 		free(propDemandeSur);
-		cli->casesTo->Free(cli->casesTo);
+		cli->casesTo->Vider(cli->casesTo);
 	}
 	lcli->Free(lcli, 0);
 }
@@ -948,7 +998,11 @@ char* Reseau_giveVisibility(Reseau *This, char* str){
 		perror("fopen");
 		exit(-1);
 	}
-
+	pthread_setcancelstate(PTHREAD_CANCEL_DISABLE, NULL);
+	if (pthread_mutex_lock(&This->mutexMatricePropriete)){
+		perror("pthread_mutex_lock");
+		exit(-10);
+	}
 	fscanf(readStream, "%" SCNd16, &nbrCase);
 	for (i=0; i<nbrCase; ++i){
 		fscanf(readStream, "%" SCNd16, &xCase);
@@ -965,8 +1019,12 @@ char* Reseau_giveVisibility(Reseau *This, char* str){
 		ca=lca->getNieme(lca, i);
 		leschaines[i]=ca->serialize(ca);
 		nbrCaract+=strlen(leschaines[i]);
-		++i;
 	}
+	if (pthread_mutex_unlock(&This->mutexMatricePropriete) < 0){
+		perror("pthread_mutex_unlock");
+		exit(-10);
+	}
+	pthread_setcancelstate(PTHREAD_CANCEL_ENABLE, NULL);
 	SerializedThis=malloc((nbrCaract+(5+1)+4+1)*sizeof(char));
 	offset = sprintf(SerializedThis, "#5a%d\n", lca->taille);
 
@@ -996,6 +1054,12 @@ Bool Reseau_recupVisibility(Reseau* This, char* str, Client* cli){
 	if (readStream == NULL){
 		perror("fopen");
 		exit(-1);
+	}
+
+	pthread_setcancelstate(PTHREAD_CANCEL_DISABLE, NULL);
+	if (pthread_mutex_lock(&This->mutexMatricePropriete)){
+		perror("pthread_mutex_lock");
+		exit(-10);
 	}
 	fscanf(readStream, "%" SCNd16, &nbrCase);
 	for (i=0; i<nbrCase; ++i){
@@ -1070,6 +1134,11 @@ Bool Reseau_recupVisibility(Reseau* This, char* str, Client* cli){
 			}
 		}
 	}
+	if (pthread_mutex_unlock(&This->mutexMatricePropriete) < 0){
+		perror("pthread_mutex_unlock");
+		exit(-10);
+	}
+	pthread_setcancelstate(PTHREAD_CANCEL_ENABLE, NULL);
 	fclose(readStream);
 	close(fdRW[1]);
 	return True;

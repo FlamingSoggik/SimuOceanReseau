@@ -1,0 +1,14 @@
+
+pthread_setcancelstate(PTHREAD_CANCEL_DISABLE, NULL);
+if (pthread_mutex_lock(&This->caseParent->g->r->mutexMatricePropriete)){
+        perror("pthread_mutex_lock");
+        exit(-10);
+}
+
+
+
+if (pthread_mutex_unlock(&This->caseParent->g->r->mutexMatricePropriete)){
+    perror("pthread_mutex_unlock");
+    exit(-10);
+}
+pthread_setcancelstate(PTHREAD_CANCEL_ENABLE, NULL);

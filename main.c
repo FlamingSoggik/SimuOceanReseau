@@ -11,7 +11,7 @@
 
 int main(int argc, char **argv)
 {
-    Grille *g;
+	Grille *g;
 	int nbpecheurs = 0, tailleGrille=0;
 	char interface = -1;
 	if (argc < 4){
@@ -32,12 +32,49 @@ int main(int argc, char **argv)
 	switch (interface){
         case 'a' :
             g = New_Grille(tailleGrille, nbpecheurs);
-            //g=SDL_Print(g);
-			sleep(30);
-
-            system("clear");
-            g->Print(g);
-            g->Free(g);
+			g=SDL_Print(g);
+//			g->Print(g);
+//			if (g->r->carteInitialised == True){
+//				pthread_setcancelstate(PTHREAD_CANCEL_DISABLE, NULL);
+//				if (pthread_mutex_lock(&g->r->mutexMatricePropriete)){
+//						perror("pthread_mutex_lock");
+//						exit(-10);
+//				}
+//				ListeCase *lc = New_ListeCase();
+//				for (i=0; i < g->Taille; ++i){
+//					for (j=0; j < g->Taille/2; ++j){
+//						lc->Push(lc, &g->tab[i][j]);
+//					}
+//				}
+//				g->r->askForProperty(g->r, lc);
+//				lc->Vider(lc);
+//				lc->Free(lc);
+//				if (pthread_mutex_unlock(&g->r->mutexMatricePropriete)){
+//						perror("pthread_mutex_lock");
+//						exit(-10);
+//				}
+//				if (pthread_mutex_lock(&g->r->mutexNbrReponseAttendue) < 0){
+//					perror("pthread_mutex_lock");
+//					exit(1);
+//				}
+//				while(g->r->nbrReponseAttendue != 0){
+//					pthread_cond_wait(&g->r->condEverythingRecieved, &g->r->mutexNbrReponseAttendue);
+//				}
+//				g->r->flag=1;
+//				if ( pthread_mutex_unlock(&g->r->mutexNbrReponseAttendue) < 0){
+//					perror("pthread_mutex_unlock");
+//						exit(-10);
+//				}
+//				pthread_setcancelstate(PTHREAD_CANCEL_ENABLE, NULL);
+//			}
+//			else sleep (1);
+//			while(g->TourCourant < 1000){
+//				g->faireTour(g, 0);
+//				system("clear");
+//				g->Print(g);
+//				usleep(1000000);
+//			}
+			g->Free(g);
 			break;
 		case 's':
 			g = New_Grille(tailleGrille, nbpecheurs);

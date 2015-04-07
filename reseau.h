@@ -29,6 +29,7 @@ typedef struct Reseau
 	fd_set untouchableSet;
 	fd_set degradableSet;
 	int maxFd;
+	int flag;
 	Bool carteInitialised;
     int selfPipe[2];
 	unsigned char nbrReponseAttendue;
