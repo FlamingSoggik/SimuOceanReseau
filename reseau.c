@@ -763,7 +763,7 @@ char* Reseau_giveProperty(Reseau *This, char* str, Client *cli){
 		fscanf(readStream, "%" SCNd16, &yCase);
 		//printf("Puis-je donner la case [%d][%d] : ", xCase, yCase);
 
-		if (This->g->tab[xCase][yCase].proprietaire == NULL && This->g->tab[xCase][yCase].isLocked == False){
+		if (This->g->tab[xCase][yCase].proprietaire == NULL && This->g->tab[xCase][yCase].liste->HasAPecheur(This->g->tab[xCase][yCase].liste) == False){
 			ca = &This->g->tab[xCase][yCase];
 			--This->g->NbrCasesToMe;
 			ca->proprietaire=cli;
@@ -834,7 +834,7 @@ Bool Reseau_recupProperty(Reseau* This, char* str, Client* cli){
 			This->g->tab[xCase][yCase].proprietaire = NULL;
 			++This->g->NbrCasesToMe;
 			if (This->flag==1){
-				This->g->tab[xCase][yCase].isLocked=True;
+//				This->g->tab[xCase][yCase].isLocked=True;
 			}
 			This->g->tab[xCase][yCase].liste->Clear(This->g->tab[xCase][yCase].liste);
 

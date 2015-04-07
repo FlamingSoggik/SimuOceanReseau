@@ -18,6 +18,25 @@
 #define max(a,b) (a>=b?a:b)
 #define min(a,b) (a>=b?b:a)
 
+
+#define EAU "\033[00m"				//NOIR
+#define PVOID "\033[48;5;1m"		//ROUGE FONCE
+#define PPLANCTON "\033[48;5;2m"	//VERT CLAIR
+#define PCORAIL "\033[48;5;9m"		//ROUGE CLAIR
+#define PBAR "\033[48;5;184m"		//MARON-JAUNE
+#define PTHON "\033[48;5;8m"		//GRIS
+#define PPOLLUTION "\033[48;5;7m"	//GRIS TRES CLAIR
+#define PPYRANHA "\033[48;5;90m"	//VIOLET
+#define PREQUIN "\033[48;5;18m"		//BLEU FONCE
+#define PORQUE "\033[48;5;27m"		//BLEU CLAIR
+#define PBALEINE "\033[48;5;22m"	//VERT FONCE
+#define PPONT "\033[48;5;136m"		//MARRON CLAIR
+#define PTERRE "\033[48;5;130m"		//MARRON
+#define PPECHEUR "\033[48;5;48m"	//VERT-BLEU
+#define NORMAL "\033[00m"			//NOIR
+#define SELECTIONE "\033[48;5;231m"	//BLANC
+#define PGRAS "\033[01m"
+
 ElementPecheur* New_ElementPecheur(Case *c){
 	ElementPecheur* This = malloc(sizeof(ElementPecheur));
 	if (!This) return NULL;
@@ -41,7 +60,7 @@ char ElementPecheur_Init(Case *c, ElementPecheur* This){
 	This->listeDePeche->Push(This->listeDePeche, ORQUE);
 	This->listeDePeche->Push(This->listeDePeche, BALEINE);
 	This->caseParent=c;
-	c->isLocked=True;
+//	c->isLocked=True;
 	This->PositionInitialeX=This->caseParent->posX;
 	This->PositionInitialeY=This->caseParent->posY;
 	This->pecheParCanne=ElementPecheur_pecheParCanne;
@@ -86,7 +105,7 @@ char ElementPecheur_Init(Case *c, ElementPecheur* This){
 void ElementPecheur_Clear(Element *This){
 	ElementPecheur *p = (ElementPecheur*)This;
 	p->listeDePeche->Free(p->listeDePeche);
-	This->caseParent->isLocked=False;
+//	This->caseParent->isLocked=False;
 }
 
 void ElementPecheur_New_Free(Element* This){
@@ -231,7 +250,7 @@ void ElementPecheur_pecheParCanne(ElementPecheur *This, char *buffer)
 			}
 		}
 	}
-	casePeche->isLocked=False;
+//	casePeche->isLocked=False;
 	if (pthread_mutex_unlock(&This->caseParent->g->r->mutexMatricePropriete) < 0){
 		perror("pthread_mutex_unlock");
 		exit(-10);
@@ -317,7 +336,7 @@ void ElementPecheur_pecheParCanneSDL(ElementPecheur *This, int16_t x, int16_t y)
 		}
 	}
 
-	casePeche->isLocked=False;
+//	casePeche->isLocked=False;
 	if (pthread_mutex_unlock(&This->caseParent->g->r->mutexMatricePropriete) < 0){
 		perror("pthread_mutex_unlock");
 		exit(1);
@@ -414,12 +433,39 @@ void ElementPecheur_pecheParFilet(ElementPecheur *This, char *buffer)
 	MatriceAccessiblePeche=This->caseParent->g->getMatriceVoisins(This->caseParent->g, This->caseParent->posX+deplX, This->caseParent->posY+deplY, This->tailleFilet);
 	MatriceAccessiblePeche[This->tailleFilet][This->tailleFilet]=&(This->caseParent->g->tab[This->caseParent->posX+deplX][This->caseParent->posY+deplX]);
 
+	printf("\n");
+	for(i=0;i<(This->tailleFilet*2+1);++i)
+		printf("=====" NORMAL);
+	printf("=\n");
+	for(i=0;i<(This->tailleFilet*2+1);++i){
+		printf("|");
+		for(j=0; j<(This->tailleFilet*2+1); ++j){
+			if (MatriceAccessiblePeche[i][j] == NULL){
+				printf(" " PREQUIN "  " NORMAL " |");
+			}
+			else {
+				printf(" " PPONT "  " NORMAL " |");
+			}
+		}
+		printf("\n");
+		if (i == This->tailleFilet*2){
+			for (j=0; j<(This->tailleFilet*2+1); j++)
+				printf("=====");
+			printf("=\n");
+		}
+		else {
+			for (j=0; j<(This->tailleFilet*2+1); j++)
+				printf("—————");
+			printf("—\n");
+		}
+	}
+
 	for(i=0;i<2*This->tailleFilet+1.0;++i){
 		for(j=0;j<2*This->tailleFilet+1.0;++j){
 			if (MatriceAccessiblePeche[i][j] != NULL){
-				if (MatriceAccessiblePeche[i][j]->proprietaire == NULL)
-					MatriceAccessiblePeche[i][j]->isLocked = True;
-				else
+//				if (MatriceAccessiblePeche[i][j]->proprietaire == NULL)
+//					MatriceAccessiblePeche[i][j]->isLocked = True;
+//				else
 					lc->Push(lc, MatriceAccessiblePeche[i][j]);
 			}
 		}
@@ -464,6 +510,59 @@ void ElementPecheur_pecheParFilet(ElementPecheur *This, char *buffer)
 	lc->Vider(lc);
 
 
+	printf("\n");
+	for(i=0;i<(This->tailleFilet*2+1);++i)
+		printf("=====" NORMAL);
+	printf("=\n");
+	for(i=0;i<(This->tailleFilet*2+1);++i){
+		printf("|");
+		for(j=0; j<(This->tailleFilet*2+1); ++j){
+			if (MatriceAccessiblePeche[i][j] == NULL){
+				printf(" " PREQUIN "  " NORMAL " |");
+			}
+			else {
+				printf(" " PPONT "  " NORMAL " |");
+			}
+		}
+		printf("\n");
+		if (i == This->tailleFilet*2){
+			for (j=0; j<(This->tailleFilet*2+1); j++)
+				printf("=====");
+			printf("=\n");
+		}
+		else {
+			for (j=0; j<(This->tailleFilet*2+1); j++)
+				printf("—————");
+			printf("—\n");
+		}
+	}
+
+	printf("\n");
+	for(i=0;i<(This->tailleFilet*2+1);++i)
+		printf("=====" NORMAL);
+	printf("=\n");
+	for(i=0;i<(This->tailleFilet*2+1);++i){
+		printf("|");
+		for(j=0; j<(This->tailleFilet*2+1); ++j){
+			if (MatriceAccessiblePeche[i][j] != NULL && MatriceAccessiblePeche[i][j]->proprietaire != NULL){
+				printf(" " PREQUIN "  " NORMAL " |");
+			}
+			else {
+				printf(" " PPONT "  " NORMAL " |");
+			}
+		}
+		printf("\n");
+		if (i == This->tailleFilet*2){
+			for (j=0; j<(This->tailleFilet*2+1); j++)
+				printf("=====");
+			printf("=\n");
+		}
+		else {
+			for (j=0; j<(This->tailleFilet*2+1); j++)
+				printf("—————");
+			printf("—\n");
+		}
+	}
 	for(i=0;i<2*This->tailleFilet+1.0;++i){
 		for(j=0;j<2*This->tailleFilet+1.0;++j){
 			if (MatriceAccessiblePeche[i][j] != NULL && MatriceAccessiblePeche[i][j]->proprietaire == NULL) {
@@ -477,12 +576,12 @@ void ElementPecheur_pecheParFilet(ElementPecheur *This, char *buffer)
 			}
 		}
 	}
-	for(i=0; i<2*This->tailleFilet+1.0; ++i){
-		for(j=0; j<2*This->tailleFilet+1.0; ++j){
-			if (MatriceAccessiblePeche[i][j] != NULL && MatriceAccessiblePeche[i][j]->proprietaire == NULL)
-				MatriceAccessiblePeche[i][j]->isLocked = False;
-		}
-	}
+//	for(i=0; i<2*This->tailleFilet+1.0; ++i){
+//		for(j=0; j<2*This->tailleFilet+1.0; ++j){
+//			if (MatriceAccessiblePeche[i][j] != NULL && MatriceAccessiblePeche[i][j]->proprietaire == NULL)
+//				MatriceAccessiblePeche[i][j]->isLocked = False;
+//		}
+//	}
 	if (pthread_mutex_unlock(&This->caseParent->g->r->mutexMatricePropriete)){
 			perror("pthread_mutex_unlock");
 			exit(-10);
@@ -524,9 +623,9 @@ void ElementPecheur_pecheParFiletSDL(ElementPecheur *This, int16_t x, int16_t y)
 	for(i=0;i<2*This->tailleFilet+1.0;++i){
 		for(j=0;j<2*This->tailleFilet+1.0;++j){
 			if (MatriceAccessiblePeche[i][j] != NULL){
-				if (MatriceAccessiblePeche[i][j]->proprietaire == NULL)
-					MatriceAccessiblePeche[i][j]->isLocked = True;
-				else
+//				if (MatriceAccessiblePeche[i][j]->proprietaire == NULL)
+//					MatriceAccessiblePeche[i][j]->isLocked = True;
+//				else
 					lc->Push(lc, MatriceAccessiblePeche[i][j]);
 			}
 		}
@@ -585,12 +684,12 @@ void ElementPecheur_pecheParFiletSDL(ElementPecheur *This, int16_t x, int16_t y)
 			}
 		}
 	}
-	for(i=0; i<2*This->tailleFilet+1.0; ++i){
-		for(j=0; j<2*This->tailleFilet+1.0; ++j){
-			if (MatriceAccessiblePeche[i][j] != NULL && MatriceAccessiblePeche[i][j]->proprietaire == NULL)
-				MatriceAccessiblePeche[i][j]->isLocked = False;
-		}
-	}
+//	for(i=0; i<2*This->tailleFilet+1.0; ++i){
+//		for(j=0; j<2*This->tailleFilet+1.0; ++j){
+//			if (MatriceAccessiblePeche[i][j] != NULL && MatriceAccessiblePeche[i][j]->proprietaire == NULL)
+//				MatriceAccessiblePeche[i][j]->isLocked = False;
+//		}
+//	}
 	if (pthread_mutex_unlock(&This->caseParent->g->r->mutexMatricePropriete)){
 		perror("pthread_mutex_unlock");
 		exit(-10);
@@ -673,7 +772,7 @@ Bool ElementPecheur_deplacement(ElementPecheur *This, char direction)
 		exit(-10);
 	}
 	/*********************** Si on peux se déplacer sur cette case ***********************/
-	if (caseDeplacement->proprietaire == NULL && ((caseDeplacement->liste->HasAPont(caseDeplacement->liste) == 1 || caseDeplacement->liste->HasDirt(caseDeplacement->liste) == 1 || (This->caseParent->liste->HasAPont(This->caseParent->liste) == 0 && This->caseParent->liste->HasDirt(This->caseParent->liste) == 0)) && caseDeplacement->liste->HasAPecheur(caseDeplacement->liste) == 0)){
+	if ((caseDeplacement->liste->HasAPont(caseDeplacement->liste) == 1 || caseDeplacement->liste->HasDirt(caseDeplacement->liste) == 1 || (This->caseParent->liste->HasAPont(This->caseParent->liste) == 0 && This->caseParent->liste->HasDirt(This->caseParent->liste) == 0)) && caseDeplacement->liste->HasAPecheur(caseDeplacement->liste) == 0){
 		//Il y a un pond et pas de pecheur sur ce pont, on peut s'y déplacer
 		// ou alors on est déja dans l'eau donc on peux se déplacer de partout
 
@@ -704,9 +803,9 @@ Bool ElementPecheur_deplacement(ElementPecheur *This, char direction)
 
 		/*********************** Si on peux se déplacer sur cette case ***********************/
 		if (caseDeplacement->proprietaire == NULL && ((caseDeplacement->liste->HasAPont(caseDeplacement->liste) == 1 || caseDeplacement->liste->HasDirt(caseDeplacement->liste) == 1 || (This->caseParent->liste->HasAPont(This->caseParent->liste) == 0 && This->caseParent->liste->HasDirt(This->caseParent->liste) == 0)) && caseDeplacement->liste->HasAPecheur(caseDeplacement->liste) == 0)){
-			This->caseParent->isLocked=False;
+//			This->caseParent->isLocked=False;
 			This->caseParent->g->moveFromTo(This->caseParent->g, (Element*)This, This->caseParent->posX+deplX, This->caseParent->posY+deplY);
-			This->caseParent->isLocked=True;
+//			This->caseParent->isLocked=True;
 			if (pthread_mutex_unlock(&This->caseParent->g->r->mutexMatricePropriete) < 0){
 				perror("pthread_mutex_unlock");
 				exit(-10);
@@ -718,7 +817,7 @@ Bool ElementPecheur_deplacement(ElementPecheur *This, char direction)
 		}
 		/********************* Si on peux PAS se déplacer sur cette case *********************/
 		else {
-			This->caseParent->isLocked=False;
+//			This->caseParent->isLocked=False;
 			if (pthread_mutex_unlock(&This->caseParent->g->r->mutexMatricePropriete) < 0){
 				perror("pthread_mutex_unlock");
 				exit(-10);
@@ -736,7 +835,7 @@ Bool ElementPecheur_deplacement(ElementPecheur *This, char direction)
 			exit(-10);
 		}
 		pthread_setcancelstate(PTHREAD_CANCEL_ENABLE, NULL);
-		This->caseParent->isLocked=False;
+//		This->caseParent->isLocked=False;
 		lc->Free(lc);
 		printf("%s : ERR2\n", __FUNCTION__);
 		return False;
@@ -816,13 +915,11 @@ Bool ElementPecheur_construirePont(ElementPecheur *This, char direction)
 		perror("pthread_mutex_lock");
 		exit(-10);
 	}
-	if (caseCreationDuPont->proprietaire == NULL
-		&& (caseCreationDuPont->liste->HasAPont(caseCreationDuPont->liste) == 0
-			&& caseCreationDuPont->liste->HasDirt(caseCreationDuPont->liste) == 0
-			&& (caseCreationDuPont->liste->HasAnAnimal(caseCreationDuPont->liste) == 0
-				|| (caseCreationDuPont->liste->HasAnAnimal(caseCreationDuPont->liste) == 1
-					&& ((ElementAnimal*)caseCreationDuPont->liste->getAnimal(caseCreationDuPont->liste))->constantes->taille < This->caseParent->g->TailleMaxSousPont)
-				)
+	if (caseCreationDuPont->liste->HasAPont(caseCreationDuPont->liste) == 0
+		&& caseCreationDuPont->liste->HasDirt(caseCreationDuPont->liste) == 0
+		&& (caseCreationDuPont->liste->HasAnAnimal(caseCreationDuPont->liste) == 0
+			|| (caseCreationDuPont->liste->HasAnAnimal(caseCreationDuPont->liste) == 1
+				&& ((ElementAnimal*)caseCreationDuPont->liste->getAnimal(caseCreationDuPont->liste))->constantes->taille < This->caseParent->g->TailleMaxSousPont)
 			)
 		){
 		//Il y a un pond et pas de pecheur sur ce pont, on peut s'y déplacer
@@ -863,7 +960,7 @@ Bool ElementPecheur_construirePont(ElementPecheur *This, char direction)
 			){
 
 			caseCreationDuPont->liste->Push(caseCreationDuPont->liste, (Element*)New_ElementPont(caseCreationDuPont));
-			This->caseParent->isLocked=False;
+//			This->caseParent->isLocked=False;
 			This->sac-=COUT_POSE_PONT;
 			if (pthread_mutex_unlock(&This->caseParent->g->r->mutexMatricePropriete) < 0){
 				perror("pthread_mutex_unlock");
@@ -876,7 +973,7 @@ Bool ElementPecheur_construirePont(ElementPecheur *This, char direction)
 			return True;
 		}
 		else {
-			caseCreationDuPont->isLocked=False;
+//			caseCreationDuPont->isLocked=False;
 			if (pthread_mutex_unlock(&This->caseParent->g->r->mutexMatricePropriete) < 0){
 				perror("pthread_mutex_unlock");
 				exit(-10);
@@ -888,7 +985,7 @@ Bool ElementPecheur_construirePont(ElementPecheur *This, char direction)
 		}
 	}
 	else {
-		caseCreationDuPont->isLocked=False;
+//		caseCreationDuPont->isLocked=False;
 		printf("%s : ERR2\n", __FUNCTION__);
 		if (pthread_mutex_unlock(&This->caseParent->g->r->mutexMatricePropriete) < 0){
 			perror("pthread_mutex_unlock");

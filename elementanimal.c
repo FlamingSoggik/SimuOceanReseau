@@ -305,7 +305,7 @@ void ElementAnimal_predation(ElementAnimal *This)
 	}
 
 
-	This->caseParent->isLocked = True;
+	//This->caseParent->isLocked = True;
 
 	while (compt < 8 && noessai < 2){
 		/************** Demande de mise à jour du contenu de la case en question **************/
@@ -426,16 +426,16 @@ void ElementAnimal_predation(ElementAnimal *This)
 	// On a plus besoin de la matrice temporaire donc on peux la supprimer :
 
 	if(l_elementBouffable->Taille(l_elementBouffable) == 0){
-		for(i=0; i<3; ++i){
-			for(j=0; j<3; ++j){
-				if (MatriceAccessiblePredation[i][j] != NULL && MatriceAccessiblePredation[i][j]->proprietaire == NULL)
-					MatriceAccessiblePredation[i][j]->isLocked = False;
-			}
-		}
+//		for(i=0; i<3; ++i){
+//			for(j=0; j<3; ++j){
+//				if (MatriceAccessiblePredation[i][j] != NULL && MatriceAccessiblePredation[i][j]->proprietaire == NULL)
+//					//MatriceAccessiblePredation[i][j]->isLocked = False;
+//			}
+//		}
 		for (i=0; i<3;++i){
 			free(MatriceAccessiblePredation[i]);
 		}
-		This->caseParent->isLocked = False;
+//		This->caseParent->isLocked = False;
 		free(MatriceAccessiblePredation);
 		if (pthread_mutex_unlock(&This->caseParent->g->r->mutexMatricePropriete)){
 			perror("pthread_mutex_unlock");
@@ -466,16 +466,16 @@ void ElementAnimal_predation(ElementAnimal *This)
 	pthread_setcancelstate(PTHREAD_CANCEL_ENABLE, NULL);
 	l_elementBouffable->Vider(l_elementBouffable);
 	l_elementBouffable->Free(l_elementBouffable);
-	for(i=0; i<3; ++i){
-		for(j=0; j<3; ++j){
-			if (MatriceAccessiblePredation[i][j] != NULL && MatriceAccessiblePredation[i][j]->proprietaire == NULL)
-				MatriceAccessiblePredation[i][j]->isLocked = False;
-		}
-	}
+//	for(i=0; i<3; ++i){
+//		for(j=0; j<3; ++j){
+//			if (MatriceAccessiblePredation[i][j] != NULL && MatriceAccessiblePredation[i][j]->proprietaire == NULL)
+//				MatriceAccessiblePredation[i][j]->isLocked = False;
+//		}
+//	}
 	for (i=0; i<3;++i){
 		free(MatriceAccessiblePredation[i]);
 	}
-	This->caseParent->isLocked = False;
+//	This->caseParent->isLocked = False;
 	if (pthread_mutex_unlock(&This->caseParent->g->r->mutexMatricePropriete)){
 		perror("pthread_mutex_unlock");
 		exit(-10);
@@ -494,8 +494,8 @@ void ElementAnimal_deplacement(ElementAnimal *This){
 	for(i=0; i<(This->constantes->sautMax*2+1); ++i){
 		for(j=0; j<(This->constantes->sautMax*2+1); ++j){
 			if (MatriceAccessibleDeplacement[i][j] != NULL){
-				if (MatriceAccessibleDeplacement[i][j]->proprietaire == NULL)
-					MatriceAccessibleDeplacement[i][j]->isLocked=True;
+//				if (MatriceAccessibleDeplacement[i][j]->proprietaire == NULL)
+//					MatriceAccessibleDeplacement[i][j]->isLocked=True;
 				lc->Push(lc, MatriceAccessibleDeplacement[i][j]);
 			}
 		}
@@ -506,7 +506,7 @@ void ElementAnimal_deplacement(ElementAnimal *This){
 			perror("pthread_mutex_lock");
 			exit(-10);
 	}
-	This->caseParent->isLocked=True;
+//	This->caseParent->isLocked=True;
 	while (compt < (This->constantes->sautMax*2+1)*(This->constantes->sautMax*2+1)-1 && noessai < 2){
 		/************** Demande de mise à jour du contenu de la case en question **************/
 		This->caseParent->g->r->askForProperty(This->caseParent->g->r, lc);
@@ -557,18 +557,18 @@ void ElementAnimal_deplacement(ElementAnimal *This){
 
 	if (flag == 0){
 		/* unlock des cases + free matrice */
-		for(i=0; i<2*This->constantes->sautMax+1; ++i){
-			for(j=0; j<2*This->constantes->sautMax+1; ++j){
-				if (MatriceAccessibleDeplacement[i][j] != NULL && MatriceAccessibleDeplacement[i][j]->proprietaire == NULL)
-					MatriceAccessibleDeplacement[i][j]->isLocked = False;
-			}
-		}
+//		for(i=0; i<2*This->constantes->sautMax+1; ++i){
+//			for(j=0; j<2*This->constantes->sautMax+1; ++j){
+//				if (MatriceAccessibleDeplacement[i][j] != NULL && MatriceAccessibleDeplacement[i][j]->proprietaire == NULL)
+//					MatriceAccessibleDeplacement[i][j]->isLocked = False;
+//			}
+//		}
 		for (i=0; i<2*This->constantes->sautMax+1.0;++i){
 			free(MatriceAccessibleDeplacement[i]);
 		}
 		free(MatriceAccessibleDeplacement);
 
-		This->caseParent->isLocked=False;
+//		This->caseParent->isLocked=False;
 		if (pthread_mutex_unlock(&This->caseParent->g->r->mutexMatricePropriete)){
 				perror("pthread_mutex_lock");
 				exit(-10);
@@ -616,15 +616,15 @@ void ElementAnimal_deplacement(ElementAnimal *This){
 	/* unlock des cases + free matrice */
 	for(i=0; i<2*This->constantes->sautMax+1; ++i){
 		for(j=0; j<2*This->constantes->sautMax+1; ++j){
-			if (MatriceAccessibleDeplacement[i][j] != NULL && MatriceAccessibleDeplacement[i][j]->proprietaire == NULL)
-				MatriceAccessibleDeplacement[i][j]->isLocked = False;
+//			if (MatriceAccessibleDeplacement[i][j] != NULL && MatriceAccessibleDeplacement[i][j]->proprietaire == NULL)
+//				MatriceAccessibleDeplacement[i][j]->isLocked = False;
 		}
 	}
 	for (i=0; i<2*This->constantes->sautMax+1.0;++i){
 		free(MatriceAccessibleDeplacement[i]);
 	}
 	free(MatriceAccessibleDeplacement);
-	This->caseParent->isLocked=False;
+//	This->caseParent->isLocked=False;
 	if (pthread_mutex_unlock(&This->caseParent->g->r->mutexMatricePropriete)){
 			perror("pthread_mutex_lock");
 			exit(-10);
@@ -641,10 +641,10 @@ void ElementAnimal_reproduction(ElementAnimal *This){
 			perror("pthread_mutex_lock");
 			exit(-10);
 	}
-	This->caseParent->isLocked=True;
+//	This->caseParent->isLocked=True;
 	if (This->derniereReproduction < This->constantes->frequenceReproduction){
 		++This->derniereReproduction;
-		This->caseParent->isLocked=False;
+//		This->caseParent->isLocked=False;
 		if (pthread_mutex_unlock(&This->caseParent->g->r->mutexMatricePropriete)){
 				perror("pthread_mutex_lock");
 				exit(-10);
@@ -722,18 +722,18 @@ void ElementAnimal_reproduction(ElementAnimal *This){
 	}
 
 	if (lcaseNaissance->Taille(lcaseNaissance) == 0|| amoureux == NULL){
-		for(i=0; i<3; ++i){
-			for(j=0; j<3; ++j){
-				if (MatriceAccessibleReproduction[i][j] != NULL && MatriceAccessibleReproduction[i][j]->proprietaire == NULL)
-					MatriceAccessibleReproduction[i][j]->isLocked = False;
-			}
-		}
+//		for(i=0; i<3; ++i){
+//			for(j=0; j<3; ++j){
+//				if (MatriceAccessibleReproduction[i][j] != NULL && MatriceAccessibleReproduction[i][j]->proprietaire == NULL)
+//					MatriceAccessibleReproduction[i][j]->isLocked = False;
+//			}
+//		}
 		for (i=0; i<3;++i){
 			free(MatriceAccessibleReproduction[i]);
 		}
 		free(MatriceAccessibleReproduction);
 
-		This->caseParent->isLocked=False;
+//		This->caseParent->isLocked=False;
 		if (pthread_mutex_unlock(&This->caseParent->g->r->mutexMatricePropriete)){
 				perror("pthread_mutex_lock");
 				exit(-10);
@@ -747,13 +747,13 @@ void ElementAnimal_reproduction(ElementAnimal *This){
 	This->sasiete-=(This->constantes->gestation*This->constantes->metabolisme);
 	caseNaissance->liste->Push(caseNaissance->liste, (Element*)New_ElementAnimal(caseNaissance, This->type));
 	This->derniereReproduction=0;
-	This->caseParent->isLocked=False;
-	for(i=0; i<3; ++i){
-		for(j=0; j<3; ++j){
-			if (MatriceAccessibleReproduction[i][j] != NULL && MatriceAccessibleReproduction[i][j]->proprietaire == NULL)
-				MatriceAccessibleReproduction[i][j]->isLocked = False;
-		}
-	}
+//	This->caseParent->isLocked=False;
+//	for(i=0; i<3; ++i){
+//		for(j=0; j<3; ++j){
+//			if (MatriceAccessibleReproduction[i][j] != NULL && MatriceAccessibleReproduction[i][j]->proprietaire == NULL)
+//				MatriceAccessibleReproduction[i][j]->isLocked = False;
+//		}
+//	}
 	for (i=0; i<3;++i){
 		free(MatriceAccessibleReproduction[i]);
 	}

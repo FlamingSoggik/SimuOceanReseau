@@ -485,7 +485,7 @@ void Grille_faireTour(Grille *This, char isSdl){
 					e->aFaitSonTour(e);
 				}
 			}
-			else {
+			else if (This->tab[i][j].proprietaire == NULL){
 				printf("pas d'animal à traiter\n");
 			}
 			e=NULL;
