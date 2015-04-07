@@ -46,3 +46,6 @@ HEADERS += \
     sdl_pecheur.h \
     listeclient.h \
     client.h
+
+OTHER_FILES += \
+    copypaste.txt

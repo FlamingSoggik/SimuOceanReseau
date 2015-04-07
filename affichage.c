@@ -175,13 +175,13 @@ struct Grille* SDL_Print(struct Grille *grill){
 							if (Est_Un_Dev==2) SDL_FillRect(graphique, NULL, SDL_MapRGB(ecran->format,255,255,255));
 							break;
 						case SDLK_F5: // Reset la grille
-							i=grill->Taille;
-							nbpecheurs = grill->nbPecheur;
-							grill->Free(grill);
-							grill=New_Grille(i, nbpecheurs);
-							Compteur_Tours=0;
-							TourDuJoueur=-1;
-							Init_Tab(nbr_espece);
+//							i=grill->Taille;
+//							nbpecheurs = grill->nbPecheur;
+//							grill->Free(grill);
+//							grill=New_Grille(i, nbpecheurs);
+//							Compteur_Tours=0;
+//							TourDuJoueur=-1;
+//							Init_Tab(nbr_espece);
 							break;
 						case SDLK_KP1: // Pavé numérique
 							if (TourDuJoueur != -1)

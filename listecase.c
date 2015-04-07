@@ -37,6 +37,8 @@ void ListeCase_Clear(ListeCase *This){
 }
 
 int16_t ListeCase_Push(ListeCase* This, Case *c){
+	if (c == NULL)
+		return 0;
     MaillonListeCase *il = malloc(sizeof(MaillonListeCase));
     if (!il) return ERROR_MALLOC_ITEM;
     il->next=This->Top;

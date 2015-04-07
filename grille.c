@@ -138,9 +138,9 @@ void Grille_Init(Grille *This, uint16_t Taille, unsigned char nbPecheurs){
 
 	Bool flag;
 	int ret;
-	struct timespec ts;
-	ts.tv_sec = 2;
-	ts.tv_nsec = 0;
+//	struct timespec ts;
+//	ts.tv_sec = 2;
+//	ts.tv_nsec = 0;
 	This->tabPecheur=malloc(This->nbPecheur*sizeof(ElementPecheur*));
 	for(parcours=0; parcours<This->nbPecheur; ++parcours){
 		flag = False;
@@ -170,7 +170,7 @@ void Grille_Init(Grille *This, uint16_t Taille, unsigned char nbPecheurs){
 			lc->Push(lc, &This->tab[i][j]);
 			This->r->askForProperty(This->r, lc);
 			lc->Free(lc);
-			if (pthread_mutex_unlock(&This->r->mutexMatricePropriete)){
+			if (pthread_mutex_unlock(&This->r->mutexMatricePropriete) < 0){
 				perror("pthread_mutex_unlock");
 				exit(-10);
 			}
@@ -182,16 +182,13 @@ void Grille_Init(Grille *This, uint16_t Taille, unsigned char nbPecheurs){
 				pthread_cond_wait(&This->r->condEverythingRecieved, &This->r->mutexNbrReponseAttendue);
 			}
 			if ( (ret = pthread_mutex_unlock(&This->r->mutexNbrReponseAttendue)) < 0){
-				if (ret != EPERM){
-					perror("pthread_mutex_lock");
-					exit(1);
-				}
-			}
-			if (pthread_mutex_lock(&This->r->mutexMatricePropriete)){
 				perror("pthread_mutex_unlock");
 				exit(-10);
 			}
-			sleep(5);
+			if (pthread_mutex_lock(&This->r->mutexMatricePropriete)){
+				perror("pthread_mutex_lock");
+				exit(-10);
+			}
 			if (This->tab[i][j].proprietaire != NULL){
 				printf("Je n'ai pas eu la propriété :(\n");
 				continue;
@@ -204,7 +201,7 @@ void Grille_Init(Grille *This, uint16_t Taille, unsigned char nbPecheurs){
 			}
 		}
 	}
-	if (pthread_mutex_unlock(&This->r->mutexMatricePropriete)){
+	if (pthread_mutex_unlock(&This->r->mutexMatricePropriete) < 0){
 		perror("pthread_mutex_unlock");
 		exit(-10);
 	}
@@ -470,7 +467,7 @@ void Grille_faireTour(Grille *This, char isSdl){
 	ElementPecheur *p;
 	for (i=0; i<This->Taille; ++i){
 		for (j=0; j<This->Taille; ++j){
-			if (This->tab[i][j].liste->HasAnAnimal(This->tab[i][j].liste)){
+			if (This->tab[i][j].proprietaire == NULL && This->tab[i][j].liste->HasAnAnimal(This->tab[i][j].liste)){
 				e=(ElementAnimal*)This->tab[i][j].liste->getAnimal(This->tab[i][j].liste);
 				if (e->doitJouerCeTour(e) == False)
 					continue;

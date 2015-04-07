@@ -162,20 +162,78 @@ void ElementPecheur_pecheParCanne(ElementPecheur *This, char *buffer)
 	}
 	free(buf1);
 
-	ElementAnimal* e;
 
+	ElementAnimal* e;
+	pthread_setcancelstate(PTHREAD_CANCEL_DISABLE, NULL);
+	if (pthread_mutex_lock(&This->caseParent->g->r->mutexMatricePropriete) < 0){
+		perror("pthread_mutex_lock");
+		exit(-10);
+	}
 	if ((double)This->caseParent->posX+deplX < 0 || This->caseParent->posX+deplX > This->caseParent->g->Taille-1 || (double)This->caseParent->posY+deplY < 0 || This->caseParent->posY+deplY > This->caseParent->g->Taille-1){
+		if (pthread_mutex_unlock(&This->caseParent->g->r->mutexMatricePropriete) < 0){
+			perror("pthread_mutex_unlock");
+			exit(-10);
+		}
+		pthread_setcancelstate(PTHREAD_CANCEL_ENABLE, NULL);
 		return;
 	}
 	Case *casePeche;
 	casePeche=&This->caseParent->g->tab[This->caseParent->posX+deplX][This->caseParent->posY+deplY];
+	ListeCase * lc = New_ListeCase();
+	lc->Push(lc, casePeche);
+	/************** Demande de mise à jour du contenu de la case en question **************/
+	This->caseParent->g->r->askForVisibility(This->caseParent->g->r, lc);
+	pthread_setcancelstate(PTHREAD_CANCEL_DISABLE, NULL);
+	if (pthread_mutex_lock(&This->caseParent->g->r->mutexNbrReponseAttendue) < 0){
+		perror("pthread_mutex_lock");
+		exit(1);
+	}
+	while(This->caseParent->g->r->nbrReponseAttendue != 0){
+		pthread_cond_wait(&This->caseParent->g->r->condEverythingRecieved, &This->caseParent->g->r->mutexNbrReponseAttendue);
+	}
+	if ( pthread_mutex_unlock(&This->caseParent->g->r->mutexNbrReponseAttendue) < 0){
+		perror("pthread_mutex_unlock");
+			exit(-10);
+	}
+	/***************************************************************************************/
+
 	if (casePeche->liste->HasAnAnimal(casePeche->liste)){
-		e=(ElementAnimal*)casePeche->liste->getAnimal(casePeche->liste);
-		if (This->peutPecher(This, e->type) == True){
-			This->sac+=e->constantes->taille;
-			e->caseParent->liste->deleteElement(e->caseParent->liste, (Element*)e);
+		/************** Demande de mise à jour du contenu de la case en question **************/
+		This->caseParent->g->r->askForProperty(This->caseParent->g->r, lc);
+		if (pthread_mutex_unlock(&This->caseParent->g->r->mutexMatricePropriete) < 0){
+			perror("pthread_mutex_unlock");
+			exit(1);
+		}
+		if (pthread_mutex_lock(&This->caseParent->g->r->mutexNbrReponseAttendue) < 0){
+			perror("pthread_mutex_lock");
+			exit(1);
+		}
+		while(This->caseParent->g->r->nbrReponseAttendue != 0){
+			pthread_cond_wait(&This->caseParent->g->r->condEverythingRecieved, &This->caseParent->g->r->mutexNbrReponseAttendue);
+		}
+		if ( pthread_mutex_unlock(&This->caseParent->g->r->mutexNbrReponseAttendue) < 0){
+			perror("pthread_mutex_unlock");
+				exit(-10);
+		}
+		if (pthread_mutex_lock(&This->caseParent->g->r->mutexMatricePropriete) < 0){
+			perror("pthread_mutex_lock");
+			exit(1);
+		}
+		/***************************************************************************************/
+
+		if (casePeche->liste->HasAnAnimal(casePeche->liste)){
+			e=(ElementAnimal*)casePeche->liste->getAnimal(casePeche->liste);
+			if (This->peutPecher(This, e->type) == True){
+				This->sac+=e->constantes->taille;
+				e->caseParent->liste->deleteElement(e->caseParent->liste, (Element*)e);
+			}
 		}
 	}
+	if (pthread_mutex_unlock(&This->caseParent->g->r->mutexMatricePropriete) < 0){
+		perror("pthread_mutex_unlock");
+		exit(-10);
+	}
+	pthread_setcancelstate(PTHREAD_CANCEL_ENABLE, NULL);
 }
 
 void ElementPecheur_pecheParCanneSDL(ElementPecheur *This, int16_t x, int16_t y)
@@ -193,14 +251,67 @@ void ElementPecheur_pecheParCanneSDL(ElementPecheur *This, int16_t x, int16_t y)
 	}
 	ElementAnimal *e;
 	Case *casePeche;
+	ListeCase *lc = New_ListeCase();
+
 	casePeche=&This->caseParent->g->tab[x][y];
+	lc->Push(lc, casePeche);
+
+	/************** Demande de mise à jour du contenu de la case en question **************/
+	This->caseParent->g->r->askForVisibility(This->caseParent->g->r, lc);
+	pthread_setcancelstate(PTHREAD_CANCEL_DISABLE, NULL);
+	if (pthread_mutex_lock(&This->caseParent->g->r->mutexNbrReponseAttendue) < 0){
+		perror("pthread_mutex_lock");
+		exit(1);
+	}
+	while(This->caseParent->g->r->nbrReponseAttendue != 0){
+		pthread_cond_wait(&This->caseParent->g->r->condEverythingRecieved, &This->caseParent->g->r->mutexNbrReponseAttendue);
+	}
+	if ( pthread_mutex_unlock(&This->caseParent->g->r->mutexNbrReponseAttendue) < 0){
+		perror("pthread_mutex_unlock");
+			exit(-10);
+	}
+	/***************************************************************************************/
+	if (pthread_mutex_lock(&This->caseParent->g->r->mutexMatricePropriete) < 0){
+		perror("pthread_mutex_lock");
+		exit(1);
+	}
+
 	if (casePeche->liste->HasAnAnimal(casePeche->liste)){
-		e=(ElementAnimal*)casePeche->liste->getAnimal(casePeche->liste);
-		if (This->peutPecher(This, e->type) == True){
-			This->sac+=e->constantes->taille;
-			e->caseParent->liste->deleteElement(e->caseParent->liste, (Element*)e);
+		/************** Demande de mise à jour du contenu de la case en question **************/
+		This->caseParent->g->r->askForProperty(This->caseParent->g->r, lc);
+		if (pthread_mutex_unlock(&This->caseParent->g->r->mutexMatricePropriete) < 0){
+			perror("pthread_mutex_unlock");
+			exit(1);
+		}
+		if (pthread_mutex_lock(&This->caseParent->g->r->mutexNbrReponseAttendue) < 0){
+			perror("pthread_mutex_lock");
+			exit(1);
+		}
+		while(This->caseParent->g->r->nbrReponseAttendue != 0){
+			pthread_cond_wait(&This->caseParent->g->r->condEverythingRecieved, &This->caseParent->g->r->mutexNbrReponseAttendue);
+		}
+		if ( pthread_mutex_unlock(&This->caseParent->g->r->mutexNbrReponseAttendue) < 0){
+			perror("pthread_mutex_unlock");
+				exit(-10);
+		}
+		if (pthread_mutex_lock(&This->caseParent->g->r->mutexMatricePropriete) < 0){
+			perror("pthread_mutex_lock");
+			exit(1);
+		}
+		/***************************************************************************************/
+		if (casePeche->liste->HasAnAnimal(casePeche->liste)){
+			e=(ElementAnimal*)casePeche->liste->getAnimal(casePeche->liste);
+			if (This->peutPecher(This, e->type) == True){
+				This->sac+=e->constantes->taille;
+				e->caseParent->liste->deleteElement(e->caseParent->liste, (Element*)e);
+			}
 		}
 	}
+	if (pthread_mutex_unlock(&This->caseParent->g->r->mutexMatricePropriete) < 0){
+		perror("pthread_mutex_unlock");
+		exit(1);
+	}
+	pthread_setcancelstate(PTHREAD_CANCEL_ENABLE, NULL);
 }
 
 Bool ElementPecheur_peutPecher(ElementPecheur *This, Type t)
@@ -386,22 +497,104 @@ Bool ElementPecheur_deplacement(ElementPecheur *This, char direction)
 	}
 	Case *caseDeplacement;
 	caseDeplacement = &This->caseParent->g->tab[This->caseParent->posX+deplX][This->caseParent->posY+deplY];
+	ListeCase *lc = New_ListeCase();
+	lc->Push(lc, caseDeplacement);
+	/************** Demande de mise à jour du contenu de la case en question **************/
+	This->caseParent->g->r->askForVisibility(This->caseParent->g->r, lc);
+	lc->Vider(lc);
+	pthread_setcancelstate(PTHREAD_CANCEL_DISABLE, NULL);
+	if (pthread_mutex_lock(&This->caseParent->g->r->mutexNbrReponseAttendue) < 0){
+		perror("pthread_mutex_lock");
+		exit(1);
+	}
+	while(This->caseParent->g->r->nbrReponseAttendue != 0){
+		pthread_cond_wait(&This->caseParent->g->r->condEverythingRecieved, &This->caseParent->g->r->mutexNbrReponseAttendue);
+	}
+	if ( pthread_mutex_unlock(&This->caseParent->g->r->mutexNbrReponseAttendue) < 0){
+		perror("pthread_mutex_unlock");
+			exit(-10);
+	}
+	pthread_setcancelstate(PTHREAD_CANCEL_ENABLE, NULL);
+	/***************************************************************************************/
+
+	pthread_setcancelstate(PTHREAD_CANCEL_DISABLE, NULL);
+	if (pthread_mutex_unlock(&This->caseParent->g->r->mutexMatricePropriete)){
+		perror("pthread_mutex_unlock");
+		exit(-10);
+	}
+	/*********************** Si on peux se déplacer sur cette case ***********************/
 	if ((caseDeplacement->liste->HasAPont(caseDeplacement->liste) == 1 || caseDeplacement->liste->HasDirt(caseDeplacement->liste) == 1 || (This->caseParent->liste->HasAPont(This->caseParent->liste) == 0 && This->caseParent->liste->HasDirt(This->caseParent->liste) == 0)) && caseDeplacement->liste->HasAPecheur(caseDeplacement->liste) == 0){
 		//Il y a un pond et pas de pecheur sur ce pont, on peut s'y déplacer
 		// ou alors on est déja dans l'eau donc on peux se déplacer de partout
-		This->caseParent->isLocked=False;
-		This->caseParent->g->moveFromTo(This->caseParent->g, (Element*)This, This->caseParent->posX+deplX, This->caseParent->posY+deplY);
-		This->caseParent->isLocked=True;
-		return True;
+
+		lc->Push(lc, caseDeplacement);
+		/************** On peut s'y déplacer, on demande donc la propriété **************/
+		This->caseParent->g->r->askForProperty(This->caseParent->g->r, lc);
+		lc->Vider(lc);
+		if (pthread_mutex_unlock(&This->caseParent->g->r->mutexMatricePropriete)){
+			perror("pthread_mutex_unlock");
+			exit(-10);
+		}
+		if (pthread_mutex_lock(&This->caseParent->g->r->mutexNbrReponseAttendue) < 0){
+			perror("pthread_mutex_lock");
+			exit(1);
+		}
+		while(This->caseParent->g->r->nbrReponseAttendue != 0){
+			pthread_cond_wait(&This->caseParent->g->r->condEverythingRecieved, &This->caseParent->g->r->mutexNbrReponseAttendue);
+		}
+		if ( pthread_mutex_unlock(&This->caseParent->g->r->mutexNbrReponseAttendue) < 0){
+			perror("pthread_mutex_unlock");
+				exit(-10);
+		}
+		if (pthread_mutex_unlock(&This->caseParent->g->r->mutexMatricePropriete)){
+			perror("pthread_mutex_unlock");
+			exit(-10);
+		}
+		/********************************************************************************/
+
+		/*********************** Si on peux se déplacer sur cette case ***********************/
+		if ((caseDeplacement->liste->HasAPont(caseDeplacement->liste) == 1 || caseDeplacement->liste->HasDirt(caseDeplacement->liste) == 1 || (This->caseParent->liste->HasAPont(This->caseParent->liste) == 0 && This->caseParent->liste->HasDirt(This->caseParent->liste) == 0)) && caseDeplacement->liste->HasAPecheur(caseDeplacement->liste) == 0){
+			This->caseParent->isLocked=False;
+			This->caseParent->g->moveFromTo(This->caseParent->g, (Element*)This, This->caseParent->posX+deplX, This->caseParent->posY+deplY);
+			This->caseParent->isLocked=True;
+			if (pthread_mutex_unlock(&This->caseParent->g->r->mutexMatricePropriete) < 0){
+				perror("pthread_mutex_unlock");
+				exit(-10);
+			}
+			pthread_setcancelstate(PTHREAD_CANCEL_ENABLE, NULL);
+			printf("%s : Normalement tout s'est bien passé\n", __FUNCTION__);
+			return True;
+		}
+		/********************* Si on peux PAS se déplacer sur cette case *********************/
+		else {
+			This->caseParent->isLocked=False;
+			if (pthread_mutex_unlock(&This->caseParent->g->r->mutexMatricePropriete) < 0){
+				perror("pthread_mutex_unlock");
+				exit(-10);
+			}
+			pthread_setcancelstate(PTHREAD_CANCEL_ENABLE, NULL);
+			printf("%s : ERR1\n", __FUNCTION__);
+			return False;
+		}
 	}
 	else {
-		//pas possible
+		//Deplacement impossible
+		if (pthread_mutex_unlock(&This->caseParent->g->r->mutexMatricePropriete) < 0){
+			perror("pthread_mutex_unlock");
+			exit(-10);
+		}
+		pthread_setcancelstate(PTHREAD_CANCEL_ENABLE, NULL);
+		printf("%s : ERR2\n", __FUNCTION__);
 		return False;
 	}
 }
 
 Bool ElementPecheur_construirePont(ElementPecheur *This, char direction)
 {
+	if (This->sac < COUT_POSE_PONT){
+		printf("Err cout pont\n");
+		return False;
+	}
 	int16_t deplX = 0, deplY = 0;
 	switch (direction) {
 		case '1':
@@ -445,13 +638,74 @@ Bool ElementPecheur_construirePont(ElementPecheur *This, char direction)
 	}
 	Case *caseCreationDuPont;
 	caseCreationDuPont = &This->caseParent->g->tab[This->caseParent->posX+deplX][This->caseParent->posY+deplY];
-	if (This->sac >= COUT_POSE_PONT && caseCreationDuPont->liste->HasAPont(caseCreationDuPont->liste) == 0 && caseCreationDuPont->liste->HasDirt(caseCreationDuPont->liste) == 0 && (caseCreationDuPont->liste->HasAnAnimal(caseCreationDuPont->liste) == 0 || (caseCreationDuPont->liste->HasAnAnimal(caseCreationDuPont->liste) == 1 && ((ElementAnimal*)caseCreationDuPont->liste->getAnimal(caseCreationDuPont->liste))->constantes->taille < This->caseParent->g->TailleMaxSousPont))){
+	ListeCase *lc = New_ListeCase();
+	lc->Push(lc, caseCreationDuPont);
+	/************** Demande de mise à jour du contenu de la case en question **************/
+	This->caseParent->g->r->askForVisibility(This->caseParent->g->r, lc);
+	pthread_setcancelstate(PTHREAD_CANCEL_DISABLE, NULL);
+	if (pthread_mutex_lock(&This->caseParent->g->r->mutexNbrReponseAttendue) < 0){
+		perror("pthread_mutex_lock");
+		exit(1);
+	}
+	while(This->caseParent->g->r->nbrReponseAttendue != 0){
+		pthread_cond_wait(&This->caseParent->g->r->condEverythingRecieved, &This->caseParent->g->r->mutexNbrReponseAttendue);
+	}
+	if ( pthread_mutex_unlock(&This->caseParent->g->r->mutexNbrReponseAttendue) < 0){
+		perror("pthread_mutex_unlock");
+			exit(-10);
+	}
+	pthread_setcancelstate(PTHREAD_CANCEL_ENABLE, NULL);
+	/***************************************************************************************/
+
+	if (caseCreationDuPont->liste->HasAPont(caseCreationDuPont->liste) == 0 && caseCreationDuPont->liste->HasDirt(caseCreationDuPont->liste) == 0 && (caseCreationDuPont->liste->HasAnAnimal(caseCreationDuPont->liste) == 0 || (caseCreationDuPont->liste->HasAnAnimal(caseCreationDuPont->liste) == 1 && ((ElementAnimal*)caseCreationDuPont->liste->getAnimal(caseCreationDuPont->liste))->constantes->taille < This->caseParent->g->TailleMaxSousPont))){
 		//Il y a un pond et pas de pecheur sur ce pont, on peut s'y déplacer
-		caseCreationDuPont->liste->Push(caseCreationDuPont->liste, (Element*)New_ElementPont(caseCreationDuPont));
-		This->sac-=COUT_POSE_PONT;
-		return True;
+
+		/************** On peut s'y déplacer, on demande donc la propriété **************/
+		This->caseParent->g->r->askForProperty(This->caseParent->g->r, lc);
+
+		pthread_setcancelstate(PTHREAD_CANCEL_DISABLE, NULL);
+		if (pthread_mutex_lock(&This->caseParent->g->r->mutexNbrReponseAttendue) < 0){
+			perror("pthread_mutex_lock");
+			exit(1);
+		}
+		while(This->caseParent->g->r->nbrReponseAttendue != 0){
+			pthread_cond_wait(&This->caseParent->g->r->condEverythingRecieved, &This->caseParent->g->r->mutexNbrReponseAttendue);
+		}
+		if ( pthread_mutex_unlock(&This->caseParent->g->r->mutexNbrReponseAttendue) < 0){
+			perror("pthread_mutex_unlock");
+				exit(-10);
+		}
+		pthread_setcancelstate(PTHREAD_CANCEL_ENABLE, NULL);
+
+		/********************************************************************************/
+
+		if (caseCreationDuPont->liste->HasAPont(caseCreationDuPont->liste) == 0 && caseCreationDuPont->liste->HasDirt(caseCreationDuPont->liste) == 0 && (caseCreationDuPont->liste->HasAnAnimal(caseCreationDuPont->liste) == 0 || (caseCreationDuPont->liste->HasAnAnimal(caseCreationDuPont->liste) == 1 && ((ElementAnimal*)caseCreationDuPont->liste->getAnimal(caseCreationDuPont->liste))->constantes->taille < This->caseParent->g->TailleMaxSousPont))){
+			pthread_setcancelstate(PTHREAD_CANCEL_DISABLE, NULL);
+			if (pthread_mutex_lock(&This->caseParent->g->r->mutexMatricePropriete)){
+				perror("pthread_mutex_lock");
+				exit(-10);
+			}
+			caseCreationDuPont->liste->Push(caseCreationDuPont->liste, (Element*)New_ElementPont(caseCreationDuPont));
+			This->caseParent->isLocked=False;
+			This->sac-=COUT_POSE_PONT;
+			if (pthread_mutex_unlock(&This->caseParent->g->r->mutexMatricePropriete) < 0){
+				perror("pthread_mutex_unlock");
+				exit(-10);
+			}
+			pthread_setcancelstate(PTHREAD_CANCEL_ENABLE, NULL);
+			printf("Avant Free %d\n", lc->taille);
+			lc->Free(lc);
+			printf("%s : Normalement tout s'est bien passé\n", __FUNCTION__);
+			return True;
+		}
+		else {
+			caseCreationDuPont->isLocked=False;
+			printf("%s : ERR1\n", __FUNCTION__);
+			return False;
+		}
 	}
 	else {
+		printf("%s : ERR2\n", __FUNCTION__);
 		return False;
 	}
 }

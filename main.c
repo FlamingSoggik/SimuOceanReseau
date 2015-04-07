@@ -12,6 +12,7 @@
 int main(int argc, char **argv)
 {
     Grille *g;
+	int i, j;
 	int nbpecheurs = 0, tailleGrille=0;
 	char interface = -1;
 	if (argc < 4){
@@ -33,11 +34,26 @@ int main(int argc, char **argv)
         case 'a' :
             g = New_Grille(tailleGrille, nbpecheurs);
             //g=SDL_Print(g);
-			sleep(30);
-
-            system("clear");
-            g->Print(g);
-            g->Free(g);
+			g->Print(g);
+			if (g->r->carteInitialised == True){
+				ListeCase *lc = New_ListeCase();
+				for (i=0; i < g->Taille; ++i){
+					for (j=0; j < g->Taille/2; ++j){
+						lc->Push(lc, &g->tab[i][j]);
+					}
+				}
+				g->r->askForProperty(g->r, lc);
+				lc->Vider(lc);
+				lc->Free(lc);
+			}
+			else sleep (1);
+			while(g->TourCourant < 1000){
+				g->faireTour(g, 0);
+				system("clear");
+				g->Print(g);
+				usleep(100000);
+			}
+			g->Free(g);
 			break;
 		case 's':
 			g = New_Grille(tailleGrille, nbpecheurs);
