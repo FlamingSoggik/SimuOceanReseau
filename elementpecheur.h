@@ -58,7 +58,7 @@ typedef struct ElementPecheur
 
 		char estSelectionne;
 		void (*pecheParCanne)(struct ElementPecheur*, char*);
-		void (*pecheParCanneSDL)(struct ElementPecheur*, int16_t, int16_t);
+		Type (*pecheParCanneSDL)(struct ElementPecheur*, int16_t, int16_t);
 		void (*pecheParFilet)(struct ElementPecheur*, char*);
 		void (*pecheParFiletSDL)(struct ElementPecheur*, int16_t, int16_t);
 		Bool (*deplacement)(struct ElementPecheur*, char);
@@ -101,7 +101,7 @@ char ElementPecheur_Init(Case *c, ElementPecheur* This);
 /// \param buffer Chaine de caractere : enchainement de direction à appliquer à partir du pecheur pour trouver la case de lancé
 ///
 void ElementPecheur_pecheParCanne(ElementPecheur* This, char *buffer);
-void ElementPecheur_pecheParCanneSDL(ElementPecheur *This, int16_t x, int16_t y);
+Type ElementPecheur_pecheParCanneSDL(ElementPecheur *This, int16_t x, int16_t y);
 
 ///
 /// \brief ElementPecheur_pecheParFilet Peche du pecheur avec un filet

@@ -241,10 +241,11 @@ void ElementPecheur_pecheParCanne(ElementPecheur *This, char *buffer)
 	pthread_setcancelstate(PTHREAD_CANCEL_ENABLE, NULL);
 }
 
-void ElementPecheur_pecheParCanneSDL(ElementPecheur *This, int16_t x, int16_t y)
+Type ElementPecheur_pecheParCanneSDL(ElementPecheur *This, int16_t x, int16_t y)
 {
+	Type t=VOID;
 	if (x < 0 || x > (double)This->caseParent->g->Taille-1 || y < 0 || y > (double)This->caseParent->g->Taille-1)
-		return;
+		return t;
 	int16_t deplX = (double)This->caseParent->posX-x;
 	int16_t deplY = (double)This->caseParent->posY-y;
 	if (deplX < 0)
@@ -252,7 +253,7 @@ void ElementPecheur_pecheParCanneSDL(ElementPecheur *This, int16_t x, int16_t y)
 	if (deplY < 0)
 		deplY*=-1;
 	if (deplX > TAILLE_CANNE_A_PECHE || deplY > TAILLE_CANNE_A_PECHE){
-		return;
+		return t;
 	}
 	ElementAnimal *e;
 	Case *casePeche;
@@ -314,6 +315,7 @@ void ElementPecheur_pecheParCanneSDL(ElementPecheur *This, int16_t x, int16_t y)
 			if (This->peutPecher(This, e->type) == True){
 				This->sac+=e->constantes->taille;
 				e->caseParent->liste->deleteElement(e->caseParent->liste, (Element*)e);
+				t=e->type;
 			}
 		}
 	}
@@ -325,6 +327,7 @@ void ElementPecheur_pecheParCanneSDL(ElementPecheur *This, int16_t x, int16_t y)
 	}
 	lc->Free(lc);
 	pthread_setcancelstate(PTHREAD_CANCEL_ENABLE, NULL);
+	return t;
 }
 
 Bool ElementPecheur_peutPecher(ElementPecheur *This, Type t)

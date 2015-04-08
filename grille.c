@@ -202,6 +202,9 @@ void Grille_Init(Grille *This, uint16_t Taille, unsigned char nbPecheurs){
 			}
 		}
 	}
+	for(parcours=0; parcours<This->nbPecheur; ++parcours){
+		This->r->sendPos(This->r, This->tabPecheur[parcours]);
+	}
 	if (pthread_mutex_unlock(&This->r->mutexMatricePropriete) < 0){
 		perror("pthread_mutex_unlock");
 		exit(-10);
@@ -429,12 +432,45 @@ void Grille_moveFromTo(Grille *This, Element *elem, uint16_t posX, uint16_t posY
 void Grille_reinitPecheur(Grille *This, Element *elem)
 {
 	ElementPecheur* pecheur = (ElementPecheur*)elem;
+
+	pthread_setcancelstate(PTHREAD_CANCEL_DISABLE, NULL);
+	if (pthread_mutex_lock(&This->r->mutexMatricePropriete) < 0){
+		perror("pthread_mutex_lock");
+		exit(1);
+	}
 	This->tab[pecheur->caseParent->posX][pecheur->caseParent->posY].liste->remove(This->tab[pecheur->caseParent->posX][pecheur->caseParent->posY].liste, (Element*)pecheur);
 	char sensDeTest = 'b';
 	int16_t depl = 1;
 	Case *caseInitiale = &This->tab[pecheur->PositionInitialeX][pecheur->PositionInitialeY];
+	ListeCase *lc = New_ListeCase();
+
 recommencer:
-	if (caseInitiale->liste->HasAPecheur(caseInitiale->liste) == 1){
+	/************** Demande de mise à jour du contenu de la case en question **************/
+	lc->Push(lc, caseInitiale);
+	This->r->askForProperty(This->r, lc);
+	lc->Vider(lc);
+	if (pthread_mutex_unlock(&This->r->mutexMatricePropriete) < 0){
+		perror("pthread_mutex_unlock");
+		exit(1);
+	}
+	if (pthread_mutex_lock(&This->r->mutexNbrReponseAttendue) < 0){
+		perror("pthread_mutex_lock");
+		exit(1);
+	}
+	while(This->r->nbrReponseAttendue > 0){
+		pthread_cond_wait(&This->r->condEverythingRecieved, &This->r->mutexNbrReponseAttendue);
+	}
+	if ( pthread_mutex_unlock(&This->r->mutexNbrReponseAttendue) < 0){
+		perror("pthread_mutex_unlock");
+			exit(-10);
+	}
+	if (pthread_mutex_lock(&This->r->mutexMatricePropriete) < 0){
+		perror("pthread_mutex_lock");
+		exit(1);
+	}
+
+	/***************************************************************************************/
+	if (caseInitiale->proprietaire != NULL || caseInitiale->liste->HasAPecheur(caseInitiale->liste) == 1){
 		if (sensDeTest == 'b'){
 			if (pecheur->PositionInitialeX+depl > This->Taille-1){
 				sensDeTest='h';
@@ -460,6 +496,11 @@ recommencer:
 	This->moveFromTo(This, (Element*)pecheur, caseInitiale->posX, caseInitiale->posY);
 	//caseInitiale->liste->Push(caseInitiale->liste, (Element*)pecheur);
 	pecheur->reinitSac(pecheur);
+	if (pthread_mutex_unlock(&This->r->mutexMatricePropriete) < 0){
+		perror("pthread_mutex_unlock");
+		exit(1);
+	}
+	pthread_setcancelstate(PTHREAD_CANCEL_ENABLE, NULL);
 }
 
 void Grille_faireTour(Grille *This, char isSdl){

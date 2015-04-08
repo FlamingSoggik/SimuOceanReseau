@@ -73,6 +73,7 @@ void unSerialize(Reseau* This, char* str, struct Client *cli);
 void askForCarte(Reseau *This);
 
 void Reseau_askForProperty(Reseau *This, struct ListeCase* lcas);
+char* Reseau_strAskVisibilitySurrounding(Reseau *This, struct Client* cli);
 char* Reseau_giveProperty(Reseau *This, char* str, struct Client *cli);
 Bool Reseau_recupProperty(Reseau* This, char* str, struct Client*cli);
 

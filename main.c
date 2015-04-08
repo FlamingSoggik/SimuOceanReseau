@@ -32,7 +32,7 @@ int main(int argc, char **argv)
 	switch (interface){
         case 'a' :
             g = New_Grille(tailleGrille, nbpecheurs);
-			g=SDL_Print(g);
+			g = SDL_Print(g);
 //			g->Print(g);
 //			if (g->r->carteInitialised == True){
 //				pthread_setcancelstate(PTHREAD_CANCEL_DISABLE, NULL);
