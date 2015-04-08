@@ -179,13 +179,13 @@ struct Grille* SDL_Print(struct Grille *grill){
 							if (Est_Un_Dev==2) SDL_FillRect(graphique, NULL, SDL_MapRGB(ecran->format,255,255,255));
 							break;
 						case SDLK_F5: // Reset la grille
-//							i=grill->Taille;
-//							nbpecheurs = grill->nbPecheur;
-//							grill->Free(grill);
-//							grill=New_Grille(i, nbpecheurs);
-//							Compteur_Tours=0;
-//							TourDuJoueur=-1;
-//							Init_Tab(nbr_espece);
+							//							i=grill->Taille;
+							//							nbpecheurs = grill->nbPecheur;
+							//							grill->Free(grill);
+							//							grill=New_Grille(i, nbpecheurs);
+							//							Compteur_Tours=0;
+							//							TourDuJoueur=-1;
+							//							Init_Tab(nbr_espece);
 							break;
 						case SDLK_KP1: // Pavé numérique
 							if (TourDuJoueur != -1)
@@ -550,107 +550,107 @@ struct Grille* SDL_Print(struct Grille *grill){
 
 
 
-		if(Est_Un_Dev)
-		{
-			Spinner_Print(ecran, 0, ScreenH, ScreenW, plusIcone);
-			Spinner_Print(ecran, 1, ScreenH, ScreenW, moinsIcone);
-			Print_Constantes( ecran, C_Selected, police, ScreenH, ScreenW);
-			Blit_Image(ecran, graphIcone, ScreenW-45, ScreenH-45);
-		}
-
-
-		if(!Est_Un_Dev)
-		{
-			Commandes_Pecheur(ecran, Avancer, Construire, PecherCanne, PecherFilet, police, police_underline, Commande_Selected, ScreenH, ScreenW);
-
-			if (grill->nbPecheur==1)
+			if(Est_Un_Dev)
 			{
-				Sac_Pecheur( ecran, police, grill->tabPecheur[0], ScreenH, ScreenW );
-				Blit_Image(ecran, Ce_Que_Je_Peche, ((ScreenH +(ScreenW-ScreenH)/2)+120), ScreenH/2 - 150 );
-
+				Spinner_Print(ecran, 0, ScreenH, ScreenW, plusIcone);
+				Spinner_Print(ecran, 1, ScreenH, ScreenW, moinsIcone);
+				Print_Constantes( ecran, C_Selected, police, ScreenH, ScreenW);
+				Blit_Image(ecran, graphIcone, ScreenW-45, ScreenH-45);
 			}
 
-			else if (TourDuJoueur!=-1)
+
+			if(!Est_Un_Dev)
 			{
-				Sac_Pecheur( ecran, police, grill->tabPecheur[TourDuJoueur], ScreenH, ScreenW );
-				Blit_Image(ecran, Ce_Que_Je_Peche, ((ScreenH +(ScreenW-ScreenH)/2)+120), ScreenH/2 - 150 );
+				Commandes_Pecheur(ecran, Avancer, Construire, PecherCanne, PecherFilet, police, police_underline, Commande_Selected, ScreenH, ScreenW);
 
-			}
-		}
-
-
-		if(Est_Un_Dev!=2) // Mode grille
-		{
-			for(i=0; i<NBR_CASES; i++)
-				for(j=0; j<NBR_CASES; j++)
+				if (grill->nbPecheur==1)
 				{
-					Selected_Type_Case=Select_Type(grill, Tab_Type, i, j, nbr_espece);
-					Actualiser(carre[i][j], Selected_Type_Case, (j*taille_case+j+pos_fenetre.x), (i*taille_case+i+pos_fenetre.y));
-					SDL_BlitSurface((carre[i][j]->srf), NULL, ecran, &(carre[i][j]->pos));
+					Sac_Pecheur( ecran, police, grill->tabPecheur[0], ScreenH, ScreenW );
+					Blit_Image(ecran, Ce_Que_Je_Peche, ((ScreenH +(ScreenW-ScreenH)/2)+120), ScreenH/2 - 150 );
+
 				}
-		}
 
-
-		if(Est_Un_Dev==2 && grill->victoire==-1) // Mode Graphique
-		{
-			for(i=0; i<NBR_CASES; i++)
-				for(j=0; j<NBR_CASES; j++)
-					Selected_Type_Case=Select_Type(grill, Tab_Type, i, j, nbr_espece); // Permet d'actualiser le tableau des nombres d'espèce.
-
-			Blit_Image(ecran, graphique, 25, (ScreenH/2)-((ScreenH-50)/1.6)/2);
-			Print_Graphique(graphique, (ScreenH-50)/1.6, nbr_espece, NBR_CASES, grill);
-
-		}
-
-		/* Monsieur le Pécheur */
-
-		if(Est_Un_Dev!=2)
-		{
-			Afficher_Pecheurs( grill, ecran, taille_case, grill->tabPecheur, grill->nbPecheur, pos_fenetre, rouge );
-
-			if (TourDuJoueur!=-1 && grill->nbPecheur!=0)
-				Selected_Pecheur(ecran, taille_case, grill->tabPecheur[TourDuJoueur], pos_fenetre, blanc );
-		}
-
-
-
-		/*Legendes*/
-
-
-		for (i=0; i<11; i++)
-			Blit_Image(ecran, Legendes_Surface[i], (ScreenH), (140+40*i));
-
-
-
-
-
-
-
-		/* Actualisation de la grille ! */
-
-		/*Mise à jour vitesse*/
-		Refresh_Timer=((pos_curseur2.x - pos_curseur1.x)+7); // La différence varie entre -6 et 94.
-
-
-		if ((Compteur_Tours%Refresh_Timer==0) && (Refresh_Timer<=95)) // Cette boucle modifie la vitesse d'actualisation de la grille
-		{
-
-
-			// printf("%d\n", grill->TourCourant); // AFFICHAGE DU NOMBRE DE TOUR
-			if (TourDuJoueur==-1)
-			{
-				grill->faireTour(grill, 1);
-
-				if ((grill->nbPecheur!=0) && ((grill->TourCourant)%1)==0)
+				else if (TourDuJoueur!=-1)
 				{
-					TourDuJoueur=(TourDuJoueur+1)%((grill->nbPecheur)+1);
-					Commande_Selected=1;
+					Sac_Pecheur( ecran, police, grill->tabPecheur[TourDuJoueur], ScreenH, ScreenW );
+					Blit_Image(ecran, Ce_Que_Je_Peche, ((ScreenH +(ScreenW-ScreenH)/2)+120), ScreenH/2 - 150 );
 
 				}
 			}
 
 
-		}
+			if(Est_Un_Dev!=2) // Mode grille
+			{
+				for(i=0; i<NBR_CASES; i++)
+					for(j=0; j<NBR_CASES; j++)
+					{
+						Selected_Type_Case=Select_Type(grill, Tab_Type, i, j, nbr_espece);
+						Actualiser(carre[i][j], Selected_Type_Case, (j*taille_case+j+pos_fenetre.x), (i*taille_case+i+pos_fenetre.y));
+						SDL_BlitSurface((carre[i][j]->srf), NULL, ecran, &(carre[i][j]->pos));
+					}
+			}
+
+
+			if(Est_Un_Dev==2 && grill->victoire==-1) // Mode Graphique
+			{
+				for(i=0; i<NBR_CASES; i++)
+					for(j=0; j<NBR_CASES; j++)
+						Selected_Type_Case=Select_Type(grill, Tab_Type, i, j, nbr_espece); // Permet d'actualiser le tableau des nombres d'espèce.
+
+				Blit_Image(ecran, graphique, 25, (ScreenH/2)-((ScreenH-50)/1.6)/2);
+				Print_Graphique(graphique, (ScreenH-50)/1.6, nbr_espece, NBR_CASES, grill);
+
+			}
+
+			/* Monsieur le Pécheur */
+
+			if(Est_Un_Dev!=2)
+			{
+				Afficher_Pecheurs( grill, ecran, taille_case, grill->tabPecheur, grill->nbPecheur, pos_fenetre, rouge );
+
+				if (TourDuJoueur!=-1 && grill->nbPecheur!=0)
+					Selected_Pecheur(ecran, taille_case, grill->tabPecheur[TourDuJoueur], pos_fenetre, blanc );
+			}
+
+
+
+			/*Legendes*/
+
+
+			for (i=0; i<11; i++)
+				Blit_Image(ecran, Legendes_Surface[i], (ScreenH), (140+40*i));
+
+
+
+
+
+
+
+			/* Actualisation de la grille ! */
+
+			/*Mise à jour vitesse*/
+			Refresh_Timer=((pos_curseur2.x - pos_curseur1.x)+7); // La différence varie entre -6 et 94.
+
+
+			if ((Compteur_Tours%Refresh_Timer==0) && (Refresh_Timer<=95)) // Cette boucle modifie la vitesse d'actualisation de la grille
+			{
+
+
+				// printf("%d\n", grill->TourCourant); // AFFICHAGE DU NOMBRE DE TOUR
+				if (TourDuJoueur==-1)
+				{
+					grill->faireTour(grill, 1);
+
+					if ((grill->nbPecheur!=0) && ((grill->TourCourant)%1)==0)
+					{
+						TourDuJoueur=(TourDuJoueur+1)%((grill->nbPecheur)+1);
+						Commande_Selected=1;
+
+					}
+				}
+
+
+			}
 
 		}
 
@@ -1188,11 +1188,11 @@ SDL_Surface* Afficher_Peche(int type, TTF_Font *police, SDL_Surface *Ce_Que_Je_P
 
 
 
-		int Taille_Dans_Sac;
-		SDL_Color Couleur_Peche;
-		Couleur_Peche.unused=0;
-		switch (type)
-		{
+	int Taille_Dans_Sac;
+	SDL_Color Couleur_Peche;
+	Couleur_Peche.unused=0;
+	switch (type)
+	{
 		case PLANCTON : //Plancton
 			//Couleur_Peche = {253, 190, 1,0};
 			Couleur_Peche.r=253;
@@ -1256,23 +1256,23 @@ SDL_Surface* Afficher_Peche(int type, TTF_Font *police, SDL_Surface *Ce_Que_Je_P
 			Couleur_Peche.b=193;
 			Taille_Dans_Sac=type-1000;
 			break;
-		}
+	}
 
 
-		if (Taille_Dans_Sac!=0 && Taille_Dans_Sac!=(-1000))
-		{
-			char texte[30]="";
-			sprintf(texte, "+ %d", Taille_Dans_Sac);
-			Ce_Que_Je_Peche = TTF_RenderText_Blended(police, texte, Couleur_Peche);
-		}
-
-
-
-
-		//int16_t Centre_Commandes=(ScreenH +(ScreenW-ScreenH)/2);
-		//Blit_Image(ecran, Ce_Que_Je_Peche, (ScreenH +(ScreenW-ScreenH)/2)-30+20, ScreenH/2 - 150 );
+	if (Taille_Dans_Sac!=0 && Taille_Dans_Sac!=(-1000))
+	{
+		char texte[30]="";
+		sprintf(texte, "+ %d", Taille_Dans_Sac);
+		Ce_Que_Je_Peche = TTF_RenderText_Blended(police, texte, Couleur_Peche);
+	}
 
 
 
-		return Ce_Que_Je_Peche;
+
+	//int16_t Centre_Commandes=(ScreenH +(ScreenW-ScreenH)/2);
+	//Blit_Image(ecran, Ce_Que_Je_Peche, (ScreenH +(ScreenW-ScreenH)/2)-30+20, ScreenH/2 - 150 );
+
+
+
+	return Ce_Que_Je_Peche;
 }
