@@ -589,7 +589,7 @@ struct Grille* SDL_Print(struct Grille *grill){
 
 		if(Est_Un_Dev!=2)
 		{
-			Afficher_Pecheurs( ecran, taille_case, grill->tabPecheur, grill->nbPecheur, pos_fenetre, rouge );
+            Afficher_Pecheurs( grill, ecran, taille_case, grill->tabPecheur, grill->nbPecheur, pos_fenetre, rouge );
 
 			if (TourDuJoueur!=-1 && grill->nbPecheur!=0)
 				Selected_Pecheur(ecran, taille_case, grill->tabPecheur[TourDuJoueur], pos_fenetre, blanc );
@@ -624,7 +624,7 @@ struct Grille* SDL_Print(struct Grille *grill){
 			{
 				grill->faireTour(grill, 1);
 
-				if ((grill->nbPecheur!=0) && ((grill->TourCourant)%5)==0)
+                if ((grill->nbPecheur!=0) && ((grill->TourCourant)%1)==0)
 				{
 					TourDuJoueur=(TourDuJoueur+1)%((grill->nbPecheur)+1);
 

@@ -8,7 +8,7 @@
 #include "elementpecheur.h"
 
 
-void Afficher_Pecheurs( SDL_Surface *ecran, int16_t taille_case, ElementPecheur **pt_Pecheur, int16_t nbrpecheur, SDL_Rect Pos_Fenetre, SDL_Surface *rouge );
+void Afficher_Pecheurs( Grille *grill, SDL_Surface *ecran, int16_t taille_case, ElementPecheur **pt_Pecheur, int16_t nbrpecheur, SDL_Rect Pos_Fenetre, SDL_Surface *rouge );
 
 typedef struct SDLPecheur
 {
