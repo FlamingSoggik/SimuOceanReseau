@@ -314,8 +314,9 @@ Type ElementPecheur_pecheParCanneSDL(ElementPecheur *This, int16_t x, int16_t y)
 			e=(ElementAnimal*)casePeche->liste->getAnimal(casePeche->liste);
 			if (This->peutPecher(This, e->type) == True){
 				This->sac+=e->constantes->taille;
+                t=e->type;
 				e->caseParent->liste->deleteElement(e->caseParent->liste, (Element*)e);
-				t=e->type;
+
 			}
 		}
 	}
@@ -327,7 +328,9 @@ Type ElementPecheur_pecheParCanneSDL(ElementPecheur *This, int16_t x, int16_t y)
 	}
 	lc->Free(lc);
 	pthread_setcancelstate(PTHREAD_CANCEL_ENABLE, NULL);
-	return t;
+
+
+    return t;
 }
 
 Bool ElementPecheur_peutPecher(ElementPecheur *This, Type t)
@@ -493,10 +496,10 @@ void ElementPecheur_pecheParFilet(ElementPecheur *This, char *buffer)
 	free(MatriceAccessiblePeche);
 }
 
-void ElementPecheur_pecheParFiletSDL(ElementPecheur *This, int16_t x, int16_t y)
+int ElementPecheur_pecheParFiletSDL(ElementPecheur *This, int16_t x, int16_t y)
 {
 	if (x < 0 || x > (double)This->caseParent->g->Taille-1 || y < 0 || y > (double)This->caseParent->g->Taille-1)
-		return;
+        return 0;
 	int16_t deplX = (double)This->caseParent->posX-x;
 	int16_t deplY = (double)This->caseParent->posY-y;
 	if (deplX < 0)
@@ -504,10 +507,10 @@ void ElementPecheur_pecheParFiletSDL(ElementPecheur *This, int16_t x, int16_t y)
 	if (deplY < 0)
 		deplY*=-1;
 	if (deplX > TAILLE_CANNE_A_PECHE || deplY > TAILLE_CANNE_A_PECHE){
-		return;
+        return 0;
 	}
 
-	int16_t i, j, compt = 0, noessai = 0;
+    int16_t i, j, compt = 0, noessai = 0, incrementation_sac=0;
 	ListeCase *lc = New_ListeCase();
 	ElementAnimal* e;
 	Case*** MatriceAccessiblePeche= NULL;
@@ -576,7 +579,8 @@ void ElementPecheur_pecheParFiletSDL(ElementPecheur *This, int16_t x, int16_t y)
 				if (MatriceAccessiblePeche[deplX][deplY]->liste->HasAnAnimal(MatriceAccessiblePeche[deplX][deplY]->liste)){
 					e=(ElementAnimal*)MatriceAccessiblePeche[deplX][deplY]->liste->getAnimal(MatriceAccessiblePeche[deplX][deplY]->liste);
 					if (This->peutPecher(This, e->type) == True){
-						This->sac+=e->constantes->taille;
+                        incrementation_sac+=e->constantes->taille;
+                        This->sac+=e->constantes->taille;
 						e->caseParent->liste->deleteElement(e->caseParent->liste, (Element*)e);
 					}
 				}
@@ -599,6 +603,10 @@ void ElementPecheur_pecheParFiletSDL(ElementPecheur *This, int16_t x, int16_t y)
 		free(MatriceAccessiblePeche[deplX]);
 	}
 	free(MatriceAccessiblePeche);
+
+    printf("Incre sac : %d\n", incrementation_sac);
+    return incrementation_sac;
+
 }
 
 Bool ElementPecheur_deplacement(ElementPecheur *This, char direction)

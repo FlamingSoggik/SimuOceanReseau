@@ -17,7 +17,7 @@ struct Grille* SDL_Print(struct Grille *grill){
 	SDL_Event event;
 	int16_t continuer=1;
 	int16_t select_curseur2=0;
-	int16_t i=0; int16_t j=0;
+    int16_t i=0; int16_t j=0, quantite_peche_filet=0;
 	int16_t Est_Un_Dev =0;
 	int16_t Compteur_Tours=0, Refresh_Timer=1;
 	ElementAnimal_Constantes *C_Selected;
@@ -481,9 +481,8 @@ struct Grille* SDL_Print(struct Grille *grill){
 							/*Peche*/
 							if (Commande_Selected==3 && TourDuJoueur != -1)
 							{
-								grill->tabPecheur[TourDuJoueur]->pecheParCanneSDL(grill->tabPecheur[TourDuJoueur], ((grill->tabPecheur[TourDuJoueur]->caseParent->posX)+pointeurY), (grill->tabPecheur[TourDuJoueur]->caseParent->posY)+pointeurX);
-                                Type espece = PLANCTON;
-
+                                Type espece;
+                                espece=grill->tabPecheur[TourDuJoueur]->pecheParCanneSDL(grill->tabPecheur[TourDuJoueur], ((grill->tabPecheur[TourDuJoueur]->caseParent->posX)+pointeurY), (grill->tabPecheur[TourDuJoueur]->caseParent->posY)+pointeurX);
                                 Ce_Que_Je_Peche=Afficher_Peche(espece, police, Ce_Que_Je_Peche);
                                 TourDuJoueur=TourDuJoueur+1;
 								if (TourDuJoueur==grill->nbPecheur) TourDuJoueur=-1;
@@ -491,8 +490,10 @@ struct Grille* SDL_Print(struct Grille *grill){
 							}
 							else if (Commande_Selected==4 && TourDuJoueur != -1)
 							{
-								grill->tabPecheur[TourDuJoueur]->pecheParFiletSDL(grill->tabPecheur[TourDuJoueur],  ((grill->tabPecheur[TourDuJoueur]->caseParent->posX)+pointeurY), (grill->tabPecheur[TourDuJoueur]->caseParent->posY)+pointeurX);
-								TourDuJoueur=TourDuJoueur+1;
+                                quantite_peche_filet=grill->tabPecheur[TourDuJoueur]->pecheParFiletSDL(grill->tabPecheur[TourDuJoueur],  ((grill->tabPecheur[TourDuJoueur]->caseParent->posX)+pointeurY), (grill->tabPecheur[TourDuJoueur]->caseParent->posY)+pointeurX);
+                                quantite_peche_filet=quantite_peche_filet+1000;
+                                Ce_Que_Je_Peche=Afficher_Peche(quantite_peche_filet, police, Ce_Que_Je_Peche);
+                                TourDuJoueur=TourDuJoueur+1;
 								if (TourDuJoueur==grill->nbPecheur) TourDuJoueur=-1;
 							}
 
@@ -1184,97 +1185,98 @@ void Fin_Partie( SDL_Surface *ecran, TTF_Font* police, int joueur, int16_t Scree
 
 SDL_Surface* Afficher_Peche(int type, TTF_Font *police, SDL_Surface *Ce_Que_Je_Peche )
 {
-    int Taille_Dans_Sac;
-    SDL_Color Couleur_Peche;
-    Couleur_Peche.unused=0;
-    switch (type)
-    {
-    case PLANCTON : //Plancton
-        //Couleur_Peche = {253, 190, 1,0};
-        Couleur_Peche.r=253;
-        Couleur_Peche.g=190;
-        Couleur_Peche.b=1;
-        Taille_Dans_Sac=C_Plancton.taille;
-        break;
-    case CORAIL : //Corail
-        //Couleur_Peche = {255, 102, 0,0 };
-        Couleur_Peche.r=255;
-        Couleur_Peche.g=102;
-        Couleur_Peche.b=0;
-        Taille_Dans_Sac=C_Corail.taille;
-        break;
-    case BAR: //Bar
-        //Couleur_Peche = {0, 114, 45,0};
-        Couleur_Peche.r=0;
-        Couleur_Peche.g=114;
-        Couleur_Peche.b=45;
-                Taille_Dans_Sac=C_Bar.taille;
-        break;
-    case THON: //Thon
-        //Couleur_Peche = {236, 68, 155,0};
-        Couleur_Peche.r=236;
-        Couleur_Peche.g=68;
-        Couleur_Peche.b=155;
-                Taille_Dans_Sac=C_Thon.taille;
-        break;
-    case PYRANHA: //Pyranha
-        //Couleur_Peche = {209, 0, 57,0};
-        Couleur_Peche.r=209;
-        Couleur_Peche.g=0;
-        Couleur_Peche.b=57;
-                Taille_Dans_Sac=C_Pyranha.taille;
-        break;
-    case REQUIN: //Requin
-        //Couleur_Peche = {55, 49, 33,0};
-        Couleur_Peche.r=55;
-        Couleur_Peche.g=49;
-        Couleur_Peche.b=33;
-                Taille_Dans_Sac=C_Requin.taille;
-        break;
-    case ORQUE: //Orque
-        //Couleur_Peche = {15, 14, 20,0};
-        Couleur_Peche.r=15;
-        Couleur_Peche.g=14;
-        Couleur_Peche.b=20;
-                Taille_Dans_Sac=C_Orque.taille;
-        break;
-    case BALEINE: //Baleine
-        //Couleur_Peche = {0, 0, 255,0};
-        Couleur_Peche.r=0;
-        Couleur_Peche.g=0;
-        Couleur_Peche.b=255;
-                Taille_Dans_Sac=C_Baleine.taille;
-        break;
-    default : //Blanc
-        //Couleur_Peche = {193, 205, 193,0};
-        Couleur_Peche.r=193;
-        Couleur_Peche.g=205;
-        Couleur_Peche.b=193;
-                Taille_Dans_Sac=0;
-        break;
-    }
 
 
-if (Taille_Dans_Sac!=0)
-{
-        char texte[30]="";
-        sprintf(texte, "+ %d", Taille_Dans_Sac);
-        Ce_Que_Je_Peche = TTF_RenderText_Blended(police, texte, Couleur_Peche);
+
+        int Taille_Dans_Sac;
+        SDL_Color Couleur_Peche;
+        Couleur_Peche.unused=0;
+        switch (type)
+        {
+        case PLANCTON : //Plancton
+            //Couleur_Peche = {253, 190, 1,0};
+            Couleur_Peche.r=253;
+            Couleur_Peche.g=190;
+            Couleur_Peche.b=1;
+            Taille_Dans_Sac=C_Plancton.taille;
+            break;
+        case CORAIL : //Corail
+            //Couleur_Peche = {255, 102, 0,0 };
+            Couleur_Peche.r=255;
+            Couleur_Peche.g=102;
+            Couleur_Peche.b=0;
+            Taille_Dans_Sac=C_Corail.taille;
+            break;
+        case BAR: //Bar
+            //Couleur_Peche = {0, 114, 45,0};
+            Couleur_Peche.r=0;
+            Couleur_Peche.g=114;
+            Couleur_Peche.b=45;
+            Taille_Dans_Sac=C_Bar.taille;
+            break;
+        case THON: //Thon
+            //Couleur_Peche = {236, 68, 155,0};
+            Couleur_Peche.r=236;
+            Couleur_Peche.g=68;
+            Couleur_Peche.b=155;
+            Taille_Dans_Sac=C_Thon.taille;
+            break;
+        case PYRANHA: //Pyranha
+            //Couleur_Peche = {209, 0, 57,0};
+            Couleur_Peche.r=209;
+            Couleur_Peche.g=0;
+            Couleur_Peche.b=57;
+            Taille_Dans_Sac=C_Pyranha.taille;
+            break;
+        case REQUIN: //Requin
+            //Couleur_Peche = {55, 49, 33,0};
+            Couleur_Peche.r=55;
+            Couleur_Peche.g=49;
+            Couleur_Peche.b=33;
+            Taille_Dans_Sac=C_Requin.taille;
+            break;
+        case ORQUE: //Orque
+            //Couleur_Peche = {15, 14, 20,0};
+            Couleur_Peche.r=15;
+            Couleur_Peche.g=14;
+            Couleur_Peche.b=20;
+            Taille_Dans_Sac=C_Orque.taille;
+            break;
+        case BALEINE: //Baleine
+            //Couleur_Peche = {0, 0, 255,0};
+            Couleur_Peche.r=0;
+            Couleur_Peche.g=0;
+            Couleur_Peche.b=255;
+            Taille_Dans_Sac=C_Baleine.taille;
+            break;
+        default : //Blanc
+            //Couleur_Peche = {193, 205, 193,0};
+            Couleur_Peche.r=193;
+            Couleur_Peche.g=205;
+            Couleur_Peche.b=193;
+            Taille_Dans_Sac=type-1000;
+            break;
+        }
+
+
+        if (Taille_Dans_Sac!=0 && Taille_Dans_Sac!=(-1000))
+        {
+            char texte[30]="";
+            sprintf(texte, "+ %d", Taille_Dans_Sac);
+            Ce_Que_Je_Peche = TTF_RenderText_Blended(police, texte, Couleur_Peche);
+        }
+
+
+
+
+        //int16_t Centre_Commandes=(ScreenH +(ScreenW-ScreenH)/2);
+        //Blit_Image(ecran, Ce_Que_Je_Peche, (ScreenH +(ScreenW-ScreenH)/2)-30+20, ScreenH/2 - 150 );
+
+
+
+        return Ce_Que_Je_Peche;
 }
 
-
-
-
-//int16_t Centre_Commandes=(ScreenH +(ScreenW-ScreenH)/2);
-//Blit_Image(ecran, Ce_Que_Je_Peche, (ScreenH +(ScreenW-ScreenH)/2)-30+20, ScreenH/2 - 150 );
-
-
-
-return Ce_Que_Je_Peche;
-
-
-
-}
 
 
 

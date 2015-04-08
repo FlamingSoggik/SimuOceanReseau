@@ -60,7 +60,7 @@ typedef struct ElementPecheur
 		void (*pecheParCanne)(struct ElementPecheur*, char*);
 		Type (*pecheParCanneSDL)(struct ElementPecheur*, int16_t, int16_t);
 		void (*pecheParFilet)(struct ElementPecheur*, char*);
-		void (*pecheParFiletSDL)(struct ElementPecheur*, int16_t, int16_t);
+        int (*pecheParFiletSDL)(struct ElementPecheur*, int16_t, int16_t);
 		Bool (*deplacement)(struct ElementPecheur*, char);
 		Bool (*construirePont)(struct ElementPecheur*, char);
 		void (*mourir)(struct ElementPecheur*); // --> fait
@@ -109,7 +109,7 @@ Type ElementPecheur_pecheParCanneSDL(ElementPecheur *This, int16_t x, int16_t y)
 /// \param buffer Chaine de caractere : enchainement de direction à appliquer à partir du pecheur pour trouver la case de lancé
 ///
 void ElementPecheur_pecheParFilet(ElementPecheur* This, char *buffer);
-void ElementPecheur_pecheParFiletSDL(ElementPecheur *This, int16_t x, int16_t y);
+int ElementPecheur_pecheParFiletSDL(ElementPecheur *This, int16_t x, int16_t y);
 ///
 /// \brief ElementPecheur_deplacement Deplacement du pecheur
 /// \param This Pointeur sur le pecheur
