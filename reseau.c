@@ -1096,7 +1096,6 @@ char* Reseau_strAskVisibilitySurrounding(Reseau *This, Client* cli){
 		exit(-10);
 	}
 	visibilite=This->g->getMatriceVoisins(This->g, cli->posX, cli->posY, 2);
-	visibilite[cli->posX][cli->posY]=NULL;
 	int i, j, offset;
 	Case *cas;
 	ListeCase *lcas=New_ListeCase();
