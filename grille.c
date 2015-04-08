@@ -202,14 +202,13 @@ void Grille_Init(Grille *This, uint16_t Taille, unsigned char nbPecheurs){
 			}
 		}
 	}
-	for(parcours=0; parcours<This->nbPecheur; ++parcours){
-		This->r->sendPos(This->r, This->tabPecheur[parcours]);
-	}
 	if (pthread_mutex_unlock(&This->r->mutexMatricePropriete) < 0){
 		perror("pthread_mutex_unlock");
 		exit(-10);
 	}
 	pthread_setcancelstate(PTHREAD_CANCEL_ENABLE, NULL);
+	if (This->nbPecheur != 0)
+		This->r->sendPos(This->r, This->tabPecheur[0]);
 }
 
 void Grille_Clear(struct Grille *This){

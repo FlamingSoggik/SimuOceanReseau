@@ -1478,3 +1478,4 @@ void Reseau_sendPos(Reseau* This, ElementPecheur* p)
 	}
 	free(toSend);
 }
+

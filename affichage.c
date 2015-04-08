@@ -12,12 +12,12 @@ struct Grille* SDL_Print(struct Grille *grill){
 
 	/* Initialisation des variables nécessaires */
 	SDL_Surface **Selected_Type_Case=NULL, *blanc=NULL, *rouge=NULL, *plusIcone=NULL, *moinsIcone=NULL, *graphIcone=NULL,*paramIcone=NULL,*ecran = NULL ,*fenetre = NULL, *curseur1 = NULL, *curseur2 = NULL, *boite = NULL, *graphique=NULL;
-    SDL_Surface *Ce_Que_Je_Peche=NULL;
-    TTF_Font *police=NULL, *police_underline=NULL, *police_fin=NULL;
+	SDL_Surface *Ce_Que_Je_Peche=NULL;
+	TTF_Font *police=NULL, *police_underline=NULL, *police_fin=NULL;
 	SDL_Event event;
 	int16_t continuer=1;
 	int16_t select_curseur2=0;
-	int16_t i=0; int16_t j=0;
+	int16_t i=0; int16_t j=0, quantite_peche_filet=0;
 	int16_t Est_Un_Dev =0;
 	int16_t Compteur_Tours=0, Refresh_Timer=1;
 	ElementAnimal_Constantes *C_Selected;
@@ -83,10 +83,10 @@ struct Grille* SDL_Print(struct Grille *grill){
 
 	police=TTF_OpenFont("ma-front.ttf", 30);
 	police_underline=TTF_OpenFont("ma-front.ttf", 30);
-    police_fin=TTF_OpenFont("ma-front.ttf", 60);
+	police_fin=TTF_OpenFont("ma-front.ttf", 60);
 	TTF_SetFontStyle(police, TTF_STYLE_NORMAL);
 	TTF_SetFontStyle(police_underline, TTF_STYLE_BOLD | TTF_STYLE_UNDERLINE);
-    TTF_SetFontStyle(police_fin, TTF_STYLE_BOLD);
+	TTF_SetFontStyle(police_fin, TTF_STYLE_BOLD);
 
 	SDL_Surface** Legendes_Surface;
 	Legendes_Surface=(SDL_Surface**)malloc(sizeof(SDL_Surface*)*11);
@@ -190,17 +190,17 @@ struct Grille* SDL_Print(struct Grille *grill){
 						case SDLK_KP1: // Pavé numérique
 							if (TourDuJoueur != -1)
 							{
-                                if (Commande_Selected == 1)
-                                {
-                                    boolean=grill->tabPecheur[TourDuJoueur]->deplacement(grill->tabPecheur[TourDuJoueur], '1');
+								if (Commande_Selected == 1)
+								{
+									boolean=grill->tabPecheur[TourDuJoueur]->deplacement(grill->tabPecheur[TourDuJoueur], '1');
 									grill->tabPecheur[TourDuJoueur]->testVictory(grill->tabPecheur[TourDuJoueur], TourDuJoueur);
 									grill->r->sendPos(grill->r, grill->tabPecheur[TourDuJoueur]);
-                                }
+								}
 								if (Commande_Selected ==2)
 									boolean = grill->tabPecheur[TourDuJoueur]->construirePont(grill->tabPecheur[TourDuJoueur], '1');
 
 								if(boolean)
-                                {
+								{
 									TourDuJoueur=TourDuJoueur+1;
 									if (TourDuJoueur==grill->nbPecheur) TourDuJoueur=-1;
 								}
@@ -211,12 +211,12 @@ struct Grille* SDL_Print(struct Grille *grill){
 						case SDLK_KP2:
 							if (TourDuJoueur != -1)
 							{
-                                if (Commande_Selected == 1)
-                                {
+								if (Commande_Selected == 1)
+								{
 									boolean=grill->tabPecheur[TourDuJoueur]->deplacement(grill->tabPecheur[TourDuJoueur], '2');
 									grill->tabPecheur[TourDuJoueur]->testVictory(grill->tabPecheur[TourDuJoueur], TourDuJoueur);
 									grill->r->sendPos(grill->r, grill->tabPecheur[TourDuJoueur]);
-                                }
+								}
 
 								if (Commande_Selected ==2)
 									boolean = grill->tabPecheur[TourDuJoueur]->construirePont(grill->tabPecheur[TourDuJoueur], '2');
@@ -234,12 +234,12 @@ struct Grille* SDL_Print(struct Grille *grill){
 							if (TourDuJoueur != -1)
 							{
 
-                                if (Commande_Selected == 1)
-                                {
+								if (Commande_Selected == 1)
+								{
 									boolean=grill->tabPecheur[TourDuJoueur]->deplacement(grill->tabPecheur[TourDuJoueur], '3');
 									grill->tabPecheur[TourDuJoueur]->testVictory(grill->tabPecheur[TourDuJoueur], TourDuJoueur);
 									grill->r->sendPos(grill->r, grill->tabPecheur[TourDuJoueur]);
-                                }
+								}
 								if (Commande_Selected ==2)
 									boolean = grill->tabPecheur[TourDuJoueur]->construirePont(grill->tabPecheur[TourDuJoueur], '3');
 
@@ -256,12 +256,12 @@ struct Grille* SDL_Print(struct Grille *grill){
 							if (TourDuJoueur != -1)
 							{
 
-                                if (Commande_Selected == 1)
-                                {
+								if (Commande_Selected == 1)
+								{
 									boolean=grill->tabPecheur[TourDuJoueur]->deplacement(grill->tabPecheur[TourDuJoueur], '4');
 									grill->tabPecheur[TourDuJoueur]->testVictory(grill->tabPecheur[TourDuJoueur], TourDuJoueur);
 									grill->r->sendPos(grill->r, grill->tabPecheur[TourDuJoueur]);
-                                }
+								}
 								if (Commande_Selected ==2)
 									boolean = grill->tabPecheur[TourDuJoueur]->construirePont(grill->tabPecheur[TourDuJoueur], '4');
 
@@ -281,11 +281,11 @@ struct Grille* SDL_Print(struct Grille *grill){
 							{
 
 								if (Commande_Selected == 1)
-                                {
+								{
 									boolean=grill->tabPecheur[TourDuJoueur]->deplacement(grill->tabPecheur[TourDuJoueur], '5');
 									grill->tabPecheur[TourDuJoueur]->testVictory(grill->tabPecheur[TourDuJoueur], TourDuJoueur);
 									grill->r->sendPos(grill->r, grill->tabPecheur[TourDuJoueur]);
-                                }
+								}
 								if (Commande_Selected ==2)
 									boolean = grill->tabPecheur[TourDuJoueur]->construirePont(grill->tabPecheur[TourDuJoueur], '5');
 
@@ -303,13 +303,13 @@ struct Grille* SDL_Print(struct Grille *grill){
 							{
 
 								if (Commande_Selected == 1)
-                                {
+								{
 									boolean=grill->tabPecheur[TourDuJoueur]->deplacement(grill->tabPecheur[TourDuJoueur], '6');
 									grill->tabPecheur[TourDuJoueur]->testVictory(grill->tabPecheur[TourDuJoueur], TourDuJoueur);
 									grill->r->sendPos(grill->r, grill->tabPecheur[TourDuJoueur]);
-                                }
+								}
 								if (Commande_Selected ==2)
-                                    boolean = grill->tabPecheur[TourDuJoueur]->construirePont(grill->tabPecheur[TourDuJoueur], '6');
+									boolean = grill->tabPecheur[TourDuJoueur]->construirePont(grill->tabPecheur[TourDuJoueur], '6');
 
 								if(boolean)
 								{
@@ -324,12 +324,12 @@ struct Grille* SDL_Print(struct Grille *grill){
 							if (TourDuJoueur != -1)
 							{
 
-                                if (Commande_Selected == 1)
-                                {
+								if (Commande_Selected == 1)
+								{
 									boolean=grill->tabPecheur[TourDuJoueur]->deplacement(grill->tabPecheur[TourDuJoueur], '7');
 									grill->tabPecheur[TourDuJoueur]->testVictory(grill->tabPecheur[TourDuJoueur], TourDuJoueur);
 									grill->r->sendPos(grill->r, grill->tabPecheur[TourDuJoueur]);
-                                }
+								}
 								if (Commande_Selected ==2)
 									boolean = grill->tabPecheur[TourDuJoueur]->construirePont(grill->tabPecheur[TourDuJoueur], '7');
 
@@ -345,12 +345,12 @@ struct Grille* SDL_Print(struct Grille *grill){
 						case SDLK_KP8:
 							if (TourDuJoueur != -1)
 							{
-                                if (Commande_Selected == 1)
-                                {
+								if (Commande_Selected == 1)
+								{
 									boolean=grill->tabPecheur[TourDuJoueur]->deplacement(grill->tabPecheur[TourDuJoueur], '8');
 									grill->tabPecheur[TourDuJoueur]->testVictory(grill->tabPecheur[TourDuJoueur], TourDuJoueur);
 									grill->r->sendPos(grill->r, grill->tabPecheur[TourDuJoueur]);
-                                }
+								}
 								if (Commande_Selected ==2)
 									boolean = grill->tabPecheur[TourDuJoueur]->construirePont(grill->tabPecheur[TourDuJoueur], '8');
 								if(boolean)
@@ -364,12 +364,12 @@ struct Grille* SDL_Print(struct Grille *grill){
 							if (TourDuJoueur != -1)
 							{
 
-                                if (Commande_Selected == 1)
-                                {
+								if (Commande_Selected == 1)
+								{
 									boolean=grill->tabPecheur[TourDuJoueur]->deplacement(grill->tabPecheur[TourDuJoueur], '9');
 									grill->tabPecheur[TourDuJoueur]->testVictory(grill->tabPecheur[TourDuJoueur], TourDuJoueur);
 									grill->r->sendPos(grill->r, grill->tabPecheur[TourDuJoueur]);
-                                }
+								}
 								if (Commande_Selected ==2)
 									boolean = grill->tabPecheur[TourDuJoueur]->construirePont(grill->tabPecheur[TourDuJoueur], '9');
 
@@ -407,14 +407,14 @@ struct Grille* SDL_Print(struct Grille *grill){
 					}
 					/*Bouton graphique*/
 					if ((ScreenW-45<=event.button.x) && (event.button.x<=ScreenW-45+30) && (ScreenH-45<=event.button.y) && (event.button.y<=ScreenH-15))
-                    { if(Est_Un_Dev==1) Est_Un_Dev=2; else if(Est_Un_Dev==2) Est_Un_Dev=1; }
+					{ if(Est_Un_Dev==1) Est_Un_Dev=2; else if(Est_Un_Dev==2) Est_Un_Dev=1; }
 
 					/*Selection espèce*/
-                    if (Est_Un_Dev)
+					if (Est_Un_Dev)
 						if (((ScreenH-40)<=event.button.x) && (event.button.x<=(ScreenH-40+100)) && ((180)<=event.button.y) && (event.button.y<=585))
 							C_Selected=Select_Legende(Legendes_Surface, police, police_underline, ((event.button.y)-140)/((580-140)/11));
 
-                    /*Edit des constantes*/
+					/*Edit des constantes*/
 					if (((ScreenH +(ScreenW-ScreenH)/2-15)-100<=event.button.x) && (event.button.x<=(ScreenH +(ScreenW-ScreenH)/2-15)-70) && ((ScreenH/2 - 100)<=event.button.y) && (event.button.y<=(ScreenH/2 - 100)+330))
 						C_Selected=Edit_Constantes(0, (event.button.y - (ScreenH/2 - 100)), C_Selected);
 					if (((ScreenH +(ScreenW-ScreenH)/2-15)+100<=event.button.x) && (event.button.x<=(ScreenH +(ScreenW-ScreenH)/2-15)+130) && ((ScreenH/2 - 100)<=event.button.y) && (event.button.y<=(ScreenH/2 - 100)+330))
@@ -481,17 +481,18 @@ struct Grille* SDL_Print(struct Grille *grill){
 							/*Peche*/
 							if (Commande_Selected==3 && TourDuJoueur != -1)
 							{
-								grill->tabPecheur[TourDuJoueur]->pecheParCanneSDL(grill->tabPecheur[TourDuJoueur], ((grill->tabPecheur[TourDuJoueur]->caseParent->posX)+pointeurY), (grill->tabPecheur[TourDuJoueur]->caseParent->posY)+pointeurX);
-                                Type espece = PLANCTON;
-
-                                Ce_Que_Je_Peche=Afficher_Peche(espece, police, Ce_Que_Je_Peche);
-                                TourDuJoueur=TourDuJoueur+1;
+								Type espece;
+								espece=grill->tabPecheur[TourDuJoueur]->pecheParCanneSDL(grill->tabPecheur[TourDuJoueur], ((grill->tabPecheur[TourDuJoueur]->caseParent->posX)+pointeurY), (grill->tabPecheur[TourDuJoueur]->caseParent->posY)+pointeurX);
+								Ce_Que_Je_Peche=Afficher_Peche(espece, police, Ce_Que_Je_Peche);
+								TourDuJoueur=TourDuJoueur+1;
 								if (TourDuJoueur==grill->nbPecheur) TourDuJoueur=-1;
 
 							}
 							else if (Commande_Selected==4 && TourDuJoueur != -1)
 							{
-								grill->tabPecheur[TourDuJoueur]->pecheParFiletSDL(grill->tabPecheur[TourDuJoueur],  ((grill->tabPecheur[TourDuJoueur]->caseParent->posX)+pointeurY), (grill->tabPecheur[TourDuJoueur]->caseParent->posY)+pointeurX);
+								quantite_peche_filet=grill->tabPecheur[TourDuJoueur]->pecheParFiletSDL(grill->tabPecheur[TourDuJoueur],  ((grill->tabPecheur[TourDuJoueur]->caseParent->posX)+pointeurY), (grill->tabPecheur[TourDuJoueur]->caseParent->posY)+pointeurX);
+								quantite_peche_filet=quantite_peche_filet+1000;
+								Ce_Que_Je_Peche=Afficher_Peche(quantite_peche_filet, police, Ce_Que_Je_Peche);
 								TourDuJoueur=TourDuJoueur+1;
 								if (TourDuJoueur==grill->nbPecheur) TourDuJoueur=-1;
 							}
@@ -533,23 +534,23 @@ struct Grille* SDL_Print(struct Grille *grill){
 		/* Opérations */
 
 
-        if (grill->victoire > -1) // grill->victoire d'un joueur
-        {
+		if (grill->victoire > -1) // grill->victoire d'un joueur
+		{
 			grill->r->sendWin(grill->r);
 			Fin_Partie( ecran, police_fin, grill->victoire/*num du joueur gagnant*/, ScreenH, ScreenW, grill->nbPecheur);
-        }
+		}
 
-        else if (grill->victoire == -2) // Défaite
-        {
-            Fin_Partie( ecran, police_fin, grill->victoire/*num du joueur gagnant*/, ScreenH, ScreenW, grill->nbPecheur);
-        }
+		else if (grill->victoire == -2) // Défaite
+		{
+			Fin_Partie( ecran, police_fin, grill->victoire/*num du joueur gagnant*/, ScreenH, ScreenW, grill->nbPecheur);
+		}
 
-        else {
-
-
+		else {
 
 
-        if(Est_Un_Dev)
+
+
+		if(Est_Un_Dev)
 		{
 			Spinner_Print(ecran, 0, ScreenH, ScreenW, plusIcone);
 			Spinner_Print(ecran, 1, ScreenH, ScreenW, moinsIcone);
@@ -558,23 +559,23 @@ struct Grille* SDL_Print(struct Grille *grill){
 		}
 
 
-        if(!Est_Un_Dev)
+		if(!Est_Un_Dev)
 		{
 			Commandes_Pecheur(ecran, Avancer, Construire, PecherCanne, PecherFilet, police, police_underline, Commande_Selected, ScreenH, ScreenW);
 
-            if (grill->nbPecheur==1)
-            {
-                Sac_Pecheur( ecran, police, grill->tabPecheur[0], ScreenH, ScreenW );
-                Blit_Image(ecran, Ce_Que_Je_Peche, ((ScreenH +(ScreenW-ScreenH)/2)+120), ScreenH/2 - 150 );
+			if (grill->nbPecheur==1)
+			{
+				Sac_Pecheur( ecran, police, grill->tabPecheur[0], ScreenH, ScreenW );
+				Blit_Image(ecran, Ce_Que_Je_Peche, ((ScreenH +(ScreenW-ScreenH)/2)+120), ScreenH/2 - 150 );
 
-            }
+			}
 
-            else if (TourDuJoueur!=-1)
-            {
-                Sac_Pecheur( ecran, police, grill->tabPecheur[TourDuJoueur], ScreenH, ScreenW );
-                Blit_Image(ecran, Ce_Que_Je_Peche, ((ScreenH +(ScreenW-ScreenH)/2)+120), ScreenH/2 - 150 );
+			else if (TourDuJoueur!=-1)
+			{
+				Sac_Pecheur( ecran, police, grill->tabPecheur[TourDuJoueur], ScreenH, ScreenW );
+				Blit_Image(ecran, Ce_Que_Je_Peche, ((ScreenH +(ScreenW-ScreenH)/2)+120), ScreenH/2 - 150 );
 
-            }
+			}
 		}
 
 
@@ -605,7 +606,7 @@ struct Grille* SDL_Print(struct Grille *grill){
 
 		if(Est_Un_Dev!=2)
 		{
-            Afficher_Pecheurs( grill, ecran, taille_case, grill->tabPecheur, grill->nbPecheur, pos_fenetre, rouge );
+			Afficher_Pecheurs( grill, ecran, taille_case, grill->tabPecheur, grill->nbPecheur, pos_fenetre, rouge );
 
 			if (TourDuJoueur!=-1 && grill->nbPecheur!=0)
 				Selected_Pecheur(ecran, taille_case, grill->tabPecheur[TourDuJoueur], pos_fenetre, blanc );
@@ -637,13 +638,13 @@ struct Grille* SDL_Print(struct Grille *grill){
 
 			// printf("%d\n", grill->TourCourant); // AFFICHAGE DU NOMBRE DE TOUR
 			if (TourDuJoueur==-1)
-            {
+			{
 				grill->faireTour(grill, 1);
 
-                if ((grill->nbPecheur!=0) && ((grill->TourCourant)%1)==0)
+				if ((grill->nbPecheur!=0) && ((grill->TourCourant)%1)==0)
 				{
 					TourDuJoueur=(TourDuJoueur+1)%((grill->nbPecheur)+1);
-                    Commande_Selected=1;
+					Commande_Selected=1;
 
 				}
 			}
@@ -651,7 +652,7 @@ struct Grille* SDL_Print(struct Grille *grill){
 
 		}
 
-        }
+		}
 
 		/* Mise à jour de l'écran */
 		SDL_Flip(ecran);
@@ -682,7 +683,7 @@ struct Grille* SDL_Print(struct Grille *grill){
 	SDL_FreeSurface(Construire);
 	SDL_FreeSurface(PecherCanne);
 	SDL_FreeSurface(PecherFilet);
-    SDL_FreeSurface(Ce_Que_Je_Peche);
+	SDL_FreeSurface(Ce_Que_Je_Peche);
 
 
 	for(i=0; i<12; i++){
@@ -706,7 +707,7 @@ struct Grille* SDL_Print(struct Grille *grill){
 
 	TTF_CloseFont(police);
 	TTF_CloseFont(police_underline);
-    TTF_CloseFont(police_fin);
+	TTF_CloseFont(police_fin);
 	SDL_Quit();
 	TTF_Quit();
 	return grill;
@@ -1004,7 +1005,7 @@ void Print_Constantes(SDL_Surface *ecran, ElementAnimal_Constantes *Selected, TT
 	char texte[30]="";
 	int16_t Centre_Commandes=(ScreenH +(ScreenW-ScreenH)/2-15); // Le 15 correspond à la largeur des images bmp !
 
-    sprintf(texte, "Survie=%d", Selected->dureeSurvie);
+	sprintf(texte, "Survie=%d", Selected->dureeSurvie);
 	SDL_Surface *Surface_texte;
 	SDL_Color Blanc = {254, 255, 255,0};
 	Surface_texte=TTF_RenderText_Blended(police, texte, Blanc );
@@ -1096,7 +1097,7 @@ void Print_Graphique(SDL_Surface *graph, int16_t GraphH, int16_t *nbr_espece, in
 	SDL_FillRect(Gros_Pixel, NULL, SDL_MapRGB(graph->format, 204, 255, 0));
 	Blit_Image(graph,Gros_Pixel,(grill->TourCourant), GraphH-((nbr_espece[6]*GraphH)/(NBR_CASES*NBR_CASES)));
 
-    SDL_FillRect(Gros_Pixel, NULL, SDL_MapRGB(graph->format, 0, 0, 255));//Baleine
+	SDL_FillRect(Gros_Pixel, NULL, SDL_MapRGB(graph->format, 0, 0, 255));//Baleine
 	Blit_Image(graph,Gros_Pixel,(grill->TourCourant), GraphH-((nbr_espece[2]*GraphH)/(NBR_CASES*NBR_CASES)));
 
 	SDL_FillRect(Gros_Pixel, NULL, SDL_MapRGB(graph->format, 0, 114, 45));//Bar
@@ -1147,36 +1148,36 @@ void Print_NbTour(SDL_Surface *ecran, Grille *grill, TTF_Font* police, int16_t S
 
 void Fin_Partie( SDL_Surface *ecran, TTF_Font* police, int joueur, int16_t ScreenH, int16_t ScreenW, int nbpecheur )
 {
-    SDL_Surface *victory=NULL;
+	SDL_Surface *victory=NULL;
 	SDL_Color Couleur_victoire = {187, 11, 11,0};
 	SDL_Color Couleur_defaite = {22, 182, 78,0};
 
-    if (joueur == -2) // PERDU
-    {
-        char texte[30]="";
-        sprintf(texte, "YOU LOOSE");
-        victory = TTF_RenderText_Blended(police, texte, Couleur_defaite);
-    }
+	if (joueur == -2) // PERDU
+	{
+		char texte[30]="";
+		sprintf(texte, "YOU LOOSE");
+		victory = TTF_RenderText_Blended(police, texte, Couleur_defaite);
+	}
 
-    else if ( nbpecheur >= 2 )
-    {
-        char texte[30]="";
-        sprintf(texte, "YOU WIN");
+	else if ( nbpecheur >= 2 )
+	{
+		char texte[30]="";
+		sprintf(texte, "YOU WIN");
 		victory = TTF_RenderText_Blended(police, texte, Couleur_victoire);
-        Blit_Image(ecran, victory, ScreenW/2-250, ScreenH/2+70);
-        sprintf(texte, "Joueur %d,", joueur);
-        victory = TTF_RenderText_Blended(police, texte, Couleur_victoire);
-    }
-
-    else if ( nbpecheur < 2 )
-    {
-        char texte[30]="";
-        sprintf(texte, "YOU WIN");
+		Blit_Image(ecran, victory, ScreenW/2-250, ScreenH/2+70);
+		sprintf(texte, "Joueur %d,", joueur);
 		victory = TTF_RenderText_Blended(police, texte, Couleur_victoire);
-    }
+	}
 
-    Blit_Image(ecran, victory, ScreenW/2-150, ScreenH/2);
-    SDL_FreeSurface(victory);
+	else if ( nbpecheur < 2 )
+	{
+		char texte[30]="";
+		sprintf(texte, "YOU WIN");
+		victory = TTF_RenderText_Blended(police, texte, Couleur_victoire);
+	}
+
+	Blit_Image(ecran, victory, ScreenW/2-150, ScreenH/2);
+	SDL_FreeSurface(victory);
 
 
 }
@@ -1184,101 +1185,94 @@ void Fin_Partie( SDL_Surface *ecran, TTF_Font* police, int joueur, int16_t Scree
 
 SDL_Surface* Afficher_Peche(int type, TTF_Font *police, SDL_Surface *Ce_Que_Je_Peche )
 {
-    int Taille_Dans_Sac;
-    SDL_Color Couleur_Peche;
-    Couleur_Peche.unused=0;
-    switch (type)
-    {
-    case PLANCTON : //Plancton
-        //Couleur_Peche = {253, 190, 1,0};
-        Couleur_Peche.r=253;
-        Couleur_Peche.g=190;
-        Couleur_Peche.b=1;
-        Taille_Dans_Sac=C_Plancton.taille;
-        break;
-    case CORAIL : //Corail
-        //Couleur_Peche = {255, 102, 0,0 };
-        Couleur_Peche.r=255;
-        Couleur_Peche.g=102;
-        Couleur_Peche.b=0;
-        Taille_Dans_Sac=C_Corail.taille;
-        break;
-    case BAR: //Bar
-        //Couleur_Peche = {0, 114, 45,0};
-        Couleur_Peche.r=0;
-        Couleur_Peche.g=114;
-        Couleur_Peche.b=45;
-                Taille_Dans_Sac=C_Bar.taille;
-        break;
-    case THON: //Thon
-        //Couleur_Peche = {236, 68, 155,0};
-        Couleur_Peche.r=236;
-        Couleur_Peche.g=68;
-        Couleur_Peche.b=155;
-                Taille_Dans_Sac=C_Thon.taille;
-        break;
-    case PYRANHA: //Pyranha
-        //Couleur_Peche = {209, 0, 57,0};
-        Couleur_Peche.r=209;
-        Couleur_Peche.g=0;
-        Couleur_Peche.b=57;
-                Taille_Dans_Sac=C_Pyranha.taille;
-        break;
-    case REQUIN: //Requin
-        //Couleur_Peche = {55, 49, 33,0};
-        Couleur_Peche.r=55;
-        Couleur_Peche.g=49;
-        Couleur_Peche.b=33;
-                Taille_Dans_Sac=C_Requin.taille;
-        break;
-    case ORQUE: //Orque
-        //Couleur_Peche = {15, 14, 20,0};
-        Couleur_Peche.r=15;
-        Couleur_Peche.g=14;
-        Couleur_Peche.b=20;
-                Taille_Dans_Sac=C_Orque.taille;
-        break;
-    case BALEINE: //Baleine
-        //Couleur_Peche = {0, 0, 255,0};
-        Couleur_Peche.r=0;
-        Couleur_Peche.g=0;
-        Couleur_Peche.b=255;
-                Taille_Dans_Sac=C_Baleine.taille;
-        break;
-    default : //Blanc
-        //Couleur_Peche = {193, 205, 193,0};
-        Couleur_Peche.r=193;
-        Couleur_Peche.g=205;
-        Couleur_Peche.b=193;
-                Taille_Dans_Sac=0;
-        break;
-    }
 
 
-if (Taille_Dans_Sac!=0)
-{
-        char texte[30]="";
-        sprintf(texte, "+ %d", Taille_Dans_Sac);
-        Ce_Que_Je_Peche = TTF_RenderText_Blended(police, texte, Couleur_Peche);
+
+		int Taille_Dans_Sac;
+		SDL_Color Couleur_Peche;
+		Couleur_Peche.unused=0;
+		switch (type)
+		{
+		case PLANCTON : //Plancton
+			//Couleur_Peche = {253, 190, 1,0};
+			Couleur_Peche.r=253;
+			Couleur_Peche.g=190;
+			Couleur_Peche.b=1;
+			Taille_Dans_Sac=C_Plancton.taille;
+			break;
+		case CORAIL : //Corail
+			//Couleur_Peche = {255, 102, 0,0 };
+			Couleur_Peche.r=255;
+			Couleur_Peche.g=102;
+			Couleur_Peche.b=0;
+			Taille_Dans_Sac=C_Corail.taille;
+			break;
+		case BAR: //Bar
+			//Couleur_Peche = {0, 114, 45,0};
+			Couleur_Peche.r=0;
+			Couleur_Peche.g=114;
+			Couleur_Peche.b=45;
+			Taille_Dans_Sac=C_Bar.taille;
+			break;
+		case THON: //Thon
+			//Couleur_Peche = {236, 68, 155,0};
+			Couleur_Peche.r=236;
+			Couleur_Peche.g=68;
+			Couleur_Peche.b=155;
+			Taille_Dans_Sac=C_Thon.taille;
+			break;
+		case PYRANHA: //Pyranha
+			//Couleur_Peche = {209, 0, 57,0};
+			Couleur_Peche.r=209;
+			Couleur_Peche.g=0;
+			Couleur_Peche.b=57;
+			Taille_Dans_Sac=C_Pyranha.taille;
+			break;
+		case REQUIN: //Requin
+			//Couleur_Peche = {55, 49, 33,0};
+			Couleur_Peche.r=55;
+			Couleur_Peche.g=49;
+			Couleur_Peche.b=33;
+			Taille_Dans_Sac=C_Requin.taille;
+			break;
+		case ORQUE: //Orque
+			//Couleur_Peche = {15, 14, 20,0};
+			Couleur_Peche.r=15;
+			Couleur_Peche.g=14;
+			Couleur_Peche.b=20;
+			Taille_Dans_Sac=C_Orque.taille;
+			break;
+		case BALEINE: //Baleine
+			//Couleur_Peche = {0, 0, 255,0};
+			Couleur_Peche.r=0;
+			Couleur_Peche.g=0;
+			Couleur_Peche.b=255;
+			Taille_Dans_Sac=C_Baleine.taille;
+			break;
+		default : //Blanc
+			//Couleur_Peche = {193, 205, 193,0};
+			Couleur_Peche.r=193;
+			Couleur_Peche.g=205;
+			Couleur_Peche.b=193;
+			Taille_Dans_Sac=type-1000;
+			break;
+		}
+
+
+		if (Taille_Dans_Sac!=0 && Taille_Dans_Sac!=(-1000))
+		{
+			char texte[30]="";
+			sprintf(texte, "+ %d", Taille_Dans_Sac);
+			Ce_Que_Je_Peche = TTF_RenderText_Blended(police, texte, Couleur_Peche);
+		}
+
+
+
+
+		//int16_t Centre_Commandes=(ScreenH +(ScreenW-ScreenH)/2);
+		//Blit_Image(ecran, Ce_Que_Je_Peche, (ScreenH +(ScreenW-ScreenH)/2)-30+20, ScreenH/2 - 150 );
+
+
+
+		return Ce_Que_Je_Peche;
 }
-
-
-
-
-//int16_t Centre_Commandes=(ScreenH +(ScreenW-ScreenH)/2);
-//Blit_Image(ecran, Ce_Que_Je_Peche, (ScreenH +(ScreenW-ScreenH)/2)-30+20, ScreenH/2 - 150 );
-
-
-
-return Ce_Que_Je_Peche;
-
-
-
-}
-
-
-
-
-
-
-
