@@ -48,7 +48,7 @@ typedef struct Reseau
 	Bool (*recupVisibility)(struct Reseau* This, char* str, struct Client* cli);
 
 	void (*sendWin)(struct Reseau *This);
-	void (*sendPos)(struct Reseau *This, struct ElementPecheur*);
+	void (*sendPos)(struct Reseau *This);
 
 
 } Reseau;
@@ -83,6 +83,6 @@ Bool Reseau_recupVisibility(Reseau* This, char* str, struct Client* cli);
 
 void Reseau_sendWin(struct Reseau *This);
 Bool Reseau_recupCoordinatesEnnemy(Reseau* This, char* str, struct Client* cli);
-void Reseau_sendPos(Reseau* This, struct ElementPecheur* p);
+void Reseau_sendPos(Reseau* This);
 
 #endif // RESEAU_H

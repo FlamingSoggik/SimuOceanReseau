@@ -1444,21 +1444,23 @@ void Reseau_sendWin(Reseau* This)
 	}
 }
 
-void Reseau_sendPos(Reseau* This, ElementPecheur* p)
+void Reseau_sendPos(Reseau* This)
 {
-	int i;
+	int i, offset=0;
 	Client *cli;
 	char *toSend;
+	toSend=malloc(10*(5+1)*2+(5+1)*sizeof(char));
+	offset=sprintf(toSend, "#7q%d\n", This->g->nbPecheur);
+	for (i=0; i<This->g->nbPecheur; ++i){
+		offset+=sprintf(toSend, "%d\%d\n", This->g->tabPecheur[i]->caseParent->posX, This->g->tabPecheur[i]->caseParent->posY);
+	}
 	for(i=0 ; i< This->clients->taille; ++i){
 		cli=This->clients->getNieme(This->clients, i);
 		if (cli == NULL){
 			printf("Call the admin NOOOOOOOOOW %s:%d\n", __FUNCTION__, __LINE__);
 			continue;
 		}
-		// (5+1) = 1 int + 1\n * 2 car deux coordonnées
-		toSend=malloc((5+1)*2+4);
-		sprintf(toSend, "#7q%d\n%d\n", p->caseParent->posX, p->caseParent->posY);
-		if (sendto(This->sockEcouteInternalMessages, toSend, strlen(toSend), 0, (struct sockaddr*)&cli->from, sizeof(cli->from)) == -1){
+		if (sendto(This->sockEcouteInternalMessages, toSend, strlen(toSend)+1, 0, (struct sockaddr*)&cli->from, sizeof(cli->from)) == -1){
 			perror("Send to __LINE__");
 		}
 	}

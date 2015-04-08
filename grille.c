@@ -202,14 +202,12 @@ void Grille_Init(Grille *This, uint16_t Taille, unsigned char nbPecheurs){
 			}
 		}
 	}
-	for(parcours=0; parcours<This->nbPecheur; ++parcours){
-		This->r->sendPos(This->r, This->tabPecheur[parcours]);
-	}
 	if (pthread_mutex_unlock(&This->r->mutexMatricePropriete) < 0){
 		perror("pthread_mutex_unlock");
 		exit(-10);
 	}
 	pthread_setcancelstate(PTHREAD_CANCEL_ENABLE, NULL);
+	This->r->sendPos(This->r);
 }
 
 void Grille_Clear(struct Grille *This){
@@ -555,7 +553,7 @@ void Grille_faireTour(Grille *This, char isSdl){
 					mode_raw(0);
 					p->deplacement(p, c);
 					p->testVictory(p, i);
-					p->caseParent->g->r->sendPos(p->caseParent->g->r, p);
+					p->caseParent->g->r->sendPos(p->caseParent->g->r);
 				}
 				else if (c == 'p'){
 					printf("Choisisez le type de peche : Peche par canne (c) ou par filet(f)\n");
