@@ -9,10 +9,11 @@ void ListeClient_Init(ListeClient* This){
 	This->getNieme=ListeClient_getNieme;
 	This->Push=ListeClient_Push;
 	This->Pop=ListeClient_Pop;
-	This->getFromFrom=ListeClient_getFrom;
+	This->getFromFrom=ListeClient_getFromFrom;
 	This->getFromSockNo=ListeClient_getFromSockNo;
 	This->remove=ListeClient_remove;
 	This->removeAll=ListeClient_removeAll;
+	pthread_mutex_init(&This->mutexListeClient, NULL);
 }
 
 ListeClient* New_ListeClient(){
@@ -40,6 +41,7 @@ void ListeClient_Clear(ListeClient *This, char freeClients){
 		--This->taille;
 		This->Top = tmp;
 	}
+	pthread_mutex_destroy(&This->mutexListeClient);
 }
 
 int16_t ListeClient_Push(ListeClient* This, Client *c){
@@ -82,7 +84,7 @@ Client *ListeClient_getNieme(ListeClient *This, uint16_t number)
 }
 
 
-Client* ListeClient_getFrom(ListeClient* This, struct sockaddr_in from)
+Client* ListeClient_getFromFrom(ListeClient* This, struct sockaddr_in from)
 {
 	MaillonListeClient *tmp = This->Top;
 	while(tmp != NULL){

@@ -13,6 +13,7 @@ typedef struct Client{
 		void (*Clear)(struct Client *This);
 		int16_t posX;
 		int16_t posY;
+		char ipPortString[21];
 }Client;
 
 Client* New_Client();

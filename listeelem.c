@@ -273,6 +273,9 @@ char* ListeElem_serialize(ListeElem *This)
 	MaillonListeElem *tmp = This->Top;
 	while(tmp != NULL){
 		leschaines[i]=tmp->e->serialize(tmp->e);
+		if (leschaines[i] == NULL){
+			printf("ERR: Case_serialize, leschaines[%d]==NULL\n", i);
+		}
 		nbrCaract+=strlen(leschaines[i]);
 		tmp=tmp->next;
 		++i;
