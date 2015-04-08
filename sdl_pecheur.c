@@ -27,6 +27,11 @@ void Afficher_Pecheurs( Grille *grill, SDL_Surface *ecran, int16_t taille_case, 
 //        pthread_setcancelstate(PTHREAD_CANCEL_DISABLE, NULL);
 //        pthread_mutex_lock(grill->r->clients->)
 
+		pthread_setcancelstate(PTHREAD_CANCEL_DISABLE, NULL);
+		if (pthread_mutex_lock(&grill->r->clients->mutexListeClient) < 0 ){
+			perror("pthread_mutex_lock");
+			exit(-10);
+		}
 		for(i=0; i<grill->r->clients->taille; i++)
 		{
 			c=grill->r->clients->getNieme(grill->r->clients, i);
@@ -43,6 +48,11 @@ void Afficher_Pecheurs( Grille *grill, SDL_Surface *ecran, int16_t taille_case, 
 				}
 			}
 		}
+		if (pthread_mutex_unlock(&grill->r->clients->mutexListeClient) < 0 ){
+			perror("pthread_mutex_unlock");
+			exit(-10);
+		}
+		pthread_setcancelstate(PTHREAD_CANCEL_ENABLE, NULL);
 
 }
 

@@ -314,8 +314,8 @@ Type ElementPecheur_pecheParCanneSDL(ElementPecheur *This, int16_t x, int16_t y)
 			e=(ElementAnimal*)casePeche->liste->getAnimal(casePeche->liste);
 			if (This->peutPecher(This, e->type) == True){
 				This->sac+=e->constantes->taille;
-				e->caseParent->liste->deleteElement(e->caseParent->liste, (Element*)e);
 				t=e->type;
+				e->caseParent->liste->deleteElement(e->caseParent->liste, (Element*)e);
 			}
 		}
 	}

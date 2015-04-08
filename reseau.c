@@ -121,35 +121,59 @@ void* HandleInternalMessage(void *arg){
 		else if (strncmp(recvBuffer, "#3a", 3) == 0){
 			printf("Reception de la carte la part de %s:%d\n",inet_ntoa(from.sin_addr),htons(from.sin_port));
 			Client *c;
+			pthread_setcancelstate(PTHREAD_CANCEL_DISABLE, NULL);
+			if (pthread_mutex_lock(&This->clients->mutexListeClient) < 0 ){
+				perror("pthread_mutex_lock");
+				exit(-10);
+			}
 			c = This->clients->getFromFrom(This->clients, from);
 			if (c == NULL){
 				printf("Call the admin NOOOOOOOOOW %s:%d\n", __FUNCTION__, __LINE__);
 			}
 			unSerialize(This, recvBuffer+3, c);
+			if (pthread_mutex_unlock(&This->clients->mutexListeClient) < 0 ){
+				perror("pthread_mutex_unlock");
+				exit(-10);
+			}
+			pthread_setcancelstate(PTHREAD_CANCEL_ENABLE, NULL);
 			This->carteInitialised=True;
 			printf("FIN UNSERIALIZED\n");
 		}
 		else if (strncmp(recvBuffer, "#5q", 3) == 0){
 			//Donner la visibilité
 			Client *c;
+			pthread_setcancelstate(PTHREAD_CANCEL_DISABLE, NULL);
+			if (pthread_mutex_lock(&This->clients->mutexListeClient) < 0 ){
+				perror("pthread_mutex_lock");
+				exit(-10);
+			}
 			c = This->clients->getFromFrom(This->clients, from);
 			if (c == NULL){
 				printf("Call the admin NOOOOOOOOOW %s:%d\n", __FUNCTION__, __LINE__);
 			}
 			toSend=Reseau_giveVisibility(This, recvBuffer+3);
 			sendto(This->sockEcouteInternalMessages, toSend, strlen(toSend)+1, 0, (struct sockaddr *) &dst, sizeof(dst));
+			if (pthread_mutex_unlock(&This->clients->mutexListeClient) < 0 ){
+				perror("pthread_mutex_unlock");
+				exit(-10);
+			}
+			pthread_setcancelstate(PTHREAD_CANCEL_ENABLE, NULL);
 			free(toSend);
 		}
 		else if (strncmp(recvBuffer, "#5a", 3) == 0){
 			//recevoir la visibilité
 			Client *c;
+			pthread_setcancelstate(PTHREAD_CANCEL_DISABLE, NULL);
+			if (pthread_mutex_lock(&This->clients->mutexListeClient) < 0 ){
+				perror("pthread_mutex_lock");
+				exit(-10);
+			}
 			c = This->clients->getFromFrom(This->clients, from);
 			if (c == NULL){
 				printf("Call the admin NOOOOOOOOOW %s:%d\n", __FUNCTION__, __LINE__);
 			}
 			Reseau_recupVisibility(This, recvBuffer+3, c);
 
-			pthread_setcancelstate(PTHREAD_CANCEL_DISABLE, NULL);
 			if (pthread_mutex_lock(&This->mutexNbrReponseAttendue) < 0){
 				perror("pthread_mutex_lock");
 				exit(1);
@@ -163,6 +187,10 @@ void* HandleInternalMessage(void *arg){
 				perror("pthread_mutex_unlock");
 				exit(1);
 			}
+			if (pthread_mutex_unlock(&This->clients->mutexListeClient) < 0 ){
+				perror("pthread_mutex_unlock");
+				exit(-10);
+			}
 			pthread_setcancelstate(PTHREAD_CANCEL_ENABLE, NULL);
 		}
 		else if (strncmp(recvBuffer, "#6#", 3) == 0){
@@ -172,24 +200,43 @@ void* HandleInternalMessage(void *arg){
 		else if (strncmp(recvBuffer, "#7q", 3) == 0){
 			//recevoir message de défaite
 			Client *c;
+			pthread_setcancelstate(PTHREAD_CANCEL_DISABLE, NULL);
+			if (pthread_mutex_lock(&This->clients->mutexListeClient) < 0 ){
+				perror("pthread_mutex_lock");
+				exit(-10);
+			}
 			c = This->clients->getFromFrom(This->clients, from);
 			if (c == NULL){
 				printf("Call the admin NOOOOOOOOOW %s:%d\n", __FUNCTION__, __LINE__);
 			}
-			printf("Chaine recue : %s", recvBuffer);
 			Reseau_recupCoordinatesEnnemy(This, recvBuffer+3, c);
 			toSend=Reseau_strAskVisibilitySurrounding(This, c);
 			sendto(This->sockEcouteInternalMessages, toSend, strlen(toSend)+1, 0, (struct sockaddr *) &dst, sizeof(dst));
+			if (pthread_mutex_unlock(&This->clients->mutexListeClient) < 0 ){
+				perror("pthread_mutex_unlock");
+				exit(-10);
+			}
+			pthread_setcancelstate(PTHREAD_CANCEL_ENABLE, NULL);
 			free(toSend);
 		}
 		else if (strncmp(recvBuffer, "#7a", 3) == 0){
 			//recevoir la visibilité suite à un de nos déplacement
 			Client *c;
+			pthread_setcancelstate(PTHREAD_CANCEL_DISABLE, NULL);
+			if (pthread_mutex_lock(&This->clients->mutexListeClient) < 0 ){
+				perror("pthread_mutex_lock");
+				exit(-10);
+			}
 			c = This->clients->getFromFrom(This->clients, from);
 			if (c == NULL){
 				printf("Call the admin NOOOOOOOOOW %s:%d\n", __FUNCTION__, __LINE__);
 			}
 			Reseau_recupVisibility(This, recvBuffer+3, c);
+			if (pthread_mutex_unlock(&This->clients->mutexListeClient) < 0 ){
+				perror("pthread_mutex_unlock");
+				exit(-10);
+			}
+			pthread_setcancelstate(PTHREAD_CANCEL_ENABLE, NULL);
 		}
 		else {
 			printf("Unwnown message:\n");
@@ -277,16 +324,16 @@ void* HandleTcpPlayer(void *arg){
 				else {
 					if ( (sizeRecieved=read(i, recvBuffer, sizeof(recvBuffer))) <= 0){
 						printf("Un client quitte la partie.\n");
-						//						pthread_setcancelstate(PTHREAD_CANCEL_DISABLE, NULL);
-						//						if (pthread_mutex_lock(&This->clients->mutexListeClient) < 0 ){
-						//							perror("pthread_mutex_lock");
-						//							exit(-10);
-						//						}
+						pthread_setcancelstate(PTHREAD_CANCEL_DISABLE, NULL);
+						if (pthread_mutex_lock(&This->clients->mutexListeClient) < 0 ){
+							perror("pthread_mutex_lock");
+							exit(-10);
+						}
 						This->clients->remove(This->clients, i);
-						//						if (pthread_mutex_unlock(&This->clients->mutexListeClient) < 0 ){
-						//							perror("pthread_mutex_unlock");
-						//							exit(-10);
-						//						}
+						if (pthread_mutex_unlock(&This->clients->mutexListeClient) < 0 ){
+							perror("pthread_mutex_unlock");
+							exit(-10);
+						}
 						pthread_setcancelstate(PTHREAD_CANCEL_ENABLE, NULL);
 						FD_CLR(i, &This->untouchableSet);
 						if (This->maxFd == i){
@@ -305,76 +352,74 @@ void* HandleTcpPlayer(void *arg){
 							uint16_t val=0;
 							sscanf(recvBuffer+3, "%" SCNd16, &val);
 							pthread_setcancelstate(PTHREAD_CANCEL_DISABLE, NULL);
-							//							if (pthread_mutex_lock(&This->clients->mutexListeClient) < 0 ){
-							//								perror("pthread_mutex_lock");
-							//								exit(-10);
-							//							}
+							if (pthread_mutex_lock(&This->clients->mutexListeClient) < 0 ){
+								perror("pthread_mutex_lock");
+								exit(-10);
+							}
 							c = This->clients->getFromFrom(This->clients, newClientInfos);
 							if (c == NULL){
 								printf("Call the admin NOOOOOOOOOW %s:%d\n", __FUNCTION__, __LINE__);
-								//								if (pthread_mutex_unlock(&This->clients->mutexListeClient) < 0 ){
-								//									perror("pthread_mutex_unlock");
-								//									exit(-10);
-								//								}
-								//								pthread_setcancelstate(PTHREAD_CANCEL_ENABLE, NULL);
+								if (pthread_mutex_unlock(&This->clients->mutexListeClient) < 0 ){
+									perror("pthread_mutex_unlock");
+									exit(-10);
+								}
+								pthread_setcancelstate(PTHREAD_CANCEL_ENABLE, NULL);
 								continue;
 							}
 							c->from.sin_port=htons(val);
 							sprintf(c->ipPortString, "%s:%d", inet_ntoa(c->from.sin_addr),htons(c->from.sin_port));
-							//							if (pthread_mutex_unlock(&This->clients->mutexListeClient) < 0 ){
-							//								perror("pthread_mutex_unlock");
-							//								exit(-10);
-							//							}
-							//							pthread_setcancelstate(PTHREAD_CANCEL_ENABLE, NULL);
+							if (pthread_mutex_unlock(&This->clients->mutexListeClient) < 0 ){
+								perror("pthread_mutex_unlock");
+								exit(-10);
+							}
+							pthread_setcancelstate(PTHREAD_CANCEL_ENABLE, NULL);
 						}
 						else if (strncmp(recvBuffer, "#4q", 3) == 0){
 							//Donner la propriétée
 							Client *c;
-							//							pthread_setcancelstate(PTHREAD_CANCEL_DISABLE, NULL);
-							//							if (pthread_mutex_lock(&This->clients->mutexListeClient) < 0 ){
-							//								perror("pthread_mutex_lock");
-							//								exit(-10);
-							//							}
+							pthread_setcancelstate(PTHREAD_CANCEL_DISABLE, NULL);
+							if (pthread_mutex_lock(&This->clients->mutexListeClient) < 0 ){
+								perror("pthread_mutex_lock");
+								exit(-10);
+							}
 							c = This->clients->getFromSockNo(This->clients, i);
 							if (c == NULL){
 								printf("Call the admin NOOOOOOOOOW %s:%d\n", __FUNCTION__, __LINE__);
-								//								if (pthread_mutex_unlock(&This->clients->mutexListeClient) < 0 ){
-								//									perror("pthread_mutex_unlock");
-								//									exit(-10);
-								//								}
-								//								pthread_setcancelstate(PTHREAD_CANCEL_ENABLE, NULL);
+								if (pthread_mutex_unlock(&This->clients->mutexListeClient) < 0 ){
+									perror("pthread_mutex_unlock");
+									exit(-10);
+								}
+								pthread_setcancelstate(PTHREAD_CANCEL_ENABLE, NULL);
 								continue;
 							}
 							toSend=Reseau_giveProperty(This, recvBuffer+3, c);
 							write(c->socketTCP, toSend, strlen(toSend));
-							//							if (pthread_mutex_unlock(&This->clients->mutexListeClient) < 0 ){
-							//								perror("pthread_mutex_unlock");
-							//								exit(-10);
-							//							}
-							//							pthread_setcancelstate(PTHREAD_CANCEL_ENABLE, NULL);
+							if (pthread_mutex_unlock(&This->clients->mutexListeClient) < 0 ){
+								perror("pthread_mutex_unlock");
+								exit(-10);
+							}
+							pthread_setcancelstate(PTHREAD_CANCEL_ENABLE, NULL);
 							free(toSend);
 						}
 						else if (strncmp(recvBuffer, "#4a", 3) == 0){
 							//mettre a jour la matrice de propriété
 							Client *c;
-							//							pthread_setcancelstate(PTHREAD_CANCEL_DISABLE, NULL);
-							//							if (pthread_mutex_lock(&This->clients->mutexListeClient) < 0 ){
-							//								perror("pthread_mutex_lock");
-							//								exit(-10);
-							//							}
+							pthread_setcancelstate(PTHREAD_CANCEL_DISABLE, NULL);
+							if (pthread_mutex_lock(&This->clients->mutexListeClient) < 0 ){
+								perror("pthread_mutex_lock");
+								exit(-10);
+							}
 							c = This->clients->getFromSockNo(This->clients, i);
 							if (c == NULL){
 								printf("Call the admin NOOOOOOOOOW %s:%d\n", __FUNCTION__, __LINE__);
-								//								if (pthread_mutex_unlock(&This->clients->mutexListeClient) < 0 ){
-								//									perror("pthread_mutex_unlock");
-								//									exit(-10);
-								//								}
-								//								pthread_setcancelstate(PTHREAD_CANCEL_ENABLE, NULL);
+								if (pthread_mutex_unlock(&This->clients->mutexListeClient) < 0 ){
+									perror("pthread_mutex_unlock");
+									exit(-10);
+								}
+								pthread_setcancelstate(PTHREAD_CANCEL_ENABLE, NULL);
 								continue;
 							}
 							Reseau_recupProperty(This, recvBuffer+3, c);
-
-							pthread_setcancelstate(PTHREAD_CANCEL_DISABLE, NULL);
 							if (pthread_mutex_lock(&This->mutexNbrReponseAttendue) < 0){
 								perror("pthread_mutex_lock");
 								exit(1);
@@ -387,6 +432,10 @@ void* HandleTcpPlayer(void *arg){
 							if (pthread_mutex_unlock(&This->mutexNbrReponseAttendue) < 0){
 								perror("pthread_mutex_unlock");
 								exit(1);
+							}
+							if (pthread_mutex_unlock(&This->clients->mutexListeClient) < 0 ){
+								perror("pthread_mutex_unlock");
+								exit(-10);
 							}
 							pthread_setcancelstate(PTHREAD_CANCEL_ENABLE, NULL);
 						}
@@ -754,11 +803,11 @@ void tenterConnection(Reseau *This){
 void askForCarte(Reseau *This){
 	int i;
 	Client *c;
-	//	pthread_setcancelstate(PTHREAD_CANCEL_DISABLE, NULL);
-	//	if (pthread_mutex_lock(&This->clients->mutexListeClient) < 0 ){
-	//		perror("pthread_mutex_unlock");
-	//		exit(-10);
-	//	}
+	pthread_setcancelstate(PTHREAD_CANCEL_DISABLE, NULL);
+	if (pthread_mutex_lock(&This->clients->mutexListeClient) < 0 ){
+		perror("pthread_mutex_unlock");
+		exit(-10);
+	}
 	for (i=0; i<This->clients->taille; ++i){
 		c = This->clients->getNieme(This->clients, i);
 		if (c == NULL){
@@ -770,11 +819,11 @@ void askForCarte(Reseau *This){
 			perror("Send to __LINE__");
 		}
 	}
-	//	if (pthread_mutex_unlock(&This->clients->mutexListeClient) < 0 ){
-	//		perror("pthread_mutex_unlock");
-	//		exit(-10);
-	//	}
-	//	pthread_setcancelstate(PTHREAD_CANCEL_ENABLE, NULL);
+	if (pthread_mutex_unlock(&This->clients->mutexListeClient) < 0 ){
+		perror("pthread_mutex_unlock");
+		exit(-10);
+	}
+	pthread_setcancelstate(PTHREAD_CANCEL_ENABLE, NULL);
 }
 
 void Reseau_askForProperty(Reseau *This, ListeCase* lcas){
@@ -783,11 +832,11 @@ void Reseau_askForProperty(Reseau *This, ListeCase* lcas){
 	Client *cli;
 	ListeClient* lcli = New_ListeClient();
 	char *propDemandeSur;
-	//	pthread_setcancelstate(PTHREAD_CANCEL_DISABLE, NULL);
-	//	if (pthread_mutex_lock(&This->clients->mutexListeClient) < 0 ){
-	//		perror("pthread_mutex_lock");
-	//		exit(-10);
-	//	}
+	pthread_setcancelstate(PTHREAD_CANCEL_DISABLE, NULL);
+	if (pthread_mutex_lock(&This->clients->mutexListeClient) < 0 ){
+		perror("pthread_mutex_lock");
+		exit(-10);
+	}
 	for (i=0; i<lcas->taille; ++i){
 		cas = lcas->getNieme(lcas, i);
 		if (cas == NULL){
@@ -802,7 +851,6 @@ void Reseau_askForProperty(Reseau *This, ListeCase* lcas){
 		}
 		cli->casesTo->Push(cli->casesTo, cas);
 	}
-	pthread_setcancelstate(PTHREAD_CANCEL_DISABLE, NULL);
 	if (pthread_mutex_lock(&This->mutexNbrReponseAttendue)){
 		perror("pthread_mutex_lock");
 		exit(-10);
@@ -816,7 +864,6 @@ void Reseau_askForProperty(Reseau *This, ListeCase* lcas){
 		perror("pthread_mutex_unlock");
 		exit(-10);
 	}
-	pthread_setcancelstate(PTHREAD_CANCEL_ENABLE, NULL);
 	for(i=0 ; i< lcli->taille; ++i){
 		cli=lcli->getNieme(lcli, i);
 		if (cli == NULL){
@@ -839,11 +886,11 @@ void Reseau_askForProperty(Reseau *This, ListeCase* lcas){
 		free(propDemandeSur);
 		cli->casesTo->Vider(cli->casesTo);
 	}
-	//	if (pthread_mutex_unlock(&This->clients->mutexListeClient) < 0 ){
-	//		perror("pthread_mutex_unlock");
-	//		exit(-10);
-	//	}
-	//	pthread_setcancelstate(PTHREAD_CANCEL_ENABLE, NULL);
+		if (pthread_mutex_unlock(&This->clients->mutexListeClient) < 0 ){
+			perror("pthread_mutex_unlock");
+			exit(-10);
+		}
+		pthread_setcancelstate(PTHREAD_CANCEL_ENABLE, NULL);
 	lcli->Free(lcli, 0);
 }
 
@@ -1033,6 +1080,11 @@ void Reseau_askForVisibility(Reseau *This, ListeCase* lcas){
 	int i, j, offset;
 	Case *cas;
 	Client *cli;
+	pthread_setcancelstate(PTHREAD_CANCEL_DISABLE, NULL);
+	if (pthread_mutex_lock(&This->clients->mutexListeClient) < 0 ){
+		perror("pthread_mutex_lock");
+		exit(-10);
+	}
 	ListeClient* lcli = New_ListeClient();
 	char *propDemandeSur;
 	for (i=0; i<lcas->taille; ++i){
@@ -1055,7 +1107,6 @@ void Reseau_askForVisibility(Reseau *This, ListeCase* lcas){
 		cli->casesTo->Push(cli->casesTo, cas);
 	}
 
-	pthread_setcancelstate(PTHREAD_CANCEL_DISABLE, NULL);
 	if (pthread_mutex_lock(&This->mutexMatricePropriete)){
 		perror("pthread_mutex_lock");
 		exit(-10);
@@ -1065,7 +1116,6 @@ void Reseau_askForVisibility(Reseau *This, ListeCase* lcas){
 		perror("pthread_mutex_unlock");
 		exit(-10);
 	}
-	pthread_setcancelstate(PTHREAD_CANCEL_ENABLE, NULL);
 	for(i=0 ; i< lcli->taille; ++i){
 		cli=lcli->getNieme(lcli, i);
 		if (cli == NULL){
@@ -1089,6 +1139,11 @@ void Reseau_askForVisibility(Reseau *This, ListeCase* lcas){
 		cli->casesTo->Vider(cli->casesTo);
 	}
 	lcli->Free(lcli, 0);
+	if (pthread_mutex_unlock(&This->clients->mutexListeClient) < 0 ){
+		perror("pthread_mutex_unlock");
+		exit(-10);
+	}
+	pthread_setcancelstate(PTHREAD_CANCEL_ENABLE, NULL);
 }
 
 char* Reseau_strAskVisibilitySurrounding(Reseau *This, Client* cli){
