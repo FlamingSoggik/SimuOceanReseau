@@ -329,11 +329,30 @@ void* HandleTcpPlayer(void *arg){
 							perror("pthread_mutex_lock");
 							exit(-10);
 						}
+						if (pthread_mutex_lock(&This->mutexMatricePropriete) < 0 ){
+							perror("pthread_mutex_lock");
+							exit(-10);
+						}
+						Client *c;
+						c = This->clients->getFromSockNo(This->clients, i);
+						int pp, qq;
+						for (pp=0; pp<This->g->Taille; ++pp){
+							for (qq=0; qq<This->g->Taille; ++qq){
+								if (This->g->tab[pp][qq].proprietaire == c)
+									This->g->tab[pp][qq].proprietaire=NULL;
+							}
+						}
 						This->clients->remove(This->clients, i);
+
+						if (pthread_mutex_unlock(&This->mutexMatricePropriete) < 0 ){
+							perror("pthread_mutex_unlock");
+							exit(-10);
+						}
 						if (pthread_mutex_unlock(&This->clients->mutexListeClient) < 0 ){
 							perror("pthread_mutex_unlock");
 							exit(-10);
 						}
+
 						pthread_setcancelstate(PTHREAD_CANCEL_ENABLE, NULL);
 						FD_CLR(i, &This->untouchableSet);
 						if (This->maxFd == i){
@@ -738,7 +757,7 @@ void tenterConnection(Reseau *This){
 			continue;
 		}
 		/* Connection TCP à chaque client */
-		printf("Nouveau serveur à qui se connecter\n");
+		printf("Nouveau client à qui se connecter\n");
 		Client *c = New_Client();
 		recvBuffer[sizeRecieved]='\0';
 		int porttcp, portudp;
@@ -1391,7 +1410,6 @@ Bool Reseau_recupCoordinatesEnnemy(Reseau* This, char* str, Client* cli){
 	cli->noPecheurLastMove=lastPecheur;
 
 	for(i=0;i<nbPecheur;++i){
-		printf("Passage dans la boucle numero %d\n", i);
 		fscanf(readStream, "%" SCNd16, &posX);
 		fscanf(readStream, "%" SCNd16, &posY);
 		if (posX >= 0 && posX < This->g->Taille)

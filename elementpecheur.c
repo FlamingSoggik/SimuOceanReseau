@@ -601,7 +601,6 @@ int ElementPecheur_pecheParFiletSDL(ElementPecheur *This, int16_t x, int16_t y)
 	}
 	free(MatriceAccessiblePeche);
 
-	printf("Incre sac : %d\n", incrementation_sac);
 	return incrementation_sac;
 
 }
@@ -871,7 +870,6 @@ Bool ElementPecheur_construirePont(ElementPecheur *This, char direction)
 				exit(-10);
 			}
 			pthread_setcancelstate(PTHREAD_CANCEL_ENABLE, NULL);
-			printf("Avant Free %d\n", lc->taille);
 			lc->Free(lc);
 			printf("%s : Normalement tout s'est bien passé\n", __FUNCTION__);
 			return True;
