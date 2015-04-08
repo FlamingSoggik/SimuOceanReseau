@@ -30,6 +30,5 @@ void Print_Graphique(SDL_Surface *graph, int16_t GraphH, int16_t *nbr_espece, in
 void Print_NbTour(SDL_Surface *ecran, Grille *grill, TTF_Font* police, int16_t ScreenH, int16_t ScreenW );
 int16_t Test_Victory(SDL_Surface *ecran, Grille *grill, TTF_Font* police, int16_t ScreenH, int16_t ScreenW, int joueur );
 void Fin_Partie( SDL_Surface *ecran, TTF_Font* police, int joueur, int16_t ScreenH, int16_t ScreenW, int nbpecheur );
-
-
+SDL_Surface* Afficher_Peche(int type, TTF_Font *police, SDL_Surface *Ce_Que_Je_Peche );
 #endif // AFFICHAGE_H

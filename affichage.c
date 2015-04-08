@@ -12,6 +12,7 @@ struct Grille* SDL_Print(struct Grille *grill){
 
 	/* Initialisation des variables nécessaires */
 	SDL_Surface **Selected_Type_Case=NULL, *blanc=NULL, *rouge=NULL, *plusIcone=NULL, *moinsIcone=NULL, *graphIcone=NULL,*paramIcone=NULL,*ecran = NULL ,*fenetre = NULL, *curseur1 = NULL, *curseur2 = NULL, *boite = NULL, *graphique=NULL;
+    SDL_Surface *Ce_Que_Je_Peche=NULL;
     TTF_Font *police=NULL, *police_underline=NULL, *police_fin=NULL;
 	SDL_Event event;
 	int16_t continuer=1;
@@ -413,6 +414,7 @@ struct Grille* SDL_Print(struct Grille *grill){
 						if (((ScreenH-40)<=event.button.x) && (event.button.x<=(ScreenH-40+100)) && ((180)<=event.button.y) && (event.button.y<=585))
 							C_Selected=Select_Legende(Legendes_Surface, police, police_underline, ((event.button.y)-140)/((580-140)/11));
 
+                    /*Edit des constantes*/
 					if (((ScreenH +(ScreenW-ScreenH)/2-15)-100<=event.button.x) && (event.button.x<=(ScreenH +(ScreenW-ScreenH)/2-15)-70) && ((ScreenH/2 - 100)<=event.button.y) && (event.button.y<=(ScreenH/2 - 100)+330))
 						C_Selected=Edit_Constantes(0, (event.button.y - (ScreenH/2 - 100)), C_Selected);
 					if (((ScreenH +(ScreenW-ScreenH)/2-15)+100<=event.button.x) && (event.button.x<=(ScreenH +(ScreenW-ScreenH)/2-15)+130) && ((ScreenH/2 - 100)<=event.button.y) && (event.button.y<=(ScreenH/2 - 100)+330))
@@ -480,7 +482,10 @@ struct Grille* SDL_Print(struct Grille *grill){
 							if (Commande_Selected==3 && TourDuJoueur != -1)
 							{
 								grill->tabPecheur[TourDuJoueur]->pecheParCanneSDL(grill->tabPecheur[TourDuJoueur], ((grill->tabPecheur[TourDuJoueur]->caseParent->posX)+pointeurY), (grill->tabPecheur[TourDuJoueur]->caseParent->posY)+pointeurX);
-								TourDuJoueur=TourDuJoueur+1;
+                                Type espece = PLANCTON;
+
+                                Ce_Que_Je_Peche=Afficher_Peche(espece, police, Ce_Que_Je_Peche);
+                                TourDuJoueur=TourDuJoueur+1;
 								if (TourDuJoueur==grill->nbPecheur) TourDuJoueur=-1;
 
 							}
@@ -557,8 +562,19 @@ struct Grille* SDL_Print(struct Grille *grill){
 		{
 			Commandes_Pecheur(ecran, Avancer, Construire, PecherCanne, PecherFilet, police, police_underline, Commande_Selected, ScreenH, ScreenW);
 
-			if (TourDuJoueur!=-1)
-				Sac_Pecheur( ecran, police, grill->tabPecheur[TourDuJoueur], ScreenH, ScreenW );
+            if (grill->nbPecheur==1)
+            {
+                Sac_Pecheur( ecran, police, grill->tabPecheur[0], ScreenH, ScreenW );
+                Blit_Image(ecran, Ce_Que_Je_Peche, ((ScreenH +(ScreenW-ScreenH)/2)+120), ScreenH/2 - 150 );
+
+            }
+
+            else if (TourDuJoueur!=-1)
+            {
+                Sac_Pecheur( ecran, police, grill->tabPecheur[TourDuJoueur], ScreenH, ScreenW );
+                Blit_Image(ecran, Ce_Que_Je_Peche, ((ScreenH +(ScreenW-ScreenH)/2)+120), ScreenH/2 - 150 );
+
+            }
 		}
 
 
@@ -621,13 +637,13 @@ struct Grille* SDL_Print(struct Grille *grill){
 
 			// printf("%d\n", grill->TourCourant); // AFFICHAGE DU NOMBRE DE TOUR
 			if (TourDuJoueur==-1)
-			{
+            {
 				grill->faireTour(grill, 1);
 
                 if ((grill->nbPecheur!=0) && ((grill->TourCourant)%1)==0)
 				{
 					TourDuJoueur=(TourDuJoueur+1)%((grill->nbPecheur)+1);
-
+                    Commande_Selected=1;
 
 				}
 			}
@@ -666,6 +682,7 @@ struct Grille* SDL_Print(struct Grille *grill){
 	SDL_FreeSurface(Construire);
 	SDL_FreeSurface(PecherCanne);
 	SDL_FreeSurface(PecherFilet);
+    SDL_FreeSurface(Ce_Que_Je_Peche);
 
 
 	for(i=0; i<12; i++){
@@ -1165,7 +1182,99 @@ void Fin_Partie( SDL_Surface *ecran, TTF_Font* police, int joueur, int16_t Scree
 }
 
 
+SDL_Surface* Afficher_Peche(int type, TTF_Font *police, SDL_Surface *Ce_Que_Je_Peche )
+{
+    int Taille_Dans_Sac;
+    SDL_Color Couleur_Peche;
+    Couleur_Peche.unused=0;
+    switch (type)
+    {
+    case PLANCTON : //Plancton
+        //Couleur_Peche = {253, 190, 1,0};
+        Couleur_Peche.r=253;
+        Couleur_Peche.g=190;
+        Couleur_Peche.b=1;
+        Taille_Dans_Sac=C_Plancton.taille;
+        break;
+    case CORAIL : //Corail
+        //Couleur_Peche = {255, 102, 0,0 };
+        Couleur_Peche.r=255;
+        Couleur_Peche.g=102;
+        Couleur_Peche.b=0;
+        Taille_Dans_Sac=C_Corail.taille;
+        break;
+    case BAR: //Bar
+        //Couleur_Peche = {0, 114, 45,0};
+        Couleur_Peche.r=0;
+        Couleur_Peche.g=114;
+        Couleur_Peche.b=45;
+                Taille_Dans_Sac=C_Bar.taille;
+        break;
+    case THON: //Thon
+        //Couleur_Peche = {236, 68, 155,0};
+        Couleur_Peche.r=236;
+        Couleur_Peche.g=68;
+        Couleur_Peche.b=155;
+                Taille_Dans_Sac=C_Thon.taille;
+        break;
+    case PYRANHA: //Pyranha
+        //Couleur_Peche = {209, 0, 57,0};
+        Couleur_Peche.r=209;
+        Couleur_Peche.g=0;
+        Couleur_Peche.b=57;
+                Taille_Dans_Sac=C_Pyranha.taille;
+        break;
+    case REQUIN: //Requin
+        //Couleur_Peche = {55, 49, 33,0};
+        Couleur_Peche.r=55;
+        Couleur_Peche.g=49;
+        Couleur_Peche.b=33;
+                Taille_Dans_Sac=C_Requin.taille;
+        break;
+    case ORQUE: //Orque
+        //Couleur_Peche = {15, 14, 20,0};
+        Couleur_Peche.r=15;
+        Couleur_Peche.g=14;
+        Couleur_Peche.b=20;
+                Taille_Dans_Sac=C_Orque.taille;
+        break;
+    case BALEINE: //Baleine
+        //Couleur_Peche = {0, 0, 255,0};
+        Couleur_Peche.r=0;
+        Couleur_Peche.g=0;
+        Couleur_Peche.b=255;
+                Taille_Dans_Sac=C_Baleine.taille;
+        break;
+    default : //Blanc
+        //Couleur_Peche = {193, 205, 193,0};
+        Couleur_Peche.r=193;
+        Couleur_Peche.g=205;
+        Couleur_Peche.b=193;
+                Taille_Dans_Sac=0;
+        break;
+    }
 
+
+if (Taille_Dans_Sac!=0)
+{
+        char texte[30]="";
+        sprintf(texte, "+ %d", Taille_Dans_Sac);
+        Ce_Que_Je_Peche = TTF_RenderText_Blended(police, texte, Couleur_Peche);
+}
+
+
+
+
+//int16_t Centre_Commandes=(ScreenH +(ScreenW-ScreenH)/2);
+//Blit_Image(ecran, Ce_Que_Je_Peche, (ScreenH +(ScreenW-ScreenH)/2)-30+20, ScreenH/2 - 150 );
+
+
+
+return Ce_Que_Je_Peche;
+
+
+
+}
 
 
 
