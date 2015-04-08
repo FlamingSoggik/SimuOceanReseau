@@ -176,6 +176,7 @@ void* HandleInternalMessage(void *arg){
 			if (c == NULL){
 				printf("Call the admin NOOOOOOOOOW %s:%d\n", __FUNCTION__, __LINE__);
 			}
+			printf("Chaine recue : %s", recvBuffer);
 			Reseau_recupCoordinatesEnnemy(This, recvBuffer+3, c);
 			toSend=Reseau_strAskVisibilitySurrounding(This, c);
 			sendto(This->sockEcouteInternalMessages, toSend, strlen(toSend)+1, 0, (struct sockaddr *) &dst, sizeof(dst));
@@ -188,7 +189,6 @@ void* HandleInternalMessage(void *arg){
 			if (c == NULL){
 				printf("Call the admin NOOOOOOOOOW %s:%d\n", __FUNCTION__, __LINE__);
 			}
-			printf("Recup de la visibilité depuis le client BWAAAAAAAA\n");
 			Reseau_recupVisibility(This, recvBuffer+3, c);
 		}
 		else {
@@ -1095,7 +1095,7 @@ char* Reseau_strAskVisibilitySurrounding(Reseau *This, Client* cli){
 		perror("pthread_mutex_lock");
 		exit(-10);
 	}
-	visibilite=This->g->getMatriceVoisins(This->g, cli->posX, cli->posY, 2);
+	visibilite=This->g->getMatriceVoisins(This->g, cli->tabPosPecheurs[cli->noPecheurLastMove][indexPosX], cli->tabPosPecheurs[cli->noPecheurLastMove][indexPosY], 2);
 	int i, j, offset;
 	Case *cas;
 	ListeCase *lcas=New_ListeCase();
@@ -1314,7 +1314,7 @@ Bool Reseau_recupVisibility(Reseau* This, char* str, Client* cli){
 
 Bool Reseau_recupCoordinatesEnnemy(Reseau* This, char* str, Client* cli){
 
-	int fdRW[2];
+	int fdRW[2], i;
 	if (pipe(fdRW) < 0){
 		perror("Pipe");
 		return False;
@@ -1326,17 +1326,21 @@ Bool Reseau_recupCoordinatesEnnemy(Reseau* This, char* str, Client* cli){
 		exit(-1);
 	}
 
-	int16_t posX, posY;
-	fscanf(readStream, "%" SCNd16, &posX);
-	fscanf(readStream, "%" SCNd16, &posY);
+	int16_t posX, posY, nbPecheur, lastPecheur;
+	fscanf(readStream, "%" SCNd16, &nbPecheur);
+	cli->nbrPecheurs=nbPecheur;
+	fscanf(readStream, "%" SCNd16, &lastPecheur);
+	cli->noPecheurLastMove=lastPecheur;
 
-	if (posX < 0 || posX >= This->g->Taille)
-		goto end;
-	if (posY < 0 || posY >= This->g->Taille)
-		goto end;
-	cli->posX=posX;
-	cli->posY=posY;
-end:
+	for(i=0;i<nbPecheur;++i){
+		printf("Passage dans la boucle numero %d\n", i);
+		fscanf(readStream, "%" SCNd16, &posX);
+		fscanf(readStream, "%" SCNd16, &posY);
+		if (posX >= 0 && posX < This->g->Taille)
+			cli->tabPosPecheurs[i][indexPosX]=posX;
+		if (posY >= 0 && posY < This->g->Taille)
+			cli->tabPosPecheurs[i][indexPosY]=posY;
+	}
 	fclose(readStream);
 	close(fdRW[1]);
 	return True;
@@ -1446,20 +1450,31 @@ void Reseau_sendWin(Reseau* This)
 
 void Reseau_sendPos(Reseau* This, ElementPecheur* p)
 {
-	int i;
+	int i, offset;
+	int16_t noPecheur;
 	Client *cli;
 	char *toSend;
+
+	for(i=0; i<This->g->nbPecheur; ++i){
+		if (This->g->tabPecheur[i] == p){
+			noPecheur=i;
+			break;
+		}
+	}
+	toSend=malloc(((5+1)*2*This->g->nbPecheur+(5+1)*2+4+10)*sizeof(char));
+	offset=sprintf(toSend, "#7q%d\n%d\n", This->g->nbPecheur, noPecheur);
+	for (i=0; i<This->g->nbPecheur; ++i){
+		offset+=sprintf(toSend+offset, "%d\n%d\n", This->g->tabPecheur[i]->caseParent->posX, This->g->tabPecheur[i]->caseParent->posY);
+	}
 	for(i=0 ; i< This->clients->taille; ++i){
 		cli=This->clients->getNieme(This->clients, i);
 		if (cli == NULL){
 			printf("Call the admin NOOOOOOOOOW %s:%d\n", __FUNCTION__, __LINE__);
 			continue;
 		}
-		// (5+1) = 1 int + 1\n * 2 car deux coordonnées
-		toSend=malloc((5+1)*2+4);
-		sprintf(toSend, "#7q%d\n%d\n", p->caseParent->posX, p->caseParent->posY);
-		if (sendto(This->sockEcouteInternalMessages, toSend, strlen(toSend), 0, (struct sockaddr*)&cli->from, sizeof(cli->from)) == -1){
+		if (sendto(This->sockEcouteInternalMessages, toSend, strlen(toSend)+1, 0, (struct sockaddr*)&cli->from, sizeof(cli->from)) == -1){
 			perror("Send to __LINE__");
 		}
 	}
+	free(toSend);
 }

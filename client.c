@@ -6,8 +6,13 @@
 void Client_Init(Client *This){
 	This->casesTo=New_ListeCase();
 	This->Clear = Client_Clear;
-	This->posX=-5;
-	This->posY=-5;
+	This->nbrPecheurs=0;
+	This->noPecheurLastMove=0;
+	int i, j;
+	for(i=0; i< 10; ++i)
+		for(j=0; j< 2; ++j)
+			This->tabPosPecheurs[i][j]=0;
+
 }
 
 void Client_Free(Client *This){
