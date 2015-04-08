@@ -262,6 +262,9 @@ void* HandleTcpPlayer(void *arg){
 						exit(-10);
 					}
 					pthread_setcancelstate(PTHREAD_CANCEL_ENABLE, NULL);
+					if (This->g->nbPecheur != 0){
+						Reseau_sendPos(This, This->g->tabPecheur[0]);
+					}
 					FD_SET(newClientSocket, &This->untouchableSet);
 					if (newClientSocket > This->maxFd){
 						This->maxFd=newClientSocket;
